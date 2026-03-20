@@ -1122,16 +1122,20 @@ async function sbDelete(table, query){
 // ── SAVE — grava tudo no Supabase ──────────────────
 async function saveDB(){
   try {
-    // Pacientes — atualiza cada um pelo id interno no JSON
+    // Pacientes — usa o id da linha do Supabase guardado no _supaId
     const patResults = await Promise.all(DB.patients.map(async p => {
-      const r = await fetch(`${SUPA_URL}/rest/v1/patients?data->>id=eq.${p.id}`, {
+      const rowId = p._supaId || p.id;
+      const { _supaId, ...patData } = p; // remove _supaId do JSON salvo
+      const r = await fetch(`${SUPA_URL}/rest/v1/patients?id=eq.${rowId}`, {
         method: 'PATCH',
         headers: { ...SUPA_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ data: p, updated_at: new Date().toISOString() })
+        body: JSON.stringify({ data: patData, updated_at: new Date().toISOString() })
       });
       if(!r.ok){
         const err = await r.text();
         console.warn(`Ampara: erro ao salvar paciente ${p.name}:`, err);
+      } else {
+        console.log(`Ampara: ✓ ${p.name} salvo (row=${rowId})`);
       }
       return r.ok;
     }));
@@ -1168,13 +1172,13 @@ async function loadDB(){
   try {
     // Carrega em paralelo
     const [pats, users, reqs, cfgs] = await Promise.all([
-      sbGet('patients', '?select=data&order=id'),
+      sbGet('patients', '?select=id,data&order=id'),
       sbGet('app_users', '?select=*&order=created_at'),
       sbGet('requests', '?select=data&order=created_at'),
       sbGet('config', '?select=*'),
     ]);
 
-    if(pats.length) DB.patients = pats.map(r => r.data);
+    if(pats.length) DB.patients = pats.map(r => ({ ...r.data, _supaId: r.id }));
     if(reqs.length) DB.requests = reqs.map(r => r.data);
 
     if(users.length){
@@ -1203,7 +1207,11 @@ async function loadDB(){
 
 // ── DELETE paciente do Supabase ────────────────────
 async function deletePatient(id){
-  try { await sbDelete('patients', `?id=eq.${id}`); } catch(e){ console.warn('delete patient',e.message); }
+  try {
+    const p = DB.patients.find(x => x.id === id);
+    const rowId = p?._supaId || id;
+    await sbDelete('patients', `?id=eq.${rowId}`);
+  } catch(e){ console.warn('delete patient',e.message); }
 }
 
 // ── DELETE usuário do Supabase ─────────────────────
