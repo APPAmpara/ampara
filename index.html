@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="theme-color" content="#5C7E6A"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Ampara"/>
+<link rel="manifest" href="manifest.json"/>
 <title>Ampara</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
 <style>
@@ -267,31 +273,74 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 <div class="screen active" id="s-login">
   <div class="lbg"><div class="llogo">🌿 Ampara</div><div class="lsub">Cuidado em família, com carinho</div></div>
   <div class="scroll" style="padding:22px 20px 30px">
-    <div class="fg"><label class="fl">E-mail</label><input class="fi" type="email" id="li-email" value="master@ampara.com"/></div>
-    <div class="fg"><label class="fl">Senha</label><input class="fi" type="password" id="li-pass" value="master123"/></div>
-    <div style="margin-top:18px"><button class="btn bp" id="btn-login">Entrar</button></div>
+    <div class="fg"><label class="fl">E-mail</label><input class="fi" type="email" id="li-email" placeholder="seu@email.com" autocomplete="email"/></div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Senha</label>
+      <input class="fi" type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <span id="li-toggle-pass" style="position:absolute;right:13px;bottom:12px;font-size:16px;cursor:pointer;color:var(--tmu)">👁</span>
+    </div>
+    <div style="text-align:right;margin-top:-6px;margin-bottom:14px">
+      <span style="font-size:12px;color:var(--sage);font-weight:600;cursor:pointer" id="lnk-forgot">Esqueci minha senha</span>
+    </div>
+    <button class="btn bp" id="btn-login">Entrar</button>
     <div id="li-error" style="display:none;margin-top:10px;background:var(--rl);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--red);text-align:center">E-mail ou senha incorretos.</div>
-    <div style="text-align:center;margin-top:13px;font-size:13px;color:var(--tmu)">Não tem conta? <span style="color:var(--sage);font-weight:600;cursor:pointer" id="lnk-reg">Cadastre-se</span></div>
-    <div style="margin-top:26px;background:var(--warm);border-radius:var(--rs);padding:11px 13px">
-      <div style="font-size:11px;color:var(--tmu);font-weight:700;margin-bottom:6px">✦ CONTAS DEMO</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <div class="demo-cred" data-email="master@ampara.com" data-pass="master123" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(45,74,62,.12);border-radius:8px;padding:8px 10px">
-          <div><div style="font-size:12px;font-weight:700;color:var(--text)">👑 Master</div><div style="font-size:11px;color:var(--tmu)">Controle total do sistema</div></div>
-          <span style="font-size:11px;color:var(--sage);font-weight:600">Usar →</span>
-        </div>
-        <div class="demo-cred" data-email="ana@familia.com" data-pass="12345" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(58,110,165,.07);border-radius:8px;padding:8px 10px">
-          <div><div style="font-size:12px;font-weight:700;color:var(--text)">🧑‍⚕️ Cuidador profissional</div><div style="font-size:11px;color:var(--tmu)">Visualiza, registra e cria dados</div></div>
-          <span style="font-size:11px;color:var(--sage);font-weight:600">Usar →</span>
-        </div>
-        <div class="demo-cred" data-email="carlos@familia.com" data-pass="familia" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(242,237,228,.9);border-radius:8px;padding:8px 10px">
-          <div><div style="font-size:12px;font-weight:700;color:var(--text)">👨‍👩‍👦 Familiar</div><div style="font-size:11px;color:var(--tmu)">Acompanha e registra observações</div></div>
-          <span style="font-size:11px;color:var(--sage);font-weight:600">Usar →</span>
-        </div>
-        <div class="demo-cred" data-email="dra@clinica.com" data-pass="medico123" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(61,122,88,.07);border-radius:8px;padding:8px 10px">
-          <div><div style="font-size:12px;font-weight:700;color:var(--text)">👩‍⚕️ Médico</div><div style="font-size:11px;color:var(--tmu)">Somente visualização — sem edição</div></div>
-          <span style="font-size:11px;color:var(--sage);font-weight:600">Usar →</span>
-        </div>
-      </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:20px 0">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--tmu);font-weight:600">OU</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <button class="btn bo" id="lnk-reg" style="font-size:14px">Criar nova conta</button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--tmu);line-height:1.6">
+      Ao entrar você concorda com os termos de uso e política de privacidade do Ampara.
+    </div>
+  </div>
+</div>
+
+<!-- ══ CADASTRO ══════════════════════════════════════ -->
+<div class="screen" id="s-register">
+  <div class="nav">
+    <button class="nback" id="reg-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar
+    </button>
+    <div class="ntitle">Criar conta</div>
+    <div></div>
+  </div>
+  <div class="scroll" style="padding:20px 20px 30px">
+    <div style="font-size:13px;color:var(--tmu);margin-bottom:20px;line-height:1.6">
+      Preencha seus dados para solicitar acesso ao Ampara. Seu cadastro será analisado pelo administrador.
+    </div>
+    <div class="fg"><label class="fl">Nome completo *</label><input class="fi" id="reg-name" placeholder="Seu nome"/></div>
+    <div class="fg"><label class="fl">E-mail *</label><input class="fi" type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email"/></div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Senha *</label>
+      <input class="fi" type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+    </div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Confirmar senha *</label>
+      <input class="fi" type="password" id="reg-pass2" placeholder="Repita a senha" autocomplete="new-password"/>
+    </div>
+    <div class="fg">
+      <label class="fl">Seu perfil *</label>
+      <select class="fi" id="reg-role">
+        <option value="">Selecione...</option>
+        <option value="caregiver">🧑‍⚕️ Cuidador profissional</option>
+        <option value="family">👨‍👩‍👦 Familiar / responsável</option>
+        <option value="doctor">👩‍⚕️ Médico / profissional de saúde</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Telefone (opcional)</label>
+      <input class="fi" type="tel" id="reg-tel" placeholder="(11) 99999-0000"/>
+    </div>
+    <div id="reg-error" style="display:none;margin-bottom:12px;background:var(--rl);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--red)"></div>
+    <div id="reg-success" style="display:none;margin-bottom:12px;background:var(--gl);border-radius:var(--rs);padding:14px;font-size:13px;color:var(--grn);line-height:1.6">
+      ✅ Solicitação enviada! O administrador irá analisar seu cadastro e você receberá acesso em breve.
+    </div>
+    <button class="btn bp" id="btn-register">Solicitar acesso</button>
+    <div style="text-align:center;margin-top:14px">
+      <span style="font-size:13px;color:var(--tmu)">Já tem conta? </span>
+      <span style="font-size:13px;color:var(--sage);font-weight:600;cursor:pointer" id="lnk-login">Entrar</span>
     </div>
   </div>
 </div>
@@ -2882,12 +2931,60 @@ window.addEventListener('DOMContentLoaded',()=>{
     DB.currentUser = null;
   }).catch(()=>{ hideLoading(); });
 
-  // Demo credential shortcuts
-  document.querySelectorAll('.demo-cred').forEach(el=>{
-    el.addEventListener('click',()=>{
-      document.getElementById('li-email').value=el.dataset.email;
-      document.getElementById('li-pass').value=el.dataset.pass;
-    });
+
+  // ── TOGGLE SENHA ──
+  wire('li-toggle-pass','click',()=>{
+    const inp=document.getElementById('li-pass');
+    inp.type=inp.type==='password'?'text':'password';
+  });
+
+  // ── ESQUECI SENHA ──
+  wire('lnk-forgot','click',()=>{
+    const email=document.getElementById('li-email').value.trim();
+    if(!email){toast('Digite seu e-mail primeiro');return;}
+    toast('Entre em contato com o administrador para redefinir sua senha.');
+  });
+
+  // ── NAVEGAR PARA CADASTRO ──
+  wire('lnk-reg','click',()=>go('s-register'));
+  wire('reg-back','click',()=>go('s-login'));
+  wire('lnk-login','click',()=>go('s-login'));
+
+  // ── CADASTRO — solicitar acesso ──
+  wire('btn-register','click',async()=>{
+    const name=document.getElementById('reg-name').value.trim();
+    const email=document.getElementById('reg-email').value.trim().toLowerCase();
+    const pass=document.getElementById('reg-pass').value;
+    const pass2=document.getElementById('reg-pass2').value;
+    const role=document.getElementById('reg-role').value;
+    const errEl=document.getElementById('reg-error');
+    const okEl=document.getElementById('reg-success');
+    errEl.style.display='none';okEl.style.display='none';
+
+    if(!name||!email||!pass||!role){errEl.textContent='Preencha todos os campos obrigatórios.';errEl.style.display='block';return;}
+    if(pass.length<6){errEl.textContent='A senha deve ter pelo menos 6 caracteres.';errEl.style.display='block';return;}
+    if(pass!==pass2){errEl.textContent='As senhas não coincidem.';errEl.style.display='block';return;}
+    if(DB.users.find(u=>u.email===email)){errEl.textContent='Este e-mail já está cadastrado.';errEl.style.display='block';return;}
+
+    const btn=document.getElementById('btn-register');
+    btn.textContent='Enviando...';btn.disabled=true;
+
+    const roleLabels={caregiver:'Cuidador profissional',family:'Familiar',doctor:'Médico'};
+    const avatars={caregiver:'🧑‍⚕️',family:'👨‍👩‍👦',doctor:'👩‍⚕️'};
+    const tel=document.getElementById('reg-tel').value.trim();
+    const newUser={id:'u'+Date.now(),name,email,pass,role,avatar:avatars[role]||'👤',patientIds:[],status:'pending',tel:tel||null};
+    const req={id:'reg'+Date.now(),type:'Solicitação de cadastro',obs:`${roleLabels[role]||role} — ${email}${tel?' · '+tel:''}`,status:'pending',date:today(),requestedBy:'novo_usuario',newUser};
+    DB.requests.push(req);
+    try{
+      await sbUpsert('requests',[{id:req.id,data:req}]);
+      okEl.style.display='block';
+      ['reg-name','reg-email','reg-pass','reg-pass2','reg-tel'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      document.getElementById('reg-role').value='';
+    }catch(e){
+      errEl.textContent='Erro ao enviar solicitação. Tente novamente.';
+      errEl.style.display='block';
+    }
+    btn.textContent='Solicitar acesso';btn.disabled=false;
   });
 
   // LOGIN
@@ -2907,8 +3004,6 @@ window.addEventListener('DOMContentLoaded',()=>{
       A.renderPatList(accessible);go('s-patients');
     }
   });
-  wire('lnk-reg','click',()=>toast('Cadastro em breve!'));
-
   // ADMIN MASTER
   wire('admin-logout','click',()=>{DB.currentUser=null;saveDB();go('s-login');});
   wire('adm-patients','click',()=>{A.renderPatList();go('s-patients');});
@@ -3403,6 +3498,15 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
 
   // Init tag selectors when navigating to new patient screen
+  // ── SERVICE WORKER (PWA) ──
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/ampara/sw.js')
+        .then(() => console.log('Ampara: SW registrado'))
+        .catch(e => console.warn('Ampara: SW erro', e));
+    });
+  }
+
 });
 </script>
 </body>
