@@ -20,9 +20,9 @@
   --sh:0 1px 7px rgba(60,90,70,.09);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:24px 12px}
-.shell{width:100%;max-width:420px;background:var(--cream);border-radius:36px;box-shadow:0 28px 70px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.5)inset;overflow:hidden;position:relative;display:flex;flex-direction:column;min-height:840px}
-.screen{display:none;flex-direction:column;min-height:840px;position:relative}
+body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 12px}
+.shell{width:100%;max-width:420px;background:var(--cream);border-radius:36px;box-shadow:0 28px 70px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.5)inset;overflow:hidden;position:relative;display:flex;flex-direction:column;height:calc(100vh - 48px);max-height:900px;min-height:600px}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden;position:relative}
 .screen.active{display:flex}
 
 /* NAV */
