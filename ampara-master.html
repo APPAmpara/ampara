@@ -1046,16 +1046,29 @@ document.getElementById('btn-login').addEventListener('click',async()=>{
   const email=document.getElementById('li-email').value.trim().toLowerCase();
   const pass=document.getElementById('li-pass').value;
   document.getElementById('li-err').style.display='none';
-  document.getElementById('btn-login').textContent='Carregando...';
+  const btn=document.getElementById('btn-login');
+  btn.textContent='Verificando...';
   try{
+    // Busca apenas o usuário pelo email — sem carregar tudo
+    const users=await sbGet('app_users',`?email=eq.${encodeURIComponent(email)}&role=eq.master`);
+    const user=users.find(u=>u.pass===pass);
+    if(!user){
+      document.getElementById('li-err').style.display='block';
+      btn.textContent='Entrar no painel';
+      return;
+    }
+    btn.textContent='Carregando dados...';
     await loadData();
-    const user=DB.users.find(u=>u.email.toLowerCase()===email&&u.pass===pass&&u.role==='master');
-    if(!user){document.getElementById('li-err').style.display='block';document.getElementById('btn-login').textContent='Entrar no painel';return;}
     document.getElementById('login-wrap').style.display='none';
     document.getElementById('app-wrap').style.display='flex';
     showView('dashboard');
     showToast('Bem-vindo ao painel Ampara!');
-  }catch(e){document.getElementById('li-err').textContent='Erro ao conectar. Verifique a conexão.';document.getElementById('li-err').style.display='block';document.getElementById('btn-login').textContent='Entrar no painel';}
+  }catch(e){
+    console.error('Login error:',e);
+    document.getElementById('li-err').textContent='Erro ao conectar: '+e.message;
+    document.getElementById('li-err').style.display='block';
+    btn.textContent='Entrar no painel';
+  }
 });
 
 document.getElementById('li-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
