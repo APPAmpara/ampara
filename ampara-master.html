@@ -1017,14 +1017,39 @@ async function deleteReq(id){
 const VIEW_RENDERS={dashboard:renderDashboard,patients:renderPatients,alerts:renderAlerts,vitals:renderVitals,timeline:renderTimeline,meds:renderMeds,interactions:renderInteractions,users:renderUsers,requests:renderRequests};
 const VIEW_TITLES={dashboard:'Dashboard',patients:'Pacientes',alerts:'Alertas',vitals:'Sinais vitais',timeline:'Timeline',meds:'Medicações',interactions:'Interações medicamentosas',users:'Usuários',requests:'Solicitações de avaliação'};
 
-function showView(name){
+function showView(name, pushState=true){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.toggle('active',i.dataset.view===name));
-  document.getElementById('topbar-title').textContent=VIEW_TITLES[name]||name;
+  const title = VIEW_TITLES[name]||name;
+  document.getElementById('topbar-title').textContent=title;
+  document.title = `Ampara · ${title}`;
   currentView=name;
   VIEW_RENDERS[name]?.();
+
+  // Atualiza a URL sem recarregar a página
+  if(pushState){
+    const url = new URL(window.location.href);
+    url.hash = name;
+    window.history.pushState({view: name}, title, url.toString());
+  }
 }
+
+// Botão Voltar/Avançar do navegador
+window.addEventListener('popstate', e => {
+  const view = e.state?.view || 'dashboard';
+  if(document.getElementById('app-wrap').style.display !== 'none'){
+    showView(view, false);
+  }
+});
+
+// Ao carregar a página, verifica se há uma view na URL (#dashboard, #patients, etc.)
+window.addEventListener('load', () => {
+  const hash = window.location.hash.replace('#','');
+  if(hash && VIEW_RENDERS[hash] && document.getElementById('app-wrap').style.display !== 'none'){
+    showView(hash, false);
+  }
+});
 
 // ── TOAST ──────────────────────────────────────────
 function showToast(msg){
