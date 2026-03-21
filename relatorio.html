@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ampara · Relatório Médico</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sage:#5C7E6A;--sl:#E8F0EB;
+  --cream:#FAF8F4;--warm:#F2EDE4;
+  --text:#1E2820;--tm:#4A5E52;--tmu:#8A9E92;
+  --border:#DDE8E0;--W:#FFF;
+  --red:#C0544A;--rl:#FAECEA;
+  --yel:#C49A3C;--yl:#FDF6E3;
+  --grn:#3D7A58;--gl:#E6F4EC;
+  --blue:#3A6EA5;--bl:#E6EFF8;
+  --r:14px;--rs:10px;
+  --sh:0 1px 7px rgba(60,90,70,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#CDD8C9;min-height:100vh;padding:20px 12px 40px}
+.shell{max-width:480px;margin:0 auto;background:var(--cream);border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden}
+.header{background:linear-gradient(140deg,#1E2F27,#2D4A3E,#5C7E6A);padding:24px 20px 28px;color:#fff}
+.logo{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.pat-name{font-family:'Lora',serif;font-size:24px;font-weight:600;margin-bottom:3px}
+.pat-meta{font-size:13px;color:rgba(255,255,255,.78)}
+.status-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;margin-top:12px}
+.validity{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;margin-top:14px;font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:7px}
+.section{font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.9px;margin:18px 20px 8px}
+.card{background:var(--W);margin:0 20px 10px;border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.rl{font-size:12px;color:var(--tmu)}
+.rv{font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 20px 10px}
+.risk-card{background:var(--W);border-radius:var(--rs);border:1px solid var(--border);padding:12px;text-align:center;box-shadow:var(--sh)}
+.risk-icon{font-size:20px;margin-bottom:4px}
+.risk-label{font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.risk-val{font-size:13px;font-weight:700}
+.alert-box{margin:0 20px 10px;border-radius:var(--rs);padding:12px 14px;font-size:13px;line-height:1.6}
+.alert-red{background:var(--rl);border-left:3px solid var(--red);color:var(--red)}
+.alert-yel{background:var(--yl);border-left:3px solid var(--yel);color:#7a5a00}
+.alert-grn{background:var(--gl);border-left:3px solid var(--grn);color:var(--grn)}
+.events-list{margin:0 20px}
+.event-item{background:var(--W);border-radius:var(--rs);border:1px solid var(--border);padding:11px 13px;margin-bottom:8px;box-shadow:var(--sh)}
+.event-type{font-size:12px;font-weight:700;color:var(--tm)}
+.event-desc{font-size:12px;color:var(--text);margin-top:4px;line-height:1.5}
+.event-meta{font-size:11px;color:var(--tmu);margin-top:4px}
+.footer{padding:20px;text-align:center;font-size:11px;color:var(--tmu);line-height:1.7;border-top:1px solid var(--border);margin-top:8px}
+.expired{text-align:center;padding:60px 20px}
+.expired-icon{font-size:64px;margin-bottom:16px}
+.expired-title{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);margin-bottom:8px}
+.expired-sub{font-size:14px;color:var(--tmu);line-height:1.6}
+.loading{text-align:center;padding:60px 20px;color:var(--tmu);font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--sage);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vital-alert{color:var(--red)}
+.vital-warn{color:var(--yel)}
+.vital-ok{color:var(--grn)}
+.med-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.med-row:last-child{border-bottom:none}
+.med-name{font-size:13px;font-weight:600;color:var(--text)}
+.med-dose{font-size:12px;color:var(--tmu);margin-top:2px}
+.med-times{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.med-time{font-size:11px;background:var(--sl);color:var(--sage);padding:2px 7px;border-radius:10px;font-weight:600}
+.print-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 40px);margin:0 20px 16px;padding:12px;background:var(--sage);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+@media print{.print-btn,.validity{display:none}.shell{box-shadow:none;border-radius:0}.header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="shell" id="app">
+  <div class="loading"><div class="spinner"></div>Carregando relatório...</div>
+</div>
+
+<script>
+const SUPA_URL='https://vazhqtpjjpatptkyhchk.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhemhxdHBqanBhdHB0a3loY2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NjQ2MDcsImV4cCI6MjA4OTU0MDYwN30.iGeGnRtmNJE_3FFfNQcXM7f-YlqVw3BzclIsHHlRmvo';
+const H={'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`};
+
+const MON=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const fmt=ds=>{if(!ds)return'—';const[y,m,d]=ds.split('-');return`${parseInt(d)} ${MON[parseInt(m)-1]} ${y}`;};
+const vsS=(k,v)=>{
+  if(v===null||v===undefined||isNaN(v))return'none';
+  const cfg={sis:{alert:160,warn:140},sat:{alertLow:91,warnLow:94},temp:{alert:38.5,warn:37.5},gli:{alert:200,warn:140},fc:{alertLow:49,warnHigh:100}};
+  const c=cfg[k];if(!c)return'none';
+  if(c.alertLow!==undefined&&v<c.alertLow)return'alert';
+  if(c.warnLow!==undefined&&v<c.warnLow)return'warn';
+  if(c.warnHigh!==undefined&&v>c.warnHigh)return'warn';
+  if(c.alert!==undefined&&v>=c.alert)return'alert';
+  if(c.warn!==undefined&&v>=c.warn)return'warn';
+  return'ok';
+};
+
+function riskColor(val){return{Alto:'#C0544A',Moderado:'#C49A3C',Baixo:'#3D7A58',Baixa:'#C0544A',Moderada:'#C49A3C',Alta:'#C49A3C','Bem nutrido':'#3D7A58','Em risco':'#C49A3C','Desnutrido':'#C0544A','Independente':'#3D7A58','Dependência leve':'#C49A3C','Dependência moderada':'#C49A3C','Dependência grave':'#C0544A','Dependência total':'#C0544A'}[val]||'#8A9E92';}
+
+async function load(){
+  const app=document.getElementById('app');
+  const params=new URLSearchParams(location.search);
+  const token=params.get('report');
+
+  if(!token){
+    app.innerHTML=`<div class="expired"><div class="expired-icon">🔒</div><div class="expired-title">Acesso não autorizado</div><div class="expired-sub">Este link não contém um token de acesso válido.</div></div>`;
+    return;
+  }
+
+  try{
+    // Busca paciente pelo token
+    const res=await fetch(`${SUPA_URL}/rest/v1/patients?select=data&order=id`,{headers:H});
+    const rows=await res.json();
+
+    // Procura o token nos dados
+    let patient=null;
+    for(const row of rows){
+      const p=row.data;
+      if(p._qrToken===token){
+        patient=p; break;
+      }
+    }
+
+    if(!patient){
+      app.innerHTML=`<div class="expired"><div class="expired-icon">🔍</div><div class="expired-title">Relatório não encontrado</div><div class="expired-sub">O token não corresponde a nenhum paciente. Peça um novo QR Code no aplicativo Ampara.</div></div>`;
+      return;
+    }
+
+    // Verifica expiração
+    if(!patient._qrExp||Date.now()>patient._qrExp){
+      app.innerHTML=`<div class="expired"><div class="expired-icon">⏰</div><div class="expired-title">Link expirado</div><div class="expired-sub">Este QR Code expirou. O familiar ou cuidador pode gerar um novo link no aplicativo Ampara.<br/><br/><strong style="color:#5C7E6A">🌿 Ampara</strong></div></div>`;
+      return;
+    }
+
+    renderReport(patient);
+  }catch(e){
+    app.innerHTML=`<div class="expired"><div class="expired-icon">⚠️</div><div class="expired-title">Erro ao carregar</div><div class="expired-sub">Verifique sua conexão e tente novamente.<br/>${e.message}</div></div>`;
+  }
+}
+
+function renderReport(p){
+  const app=document.getElementById('app');
+  const lv=p.vitals&&p.vitals[0];
+  const meds=p.medSchedule||[];
+  const events=(p.events||[]).slice(0,5);
+
+  // Status geral
+  let statusLevel='Estável', statusIcon='✅', statusBg='rgba(61,122,88,.15)', statusFg='#3D7A58';
+  let statusDesc='Parâmetros clínicos dentro dos limites esperados.';
+  const issues=[];
+  if(lv){
+    if(vsS('sis',lv.sis)==='alert'||vsS('sat',lv.sat)==='alert'||vsS('gli',lv.gli)==='alert'||vsS('temp',lv.temp)==='alert'){
+      statusLevel='Alerta'; statusIcon='⚠️'; statusBg='rgba(192,84,74,.15)'; statusFg='#C0544A';
+      statusDesc='Um ou mais parâmetros vitais requerem avaliação imediata.';
+    } else if(vsS('sis',lv.sis)==='warn'||vsS('sat',lv.sat)==='warn'||vsS('gli',lv.gli)==='warn'){
+      statusLevel='Atenção'; statusIcon='⚡'; statusBg='rgba(196,154,60,.15)'; statusFg='#C49A3C';
+      statusDesc='Alguns parâmetros requerem monitoramento próximo.';
+    }
+  }
+
+  // Expiração
+  const msLeft=p._qrExp-Date.now();
+  const hLeft=Math.floor(msLeft/3600000);
+  const mLeft=Math.floor((msLeft%3600000)/60000);
+
+  // VS com alertas
+  const vsItems=lv?[
+    {icon:'🫀',label:'Pressão arterial',val:lv.sis?`${lv.sis}/${lv.dia} mmHg`:null,st:vsS('sis',lv.sis)},
+    {icon:'❤️',label:'Freq. cardíaca',val:lv.fc?`${lv.fc} bpm`:null,st:vsS('fc',lv.fc)},
+    {icon:'🌡️',label:'Temperatura',val:lv.temp?`${lv.temp} °C`:null,st:vsS('temp',lv.temp)},
+    {icon:'🫁',label:'Saturação O₂',val:lv.sat?`${lv.sat} %`:null,st:vsS('sat',lv.sat)},
+    {icon:'🩸',label:'Glicemia',val:lv.gli?`${lv.gli} mg/dL`:null,st:vsS('gli',lv.gli)},
+    {icon:'🫧',label:'Freq. resp.',val:lv.fr?`${lv.fr} irpm`:null,st:'none'},
+    {icon:'⚖️',label:'Peso',val:lv.peso?`${lv.peso} kg`:null,st:'none'},
+  ].filter(i=>i.val):[];
+
+  const stClass=st=>st==='alert'?'vital-alert':st==='warn'?'vital-warn':st==='ok'?'vital-ok':'';
+
+  let html=`
+  <div class="header">
+    <div class="logo">🌿 Ampara · Relatório Médico</div>
+    <div class="pat-name">${p.name}</div>
+    <div class="pat-meta">${p.age} anos · ${p.sex||''} · ${(p.diag||'').split('·')[0].trim()}</div>
+    <div class="status-badge" style="background:${statusBg};color:${statusFg}">${statusIcon} ${statusLevel}</div>
+    <div class="pat-meta" style="margin-top:6px;font-size:12px">${statusDesc}</div>
+    <div class="validity">⏱ Válido por mais ${hLeft}h ${mLeft}min · Gerado pelo app Ampara</div>
+  </div>`;
+
+  // Dados do paciente
+  html+=`<div class="section">Identificação</div><div class="card">
+    <div class="row"><span class="rl">Nome</span><span class="rv">${p.name}</span></div>
+    <div class="row"><span class="rl">Idade</span><span class="rv">${p.age} anos</span></div>
+    <div class="row"><span class="rl">Sexo</span><span class="rv">${p.sex||'—'}</span></div>
+    <div class="row"><span class="rl">Diagnóstico</span><span class="rv">${(p.diag||'—').split('·')[0].trim()}</span></div>
+    ${p.como?`<div class="row"><span class="rl">Comorbidades</span><span class="rv">${p.como}</span></div>`:''}
+    ${p.code?`<div class="row"><span class="rl">Código</span><span class="rv" style="font-family:monospace;letter-spacing:1px">${p.code}</span></div>`:''}
+  </div>`;
+
+  // Sinais vitais
+  if(vsItems.length){
+    html+=`<div class="section">Sinais vitais <span style="font-weight:400;text-transform:none;letter-spacing:0">${fmt(lv.date)} · ${lv.time}</span></div><div class="card">`;
+    vsItems.forEach(i=>{
+      html+=`<div class="row"><span class="rl">${i.icon} ${i.label}</span><span class="rv ${stClass(i.st)}">${i.val}${i.st==='alert'?' ⚠':i.st==='warn'?' ⚡':''}</span></div>`;
+    });
+    html+=`<div class="row"><span class="rl">Registrado por</span><span class="rv">${lv.author}</span></div></div>`;
+  } else {
+    html+=`<div class="section">Sinais vitais</div><div class="alert-box alert-yel">Nenhum sinal vital registrado ainda.</div>`;
+  }
+
+  // Avaliações de risco
+  const risks=[
+    {icon:'🦯',label:'Queda (Morse)',val:p.rF},
+    {icon:'🥗',label:'Nutricional (MNA)',val:p.rN},
+    {icon:'🙋',label:'Funcional (Barthel)',val:p.rFunc},
+    {icon:'💧',label:'Hidratação',val:p.rHyd},
+  ].filter(r=>r.val&&r.val!=='—');
+
+  if(risks.length){
+    html+=`<div class="section">Avaliações de risco</div><div class="risk-grid">`;
+    risks.forEach(r=>{
+      html+=`<div class="risk-card">
+        <div class="risk-icon">${r.icon}</div>
+        <div class="risk-label">${r.label}</div>
+        <div class="risk-val" style="color:${riskColor(r.val)}">${r.val}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Medicações
+  if(meds.length){
+    html+=`<div class="section">Medicações em uso</div><div class="card">`;
+    meds.forEach(m=>{
+      html+=`<div class="med-row">
+        <div><div class="med-name">💊 ${m.name}</div><div class="med-dose">${m.dose} ${m.unit}</div></div>
+        <div class="med-times">${m.times.map(t=>`<span class="med-time">${t}</span>`).join('')}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Eventos recentes
+  if(events.length){
+    html+=`<div class="section">Eventos recentes</div><div class="events-list">`;
+    events.forEach(e=>{
+      html+=`<div class="event-item">
+        <div class="event-type">${e.type} · <span style="font-weight:400;color:var(--tmu)">${fmt(e.date)}</span></div>
+        <div class="event-desc">${(e.desc||'').slice(0,200)}</div>
+        <div class="event-meta">Por ${e.author} · Gravidade: ${e.grav||'—'}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Observações gerais
+  if(p.obs){
+    html+=`<div class="section">Observações gerais</div>
+    <div class="card"><div class="row"><span class="rv" style="text-align:left;max-width:100%;font-weight:400;color:var(--tm);font-size:13px;line-height:1.6">${p.obs}</span></div></div>`;
+  }
+
+  // Contato de referência
+  if(p.emergName){
+    html+=`<div class="section">Contato de referência</div><div class="card">
+      <div class="row"><span class="rl">Nome</span><span class="rv">${p.emergName}</span></div>
+      ${p.emergRel?`<div class="row"><span class="rl">Parentesco</span><span class="rv">${p.emergRel}</span></div>`:''}
+      ${p.emergTel?`<div class="row"><span class="rl">Telefone</span><span class="rv">${p.emergTel}</span></div>`:''}
+    </div>`;
+  }
+
+  html+=`<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>`;
+
+  html+=`<div class="footer">
+    <strong style="color:#5C7E6A;font-size:13px">🌿 Ampara</strong><br/>
+    Plataforma de cuidado domiciliar para idosos<br/>
+    Relatório gerado em ${new Date().toLocaleString('pt-BR')} · Token: ${p._qrToken}<br/>
+    <span style="font-size:10px">Este documento é confidencial e de uso exclusivo do profissional de saúde.</span>
+  </div>`;
+
+  app.innerHTML=html;
+}
+
+load();
+</script>
+</body>
+</html>

@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Ampara"/>
 <link rel="manifest" href="manifest.json"/>
 <title>Ampara</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -3085,7 +3086,7 @@ function renderMeuDoutor(){
   const msLeft=p._qrExp-Date.now();
   const hLeft=Math.floor(msLeft/3600000);
   const mLeft=Math.floor((msLeft%3600000)/60000);
-  const qrUrl=`https://appampara.github.io/ampara/?report=${p._qrToken}`;
+  const qrUrl=`https://appampara.github.io/ampara/relatorio.html?report=${p._qrToken}`;
 
   const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
   const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
@@ -3143,49 +3144,38 @@ function renderMeuDoutor(){
   <div class="qr-wrap">
     <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:4px">QR Code do paciente</div>
     <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">O médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
-    <canvas id="md-qr-canvas" width="180" height="180" style="border-radius:8px"></canvas>
+    <div id="md-qr-canvas" style="background:#fff;padding:8px;border-radius:10px;display:inline-block"></div>
     <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min · Gera novo a cada 24h</div>
     <button class="btn bs bsm" id="md-regen-qr" style="margin-top:4px">🔄 Gerar novo QR</button>
   </div>`;
 
   document.getElementById('md-content').innerHTML=html;
 
-  // Draw QR Code (pure JS, no library needed — simple matrix QR)
-  drawSimpleQR(document.getElementById('md-qr-canvas'), qrUrl);
+  // Draw real QR Code using QRCode.js
+  setTimeout(()=>{
+    const el = document.getElementById('md-qr-canvas');
+    if(!el) return;
+    el.innerHTML = '';
+    new QRCode(el, {
+      text: qrUrl,
+      width: 180,
+      height: 180,
+      colorDark: '#1E2820',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }, 50);
 
-  document.getElementById('md-regen-qr')?.addEventListener('click',()=>{
+  document.getElementById('md-regen-qr')?.addEventListener('click',async ()=>{
     p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
     p._qrExp=Date.now()+(24*60*60*1000);
-    saveDB(); renderMeuDoutor();
+    await saveDB();
+    renderMeuDoutor();
     toast('🔄 QR Code renovado por 24h!');
   });
 }
 
-// Simple QR-like code renderer (visual placeholder using deterministic pattern)
-function drawSimpleQR(canvas, text){
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const size=180; const cells=21; const cell=Math.floor(size/cells);
-  // Deterministic hash from text
-  let hash=0; for(let i=0;i<text.length;i++){hash=((hash<<5)-hash)+text.charCodeAt(i);hash|=0;}
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
-  const isBlack=(r,c)=>{
-    // Corner squares
-    if((r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7))return true;
-    if((r>=1&&r<=5&&c>=1&&c<=5)||(r>=1&&r<=5&&c>=cells-6&&c<=cells-2)||(r>=cells-6&&r<=cells-2&&c>=1&&c<=5))return false;
-    if((r>=2&&r<=4&&c>=2&&c<=4)||(r>=2&&r<=4&&c>=cells-5&&c<=cells-3)||(r>=cells-5&&r<=cells-3&&c>=2&&c<=4))return true;
-    // Timing patterns
-    if(r===6||c===6)return (r+c)%2===0;
-    // Data (deterministic from hash)
-    const bit=(hash^(r*cells+c)*1234567)&1;
-    return bit===1;
-  };
-  ctx.fillStyle='#1E2820';
-  for(let r=0;r<cells;r++){for(let c=0;c<cells;c++){if(isBlack(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}}
-  // Center Ampara logo text
-  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(75,75,30,30);
-  ctx.fillStyle='#5C7E6A'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.fillText('🌿',90,91);
-}
+// QR Code rendered by QRCode.js library (loaded via CDN)
 
 // ═══════════════════════════════════════════════════
 // INFOGRÁFICO DO PAINEL (substitui sinais vitais/riscos)
