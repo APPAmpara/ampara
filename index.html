@@ -363,7 +363,71 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
   </div>
   <div class="scroll" style="padding-top:14px;padding-bottom:20px">
     <div id="pat-list"></div>
-    <div style="padding:8px 20px 0"><button class="btn bs" id="btn-np">+ Cadastrar novo paciente</button></div>
+    <div style="padding:8px 20px 4px"><button class="btn bs" id="btn-np">+ Cadastrar novo paciente</button></div>
+    <div style="padding:4px 20px 0"><button class="btn bo" id="btn-access-code" style="font-size:13px">🔑 Acessar por código</button></div>
+  </div>
+</div>
+
+<!-- ══ ACESSO POR CÓDIGO ════════════════════════════════ -->
+<div class="screen" id="s-access-code">
+  <div class="nav">
+    <button class="nback" onclick="go('s-patients')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar
+    </button>
+    <div class="ntitle">Acessar por código</div>
+    <div></div>
+  </div>
+  <div class="scroll" style="padding:20px 20px 30px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px;margin-bottom:8px">🔑</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Código do paciente</div>
+      <div style="font-size:13px;color:var(--tmu);margin-top:4px;line-height:1.5">Digite o código de identificação do paciente para solicitar acesso. O responsável receberá uma notificação para aprovar.</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Código de identificação</label>
+      <input class="fi" id="ac-code" placeholder="Ex: HOM0001 ou AMP0001" style="text-transform:uppercase;letter-spacing:2px;font-size:18px;font-weight:700;text-align:center"/>
+    </div>
+    <div id="ac-result" style="display:none;margin:12px 0;padding:14px;border-radius:var(--rs);background:var(--sl);border:1.5px solid var(--sm)">
+      <div style="font-size:13px;font-weight:700;color:var(--sage)" id="ac-pat-name"></div>
+      <div style="font-size:12px;color:var(--tmu);margin-top:2px" id="ac-pat-info"></div>
+    </div>
+    <div id="ac-error" style="display:none;margin:12px 0;padding:12px;border-radius:var(--rs);background:var(--rl);font-size:13px;color:var(--red)"></div>
+    <button class="btn bp" id="btn-ac-search" style="margin-bottom:10px">🔍 Buscar paciente</button>
+    <button class="btn bs" id="btn-ac-request" style="display:none">📨 Solicitar acesso</button>
+    <div id="ac-success" style="display:none;margin-top:12px;padding:14px;border-radius:var(--rs);background:var(--gl);font-size:13px;color:var(--grn);line-height:1.6">
+      ✅ Solicitação enviada! O responsável pelo paciente receberá uma notificação para aprovar seu acesso.
+    </div>
+  </div>
+</div>
+
+<!-- ══ AVALIAÇÃO INICIAL — DIA 0 ═══════════════════════ -->
+<div class="screen" id="s-initial-eval">
+  <div class="nav">
+    <div></div>
+    <div class="ntitle">Avaliação inicial — Dia 0</div>
+    <div></div>
+  </div>
+  <div class="scroll" style="padding:0 0 30px">
+    <!-- Progress bar -->
+    <div style="padding:14px 20px 8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:700;color:var(--sage)" id="ie-step-label">Passo 1 de 6</div>
+        <div style="font-size:11px;color:var(--tmu)" id="ie-step-name"></div>
+      </div>
+      <div style="background:var(--border);border-radius:10px;height:5px;overflow:hidden">
+        <div id="ie-progress-bar" style="height:100%;border-radius:10px;background:var(--sage);transition:width .3s;width:16%"></div>
+      </div>
+    </div>
+
+    <!-- Aviso -->
+    <div style="margin:0 20px 16px;background:var(--al);border-radius:var(--rs);padding:11px 13px;display:flex;gap:9px;align-items:flex-start">
+      <span style="font-size:18px;flex-shrink:0">📋</span>
+      <div style="font-size:12px;color:var(--tm);line-height:1.5">Esta avaliação é obrigatória no primeiro acesso ao paciente e registra o estado de saúde inicial como referência para todo o acompanhamento.</div>
+    </div>
+
+    <!-- Steps container -->
+    <div id="ie-content"></div>
   </div>
 </div>
 
@@ -1586,7 +1650,11 @@ const A = {
 
   filterPats(){
     const q=document.getElementById('search').value.toLowerCase();
-    A.renderPatList(DB.patients.filter(p=>p.name.toLowerCase().includes(q)||p.diag.toLowerCase().includes(q)));
+    const u=DB.currentUser;
+    const accessible=(!u||u.role==='master'||u.patientIds==='all')
+      ?DB.patients
+      :DB.patients.filter(p=>(u.patientIds||[]).map(Number).includes(Number(p.id)));
+    A.renderPatList(accessible.filter(p=>p.name.toLowerCase().includes(q)||(p.diag||'').toLowerCase().includes(q)||(p.code||'').toLowerCase().includes(q)));
   },
 
   renderPatList(list){
@@ -1599,7 +1667,17 @@ const A = {
     if(avatar) avatar.textContent=u?.avatar||'👩';
     if(masterBtn) masterBtn.style.display=u?.role==='master'?'block':'none';
 
-    const pts=list||DB.patients;
+    // Sempre filtra por patientIds do usuário — nunca mostra todos
+    let pts;
+    if(list){
+      pts=list;
+    } else if(!u||u.role==='master'||u.patientIds==='all'){
+      pts=DB.patients;
+    } else {
+      const ids=(u.patientIds||[]).map(Number);
+      pts=DB.patients.filter(p=>ids.includes(Number(p.id)));
+    }
+
     const el=document.getElementById('pat-list');
     if(!pts.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--tmu);font-size:13px">Nenhum paciente encontrado</div>`;return;}
     el.innerHTML=pts.map(p=>{
@@ -1608,21 +1686,36 @@ const A = {
       const medB=pend>0?`<span class="badge bblue">💊 ${pend} pendente${pend>1?'s':''}</span>`:'';
       const hasAlertVit=p.vitals&&p.vitals[0]&&['sis','sat','gli','temp'].some(k=>vsS(k,p.vitals[0][k])==='alert');
       const vitB=hasAlertVit?`<span class="badge bbr">📊 Sinal alterado</span>`:'';
+      const codeBadge=p.code?`<span style="font-size:10px;color:var(--tmu);font-weight:700;letter-spacing:1px">${p.code}</span>`:'';
       return`<div class="pc" data-pid="${p.id}">
         ${p.photo
           ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0"/>`
           : `<div class="av" style="background:${p.ab};color:${p.ac};width:52px;height:52px;font-size:19px">${p.initials}</div>`
         }
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:600;color:var(--text)">${p.name}</div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:15px;font-weight:600;color:var(--text)">${p.name}</span>
+            ${codeBadge}
+          </div>
           <div style="font-size:11px;color:var(--tmu);margin-top:1px">${p.age} anos · ${p.diag.split('·')[0].split(',')[0].trim()}</div>
-          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${badge}${medB}${vitB}</div>
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${badge}${medB}${vitB}${!p.initialEvalDone?'<span class="badge bby">📋 Avaliação pendente</span>':''}</div>
         </div>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--tmu);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`;
     }).join('');
     el.querySelectorAll('.pc').forEach(el=>{
-      el.addEventListener('click',()=>{DB.pid=parseInt(el.dataset.pid);A.renderDash();go('s-dash');});
+      el.addEventListener('click',()=>{
+        DB.pid=parseInt(el.dataset.pid);
+        const p=DB.p;
+        if(!p) return;
+        // Avaliação obrigatória se: nunca feita, ou lembrete vencido
+        const reminderExpired=p._evalReminderAt&&Date.now()>p._evalReminderAt;
+        if(!p.initialEvalDone&&(!p._evalReminderAt||reminderExpired)){
+          A.renderInitialEval();go('s-initial-eval');
+        } else {
+          A.renderDash();go('s-dash');
+        }
+      });
     });
   },
 
@@ -3463,7 +3556,45 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
 
   wire('npb-cancel','click',()=>go('s-patients'));
-  wire('btn-savep','click',()=>{
+  // ── GERA CÓDIGO DO PACIENTE ──────────────────────
+  function generatePatientCode(){
+    const u=DB.currentUser;
+    const prefix=(u?.homecare||'HOM').toUpperCase().slice(0,3);
+    // Encontra o maior número sequencial existente para esse prefixo
+    const used=DB.patients
+      .filter(p=>p.code&&p.code.startsWith(prefix))
+      .map(p=>parseInt(p.code.slice(3))||0);
+    const next=(used.length?Math.max(...used):0)+1;
+    return prefix+String(next).padStart(4,'0');
+  }
+
+  // ── SALVAR NOVO PACIENTE NO SUPABASE (INSERT) ────
+  async function insertPatient(p){
+    try{
+      const r=await fetch(`${SUPA_URL}/rest/v1/patients`,{
+        method:'POST',
+        headers:{...SUPA_HEADERS,'Prefer':'return=representation'},
+        body:JSON.stringify({data:p})
+      });
+      if(!r.ok){console.warn('insertPatient error',await r.text());return null;}
+      const rows=await r.json();
+      return rows[0]?.id||null; // retorna o id da linha no Supabase
+    }catch(e){console.warn('insertPatient',e.message);return null;}
+  }
+
+  // ── ATUALIZA patientIds DO USUÁRIO NO SUPABASE ───
+  async function updateUserPatientIds(userId,patientIds){
+    try{
+      await fetch(`${SUPA_URL}/rest/v1/app_users?id=eq.${userId}`,{
+        method:'PATCH',
+        headers:{...SUPA_HEADERS,'Prefer':'return=minimal'},
+        body:JSON.stringify({patient_ids:JSON.stringify(patientIds)})
+      });
+    }catch(e){console.warn('updateUserPatientIds',e.message);}
+  }
+
+  // ── CADASTRAR NOVO PACIENTE ──────────────────────
+  wire('btn-savep','click',async()=>{
     const name=document.getElementById('np-name').value.trim();
     const age=document.getElementById('np-age').value.trim();
     if(!name){toast('⚠ Informe o nome');return;}
@@ -3477,24 +3608,536 @@ window.addEventListener('DOMContentLoaded',()=>{
     const c=pal[DB.patients.length%pal.length];
     const words=name.trim().split(' ');
     const ini=(words[0][0]+(words.length>1?words[words.length-1][0]:'')).toUpperCase();
-    DB.patients.push({
-      id:Date.now(),name,age:parseInt(age),sex:document.getElementById('np-sex').value,initials:ini,ab:c[0],ac:c[1],
+    const code=generatePatientCode();
+    const newPat={
+      id:Date.now(),name,age:parseInt(age),sex:document.getElementById('np-sex').value,
+      initials:ini,ab:c[0],ac:c[1],code,
+      createdBy:DB.currentUser?.id||null,
       diag,como,emerg,
       photo:DB._newPatPhoto||null,
       suporte:[emergName||'Contato de emergência'],
       obs:document.getElementById('np-obs').value||'',
-      rF:'—',rN:'—',rFunc:'—',statusLabel:'Recém-cadastrado',statusColor:'#A8C4B0',
+      rF:'—',rN:'—',rFunc:'—',rHyd:'—',
+      statusLabel:'Recém-cadastrado',statusColor:'#A8C4B0',
+      initialEvalDone:false,
       medSchedule:[],medLog:{},events:[],vitals:[]
-    });
+    };
+
+    const btn=document.getElementById('btn-savep');
+    btn.textContent='Salvando...';btn.disabled=true;
+
+    // INSERT no Supabase
+    const supaRowId=await insertPatient(newPat);
+    if(supaRowId) newPat._supaId=supaRowId;
+
+    DB.patients.push(newPat);
+
+    // Vincula paciente ao usuário criador
+    const u=DB.currentUser;
+    if(u&&u.role!=='master'){
+      if(!Array.isArray(u.patientIds)) u.patientIds=[];
+      u.patientIds.push(newPat.id);
+      // Atualiza no Supabase
+      await updateUserPatientIds(u.id,u.patientIds);
+      // Atualiza no DB local
+      const uIdx=DB.users.findIndex(x=>x.id===u.id);
+      if(uIdx>=0) DB.users[uIdx].patientIds=u.patientIds;
+    }
+
     // Reset form
     ['np-name','np-age','np-obs','np-emerg-name','np-emerg-tel'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     DB._newPatPhoto=null;
     const disp=document.getElementById('np-photo-display');
     if(disp) disp.innerHTML='📷';
     tagDiag?.reset(); tagComo?.reset();
-    A.renderPatList();toast('✓ Paciente cadastrado! Adicione as medicações no perfil.');
-    saveDB();
-    setTimeout(()=>go('s-patients'),1200);
+
+    btn.textContent='✓ Cadastrar paciente';btn.disabled=false;
+
+    toast(`✅ Paciente cadastrado! Código: ${code}`);
+
+    // Redireciona para avaliação inicial obrigatória
+    DB.pid=newPat.id;
+    setTimeout(()=>{ A.renderInitialEval(); go('s-initial-eval'); },800);
+  });
+
+  // ── AVALIAÇÃO INICIAL — DIA 0 ────────────────────
+  const IE_STEPS=[
+    {id:'ie-vs',     label:'Sinais vitais',          icon:'🩺'},
+    {id:'ie-morse',  label:'Risco de queda (Morse)',  icon:'🚶'},
+    {id:'ie-mna',    label:'Risco nutricional (MNA)', icon:'🥗'},
+    {id:'ie-barthel',label:'Funcionalidade (Barthel)',icon:'🙋'},
+    {id:'ie-hyd',    label:'Hidratação',              icon:'💧'},
+    {id:'ie-anamnese',label:'Anamnese livre',         icon:'📝'},
+  ];
+  let ieStep=0;
+  const ieData={};
+
+  A.renderInitialEval=function(){
+    ieStep=0;
+    ieData.vs={}; ieData.morse={}; ieData.mna={}; ieData.barthel={}; ieData.hyd={}; ieData.anamnese='';
+    // Verifica se está em modo de reentrada (12h) ou primeiro acesso
+    const p=DB.p;
+    const isReminder=p&&p._evalReminderAt&&Date.now()<p._evalReminderAt;
+    // Adiciona botão pular apenas no primeiro acesso (não na reentrada obrigatória)
+    const skipBtn=!isReminder?`<button id="ie-skip-btn" style="background:none;border:none;color:var(--tmu);font-size:12px;cursor:pointer;padding:8px 0;text-decoration:underline;font-family:'DM Sans',sans-serif">Pular por agora — lembrar em 12h</button>`:'';
+    const reminderBanner=isReminder?`<div style="margin:0 20px 12px;background:var(--rl);border-radius:var(--rs);padding:11px 13px;font-size:12px;color:var(--red);font-weight:600;display:flex;gap:8px;align-items:flex-start"><span>⏰</span><span>A avaliação inicial foi adiada e agora é obrigatória. O app não avançará para outras telas até a conclusão.</span></div>`:'';
+    document.getElementById('ie-content').innerHTML='';
+
+    // Injeta banner e botão pular no header da tela
+    const headerArea=document.querySelector('#s-initial-eval .scroll');
+    // Remove banner anterior se existir
+    const oldBanner=document.getElementById('ie-reminder-banner');
+    if(oldBanner) oldBanner.remove();
+    const oldSkip=document.getElementById('ie-skip-area');
+    if(oldSkip) oldSkip.remove();
+
+    if(isReminder){
+      const div=document.createElement('div');
+      div.id='ie-reminder-banner';
+      div.innerHTML=reminderBanner;
+      headerArea.insertBefore(div,headerArea.querySelector('[style*="padding:14px 20px 8px"]')?.nextSibling||headerArea.firstChild);
+    } else {
+      const div=document.createElement('div');
+      div.id='ie-skip-area';
+      div.style.cssText='text-align:center;padding:4px 20px 0';
+      div.innerHTML=skipBtn;
+      headerArea.appendChild(div);
+      document.getElementById('ie-skip-btn')?.addEventListener('click',()=>{
+        const p=DB.p;
+        if(p){
+          p._evalReminderAt=Date.now()+(12*60*60*1000); // 12h em ms
+          saveDB();
+        }
+        toast('⏰ A avaliação aparecerá novamente em 12 horas.');
+        A.renderPatList();
+        setTimeout(()=>go('s-patients'),600);
+      });
+    }
+    renderIEStep();
+  };
+
+  function renderIEStep(){
+    const total=IE_STEPS.length;
+    const pct=Math.round(((ieStep+1)/total)*100);
+    document.getElementById('ie-step-label').textContent=`Passo ${ieStep+1} de ${total}`;
+    document.getElementById('ie-step-name').textContent=IE_STEPS[ieStep].label;
+    document.getElementById('ie-progress-bar').style.width=pct+'%';
+    const c=document.getElementById('ie-content');
+    const stepId=IE_STEPS[ieStep].id;
+
+    // ── PASSO 1: SINAIS VITAIS ───────────────────────
+    if(stepId==='ie-vs'){
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">🩺 Sinais vitais iniciais</div>
+        <div style="font-size:12px;color:var(--tmu);margin-bottom:4px;line-height:1.5">Registre os valores aferidos agora. Campos não preenchidos serão salvos como não informado.</div>
+        <div style="background:var(--bl);border-radius:var(--rs);padding:9px 12px;margin-bottom:14px;font-size:12px;color:var(--blue)">
+          💡 Anote os valores com cuidado — esses serão a referência de saúde inicial do paciente.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${[
+            ['ie-sis','PA Sistólica','mmHg (ex: 120)'],
+            ['ie-dia','PA Diastólica','mmHg (ex: 80)'],
+            ['ie-fc','Freq. cardíaca','bpm (ex: 72)'],
+            ['ie-temp','Temperatura','°C (ex: 36,5)'],
+            ['ie-sat','Saturação O₂','% (ex: 97)'],
+            ['ie-gli','Glicemia','mg/dL (ex: 110)'],
+            ['ie-peso','Peso','kg (ex: 70)'],
+            ['ie-fr','Freq. respiratória','irpm (ex: 16)'],
+          ].map(([id,label,ph])=>`
+            <div class="fg">
+              <label class="fl">${label}</label>
+              <input class="fi" id="${id}" type="number" step="any" placeholder="${ph}"/>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:12px;padding-bottom:20px">
+          <button class="btn bp" id="ie-next-btn">Próximo →</button>
+        </div>
+      </div>`;
+      document.getElementById('ie-next-btn').addEventListener('click',()=>{
+        ieData.vs={
+          sis:parseFloat(document.getElementById('ie-sis').value)||null,
+          dia:parseFloat(document.getElementById('ie-dia').value)||null,
+          fc:parseFloat(document.getElementById('ie-fc').value)||null,
+          temp:parseFloat(document.getElementById('ie-temp').value)||null,
+          sat:parseFloat(document.getElementById('ie-sat').value)||null,
+          gli:parseFloat(document.getElementById('ie-gli').value)||null,
+          peso:parseFloat(document.getElementById('ie-peso').value)||null,
+          fr:parseFloat(document.getElementById('ie-fr').value)||null,
+        };
+        ieStep++;renderIEStep();
+      });
+
+    // ── PASSO 2: MORSE ───────────────────────────────
+    // Escala de Morse: score 0–125. < 25 = baixo, 25–44 = moderado, ≥ 45 = alto
+    // Pontuação ALTA = MAIOR RISCO de queda
+    } else if(stepId==='ie-morse'){
+      const morseQ=[
+        {g:'m1',label:'1. Histórico de quedas nos últimos 3 meses',
+          hint:'O paciente sofreu alguma queda nos últimos 3 meses?',
+          opts:[{t:'Não',p:0,s:'Sem histórico recente'},{t:'Sim',p:25,s:'Queda registrada — risco aumentado'}]},
+        {g:'m2',label:'2. Diagnóstico secundário',
+          hint:'O paciente tem mais de uma doença diagnosticada? Ex: hipertensão + diabetes, ou Parkinson + depressão.',
+          opts:[{t:'Não — somente uma condição principal',p:0,s:'Diagnóstico único'},{t:'Sim — duas ou mais doenças',p:15,s:'Múltiplas condições aumentam o risco'}]},
+        {g:'m3',label:'3. Como o paciente se locomove?',
+          hint:'Observe a forma habitual de se deslocar.',
+          opts:[
+            {t:'Sem auxílio — anda sozinho normalmente',p:0,s:'Marcha independente'},
+            {t:'Com bengala, andador ou muleta',p:15,s:'Auxílio de dispositivo'},
+            {t:'Apoia-se em móveis, paredes ou pessoas',p:30,s:'Apoio externo — risco elevado'},
+          ]},
+        {g:'m4',label:'4. Acesso venoso ou uso de heparina',
+          hint:'Paciente com soro, cateter, anticoagulante ou heparina?',
+          opts:[{t:'Não',p:0,s:'Sem acesso venoso'},{t:'Sim',p:20,s:'Presença de acesso venoso'}]},
+        {g:'m5',label:'5. Como é a marcha do paciente?',
+          hint:'Observe como ele caminha.',
+          opts:[
+            {t:'Normal ou o paciente não deambula',p:0,s:'Sem alteração'},
+            {t:'Lenta, pequenos passos ou com esforço',p:10,s:'Marcha comprometida'},
+            {t:'Instável, arrasta os pés ou risco de tombar',p:20,s:'Marcha prejudicada — alto risco'},
+          ]},
+        {g:'m6',label:'6. Estado mental e consciência dos próprios limites',
+          hint:'"Superestima a capacidade" significa que o paciente acredita que consegue fazer coisas que já não consegue com segurança. Ex: tenta levantar sozinho da cama sem pedir ajuda, mesmo com dificuldade.',
+          opts:[
+            {t:'Orientado e consciente dos seus limites',p:0,s:'Estado mental adequado'},
+            {t:'Superestima a própria capacidade — age como se fosse mais capaz do que é',p:15,s:'Risco por falta de autoconsciência'},
+          ]},
+      ];
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">🚶 Escala de Morse — Risco de queda</div>
+        <div style="background:var(--warm);border-radius:var(--rs);padding:9px 12px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--sage)">
+          Score: <span id="ie-morse-score">0</span> pts
+          <span style="font-size:11px;font-weight:400;color:var(--tmu)"> · &lt;25 Baixo · 25–44 Moderado · ≥45 Alto</span>
+        </div>
+        <div style="font-size:11px;color:var(--tmu);margin-bottom:14px">Score maior = maior risco de queda</div>
+        ${morseQ.map(q=>`
+          <div style="font-size:13px;font-weight:600;color:var(--tm);margin:16px 0 4px">${q.label}</div>
+          <div style="font-size:11px;color:var(--tmu);margin-bottom:8px;line-height:1.5;font-style:italic">${q.hint}</div>
+          ${q.opts.map((o,i)=>`<div class="aopt${i===0?' sel':''}" data-g="${q.g}" data-pts="${o.p}" onclick="A._ieAopt(this,'ie-morse-score','m')">
+            <div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.p} pts · ${o.s}</div></div>
+          </div>`).join('')}
+        `).join('')}
+        <div style="margin-top:16px;padding-bottom:20px"><button class="btn bp" id="ie-next-btn">Próximo →</button></div>
+      </div>`;
+      A._ieCalcScore('ie-morse-score','m');
+      document.getElementById('ie-next-btn').addEventListener('click',()=>{
+        const score=['m1','m2','m3','m4','m5','m6'].reduce((a,g)=>{
+          const sel=document.querySelector(`#ie-content .aopt.sel[data-g="${g}"]`);
+          return a+(sel?parseInt(sel.dataset.pts):0);
+        },0);
+        // Morse: score ALTO = ALTO risco
+        ieData.morse={score,risk:score<25?'Baixo':score<45?'Moderado':'Alto'};
+        ieStep++;renderIEStep();
+      });
+
+    // ── PASSO 3: MNA ─────────────────────────────────
+    // MNA: score 0–14. ≥ 12 = bem nutrido, 8–11 = risco, < 8 = desnutrido
+    // Pontuação ALTA = MELHOR estado nutricional = MENOR risco
+    } else if(stepId==='ie-mna'){
+      const mnaQ=[
+        {g:'n1',label:'1. Perda de apetite nos últimos 3 meses',
+          hint:'O paciente está comendo menos do que antes?',
+          opts:[
+            {t:'Perda grave de apetite — come muito pouco',p:0,s:'0 pts — pior estado nutricional'},
+            {t:'Perda moderada de apetite',p:1,s:'1 pt'},
+            {t:'Sem perda de apetite — come normalmente',p:2,s:'2 pts — melhor'},
+          ]},
+        {g:'n2',label:'2. Perda de peso nos últimos 3 meses',
+          hint:'Houve redução visível de peso?',
+          opts:[
+            {t:'Perdeu mais de 3 kg',p:0,s:'0 pts — perda grave'},
+            {t:'Não sabe informar',p:1,s:'1 pt'},
+            {t:'Perdeu entre 1 e 3 kg',p:2,s:'2 pts'},
+            {t:'Não perdeu peso',p:3,s:'3 pts — melhor'},
+          ]},
+        {g:'n3',label:'3. Mobilidade',
+          hint:'Qual é a capacidade de se deslocar?',
+          opts:[
+            {t:'Acamado ou preso à cadeira de rodas',p:0,s:'0 pts — imóvel'},
+            {t:'Levanta mas sai pouco ou raramente de casa',p:1,s:'1 pt'},
+            {t:'Sai de casa normalmente',p:2,s:'2 pts — melhor'},
+          ]},
+        {g:'n4',label:'4. Estresse psicológico ou doença aguda nos últimos 3 meses',
+          hint:'Houve internação, cirurgia, luto, diagnóstico grave ou situação muito estressante?',
+          opts:[
+            {t:'Sim — houve estresse ou doença aguda',p:0,s:'0 pts'},
+            {t:'Não',p:2,s:'2 pts — melhor'},
+          ]},
+        {g:'n5',label:'5. Problemas neuropsicológicos',
+          hint:'O paciente tem demência, depressão ou outra condição que afeta o comportamento?',
+          opts:[
+            {t:'Demência grave ou depressão severa',p:0,s:'0 pts'},
+            {t:'Demência leve',p:1,s:'1 pt'},
+            {t:'Sem problema neurológico ou psicológico',p:2,s:'2 pts — melhor'},
+          ]},
+        {g:'n6',label:'6. IMC ou circunferência da panturrilha (barriga da perna)',
+          hint:'Use o IMC se souber (peso ÷ altura²). Se não souber, meça a barriga da perna com uma fita.',
+          opts:[
+            {t:'IMC < 19 ou panturrilha < 31 cm',p:0,s:'0 pts — desnutrição provável'},
+            {t:'IMC entre 19 e 21',p:1,s:'1 pt'},
+            {t:'IMC entre 21 e 23',p:2,s:'2 pts'},
+            {t:'IMC ≥ 23 ou panturrilha ≥ 31 cm',p:3,s:'3 pts — melhor'},
+          ]},
+      ];
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">🥗 MNA — Risco nutricional</div>
+        <div style="background:var(--warm);border-radius:var(--rs);padding:9px 12px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--sage)">
+          Score: <span id="ie-mna-score">0</span> / 14 pts
+          <span style="font-size:11px;font-weight:400;color:var(--tmu)"> · &lt;8 Desnutrido · 8–11 Em risco · ≥12 Normal</span>
+        </div>
+        <div style="font-size:11px;color:var(--tmu);margin-bottom:14px">Score maior = melhor estado nutricional = menor risco</div>
+        ${mnaQ.map(q=>`
+          <div style="font-size:13px;font-weight:600;color:var(--tm);margin:16px 0 4px">${q.label}</div>
+          <div style="font-size:11px;color:var(--tmu);margin-bottom:8px;line-height:1.5;font-style:italic">${q.hint}</div>
+          ${q.opts.map((o,i)=>`<div class="aopt${i===0?' sel':''}" data-g="${q.g}" data-pts="${o.p}" onclick="A._ieAopt(this,'ie-mna-score','n')">
+            <div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.s}</div></div>
+          </div>`).join('')}
+        `).join('')}
+        <div style="margin-top:16px;padding-bottom:20px"><button class="btn bp" id="ie-next-btn">Próximo →</button></div>
+      </div>`;
+      A._ieCalcScore('ie-mna-score','n');
+      document.getElementById('ie-next-btn').addEventListener('click',()=>{
+        const score=['n1','n2','n3','n4','n5','n6'].reduce((a,g)=>{
+          const sel=document.querySelector(`#ie-content .aopt.sel[data-g="${g}"]`);
+          return a+(sel?parseInt(sel.dataset.pts):0);
+        },0);
+        // MNA: score BAIXO = ALTO risco nutricional
+        const risk=score>=12?'Baixo':score>=8?'Moderado':'Alto';
+        ieData.mna={score,risk};
+        ieStep++;renderIEStep();
+      });
+
+    // ── PASSO 4: BARTHEL ─────────────────────────────
+    // Barthel: score 0–100. 100 = totalmente independente, 0 = totalmente dependente
+    // Pontuação ALTA = MAIS INDEPENDENTE = MENOR risco funcional
+    } else if(stepId==='ie-barthel'){
+      const items=[
+        {g:'b1',label:'Alimentação — consegue comer sozinho?',
+          opts:[{t:'Independente — se alimenta sozinho',p:10},{t:'Precisa de alguma ajuda para cortar, temperar',p:5},{t:'Totalmente dependente — outro alimenta',p:0}]},
+        {g:'b2',label:'Banho — consegue tomar banho sozinho?',
+          opts:[{t:'Independente — entra, se lava e sai sem ajuda',p:5},{t:'Dependente — precisa de ajuda em alguma etapa',p:0}]},
+        {g:'b3',label:'Higiene pessoal — escova dentes, penteia o cabelo, faz a barba?',
+          opts:[{t:'Independente — realiza sem ajuda',p:5},{t:'Dependente — precisa de ajuda',p:0}]},
+        {g:'b4',label:'Vestuário — consegue se vestir e despir?',
+          opts:[{t:'Independente — veste-se e despe-se sem ajuda',p:10},{t:'Precisa de alguma ajuda (botões, sapatos)',p:5},{t:'Totalmente dependente',p:0}]},
+        {g:'b5',label:'Controle intestinal — controla as evacuações?',
+          opts:[{t:'Continente — controla sem acidentes',p:10},{t:'Incontinência ocasional — acidentes esporádicos',p:5},{t:'Incontinente — sem controle',p:0}]},
+        {g:'b6',label:'Controle urinário — controla a urina?',
+          opts:[{t:'Continente — sem acidentes',p:10},{t:'Acidentes ocasionais ou usa cateter',p:5},{t:'Incontinente — sem controle',p:0}]},
+        {g:'b7',label:'Uso do banheiro — consegue usar o vaso sanitário?',
+          opts:[{t:'Independente — usa sem ajuda',p:10},{t:'Precisa de ajuda para sentar ou levantar',p:5},{t:'Totalmente dependente',p:0}]},
+        {g:'b8',label:'Transferência — passa da cama para a cadeira?',
+          opts:[{t:'Independente — transfere-se sem ajuda',p:15},{t:'Precisa de supervisão ou pequena ajuda',p:10},{t:'Precisa de grande ajuda — consegue sentar',p:5},{t:'Totalmente dependente — não consegue sentar',p:0}]},
+        {g:'b9',label:'Deambulação — consegue caminhar?',
+          opts:[{t:'Independente — caminha pelo menos 50 metros',p:15},{t:'Caminha com auxílio de pessoa ou dispositivo ≥50m',p:10},{t:'Usa cadeira de rodas com independência',p:5},{t:'Imóvel — não caminha nem usa cadeira sozinho',p:0}]},
+        {g:'b10',label:'Escadas — consegue subir e descer?',
+          opts:[{t:'Independente — sobe e desce sem ajuda',p:10},{t:'Precisa de ajuda ou supervisão',p:5},{t:'Incapaz de usar escadas',p:0}]},
+      ];
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">🙋 Índice de Barthel — Funcionalidade</div>
+        <div style="background:var(--warm);border-radius:var(--rs);padding:9px 12px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--sage)">
+          Score: <span id="ie-barthel-score">100</span> / 100 pts
+          <span style="font-size:11px;font-weight:400;color:var(--tmu)"> · 0–20 Total · 21–60 Grave · 61–90 Moderado · 91–99 Leve · 100 Independente</span>
+        </div>
+        <div style="font-size:11px;color:var(--tmu);margin-bottom:14px">Score maior = mais independente = menor risco funcional</div>
+        ${items.map(item=>`
+          <div style="font-size:13px;font-weight:600;color:var(--tm);margin:16px 0 8px">${item.label}</div>
+          ${item.opts.map((o,i)=>`<div class="aopt${i===0?' sel':''}" data-g="${item.g}" data-pts="${o.p}" onclick="A._ieAopt(this,'ie-barthel-score','b')">
+            <div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.p} pts</div></div>
+          </div>`).join('')}
+        `).join('')}
+        <div style="margin-top:16px;padding-bottom:20px"><button class="btn bp" id="ie-next-btn">Próximo →</button></div>
+      </div>`;
+      A._ieCalcScore('ie-barthel-score','b');
+      document.getElementById('ie-next-btn').addEventListener('click',()=>{
+        const score=['b1','b2','b3','b4','b5','b6','b7','b8','b9','b10'].reduce((a,g)=>{
+          const sel=document.querySelector(`#ie-content .aopt.sel[data-g="${g}"]`);
+          return a+(sel?parseInt(sel.dataset.pts):0);
+        },0);
+        // Barthel: score ALTO = INDEPENDENTE = BAIXO risco funcional
+        const risk=score===100?'Baixo':score>=91?'Baixo':score>=61?'Moderado':score>=21?'Alto':'Alto';
+        ieData.barthel={score,risk,label:score===100?'Independente':score>=91?'Dependência leve':score>=61?'Dependência moderada':score>=21?'Dependência grave':'Dependência total'};
+        ieStep++;renderIEStep();
+      });
+
+    // ── PASSO 5: HIDRATAÇÃO ──────────────────────────
+    } else if(stepId==='ie-hyd'){
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">💧 Avaliação de hidratação</div>
+        <div style="background:var(--bl);border-radius:var(--rs);padding:9px 12px;margin-bottom:14px;font-size:12px;color:var(--blue);line-height:1.5">
+          💡 Idosos devem ingerir ao menos <strong>1.500 ml</strong> por dia. Muitos não sentem sede mesmo desidratados.
+        </div>
+        ${[
+          {g:'hq1',label:'1. O paciente bebeu bem hoje?',
+           opts:[{t:'😟 Pouco ou nada — menos de 500 ml',p:0,s:'Risco alto de desidratação'},{t:'😐 Parcialmente — 500 a 1.000 ml',p:1,s:'Ingestão insuficiente'},{t:'😊 Bem — mais de 1.000 ml',p:2,s:'Boa hidratação'}]},
+          {g:'hq2',label:'2. Urina com frequência e cor normal?',
+           opts:[{t:'❌ Não urina ou urina muito escura (marrom/laranja)',p:0,s:'Sinal claro de desidratação'},{t:'⚠️ Menos que o habitual ou amarelo intenso',p:1,s:'Atenção'},{t:'✅ Frequência e cor normais (amarelo claro)',p:2,s:'Adequado'}]},
+          {g:'hq3',label:'3. Mucosas e lábios estão hidratados?',
+           opts:[{t:'❌ Boca seca, lábios rachados, olhos fundos',p:0,s:'Desidratação provável'},{t:'⚠️ Levemente ressecados',p:1,s:'Atenção'},{t:'✅ Úmidos e normais',p:2,s:'Hidratado'}]},
+        ].map(q=>`
+          <div style="font-size:13px;font-weight:600;color:var(--tm);margin:14px 0 8px">${q.label}</div>
+          ${q.opts.map((o,i)=>`<div class="aopt${i===2?' sel':''}" data-g="${q.g}" data-pts="${o.p}" onclick="A._ieAopt(this,'','h')">
+            <div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.s}</div></div>
+          </div>`).join('')}
+        `).join('')}
+        <div style="margin-top:16px;padding-bottom:20px"><button class="btn bp" id="ie-next-btn">Próximo →</button></div>
+      </div>`;
+      document.getElementById('ie-next-btn').addEventListener('click',()=>{
+        const score=['hq1','hq2','hq3'].reduce((a,g)=>{
+          const sel=document.querySelector(`#ie-content .aopt.sel[data-g="${g}"]`);
+          return a+(sel?parseInt(sel.dataset.pts):0);
+        },0);
+        // Hidratação: score ALTO = BEM HIDRATADO = BAIXO risco
+        const risk=score>=5?'Baixo':score>=3?'Moderado':'Alto';
+        ieData.hyd={score,risk};
+        ieStep++;renderIEStep();
+      });
+
+    // ── PASSO 6: ANAMNESE ────────────────────────────
+    } else if(stepId==='ie-anamnese'){
+      c.innerHTML=`<div style="padding:0 20px">
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:4px">📝 Anamnese livre</div>
+        <div style="font-size:12px;color:var(--tmu);margin-bottom:14px;line-height:1.5">
+          Registre tudo que for relevante do primeiro contato com o paciente — queixas principais, histórico, condições do ambiente domiciliar, suporte familiar, comportamento, rotina, etc. Este campo será a referência inicial do cuidado.
+        </div>
+        <div style="background:var(--sl);border-radius:var(--rs);padding:9px 12px;margin-bottom:14px;font-size:12px;color:var(--sage);line-height:1.5">
+          💡 Sugestões: Como o paciente chegou até o serviço? Quais são suas principais queixas hoje? Tem cuidador fixo? Como é a casa (escadas, banheiro adaptado)? Tem rede de apoio familiar?
+        </div>
+        <textarea class="fi" id="ie-anamnese-text" style="min-height:180px;resize:none;line-height:1.7" placeholder="Escreva livremente..."></textarea>
+        <div style="margin-top:14px;padding-bottom:30px">
+          <button class="btn bp" id="ie-finish-btn">✅ Concluir avaliação inicial</button>
+        </div>
+      </div>`;
+      document.getElementById('ie-finish-btn').addEventListener('click',async()=>{
+        ieData.anamnese=document.getElementById('ie-anamnese-text').value.trim();
+        await saveInitialEval();
+      });
+    }
+  }
+
+  // Score ao vivo — atualiza o contador enquanto o usuário escolhe
+  A._ieAopt=function(el,scoreElId,prefix){
+    const g=el.dataset.g;
+    document.querySelectorAll(`#ie-content .aopt[data-g="${g}"]`).forEach(o=>o.classList.remove('sel'));
+    el.classList.add('sel');
+    if(scoreElId) A._ieCalcScore(scoreElId,prefix);
+  };
+
+  A._ieCalcScore=function(elId,prefix){
+    const el=document.getElementById(elId);
+    if(!el)return;
+    const sel=document.querySelectorAll(`#ie-content .aopt.sel[data-g^="${prefix}"]`);
+    const score=[...sel].reduce((a,o)=>a+parseInt(o.dataset.pts||0),0);
+    el.textContent=score;
+  };
+
+  // Salva avaliação inicial completa no paciente
+  async function saveInitialEval(){
+    const p=DB.p;if(!p)return;
+    const d=today();
+    const author=DB.currentUser?.name||'Cuidador';
+
+    // 1. Sinais vitais
+    if(Object.values(ieData.vs).some(v=>v!==null)){
+      p.vitals.unshift({id:Date.now(),date:d,time:nowTime(),...ieData.vs,author,obs:'Avaliação inicial — Dia 0'});
+    }
+
+    // 2. Riscos — lógica correta:
+    // Morse: score alto = risco ALTO ✓
+    if(ieData.morse?.risk) p.rF=ieData.morse.risk;
+
+    // MNA: score alto = BEM NUTRIDO = risco BAIXO ✓
+    if(ieData.mna?.risk) p.rN=ieData.mna.risk;
+
+    // Barthel: score alto = INDEPENDENTE = risco funcional BAIXO ✓
+    if(ieData.barthel?.risk) p.rFunc=ieData.barthel.risk;
+
+    // Hidratação: score alto = BEM HIDRATADO = risco BAIXO ✓
+    if(ieData.hyd?.risk) p.rHyd=ieData.hyd.risk;
+
+    // 3. Evento na timeline
+    const resumo=[
+      ieData.morse?.risk?`Queda (Morse): Risco ${ieData.morse.risk} — ${ieData.morse.score} pts`:'',
+      ieData.mna?.risk?`Nutrição (MNA): ${ieData.mna.risk} — ${ieData.mna.score}/14 pts`:'',
+      ieData.barthel?.risk?`Funcional (Barthel): ${ieData.barthel.label} — ${ieData.barthel.score}/100 pts`:'',
+      ieData.hyd?.risk?`Hidratação: Risco ${ieData.hyd.risk}`:'',
+      ieData.anamnese?`Anamnese: ${ieData.anamnese.slice(0,300)}`:'',
+    ].filter(Boolean).join(' · ');
+
+    p.events.unshift({
+      id:Date.now(),date:d,
+      type:'Avaliação inicial — Dia 0',
+      grav:'Leve',
+      desc:resumo||'Avaliação inicial concluída.',
+      author
+    });
+
+    p.initialEvalDone=true;
+    p._evalReminderAt=null; // limpa o lembrete
+    p.statusLabel='Em acompanhamento';
+    p.statusColor='#FFD166';
+
+    await saveDB();
+    toast('✅ Avaliação inicial concluída!');
+
+    // Remove botão pular e banner
+    document.getElementById('ie-skip-area')?.remove();
+    document.getElementById('ie-reminder-banner')?.remove();
+
+    A.renderPatList();
+    setTimeout(()=>{A.renderDash();go('s-dash');},600);
+  }
+
+  // ── ACESSAR POR CÓDIGO ───────────────────────────
+  let _foundPatByCode=null;
+  wire('btn-access-code','click',()=>{ _foundPatByCode=null; document.getElementById('ac-code').value=''; document.getElementById('ac-result').style.display='none'; document.getElementById('ac-error').style.display='none'; document.getElementById('ac-success').style.display='none'; document.getElementById('btn-ac-request').style.display='none'; go('s-access-code'); });
+
+  wire('btn-ac-search','click',async()=>{
+    const code=document.getElementById('ac-code').value.trim().toUpperCase();
+    const errEl=document.getElementById('ac-error');
+    const resEl=document.getElementById('ac-result');
+    errEl.style.display='none'; resEl.style.display='none';
+    document.getElementById('btn-ac-request').style.display='none';
+    document.getElementById('ac-success').style.display='none';
+    if(!code||code.length<7){errEl.textContent='Digite um código válido (ex: HOM0001)';errEl.style.display='block';return;}
+
+    // Busca no Supabase por código
+    try{
+      const rows=await sbGet('patients',`?select=id,data&data->>code=eq.${code}`);
+      if(!rows.length){errEl.textContent='Código não encontrado. Verifique e tente novamente.';errEl.style.display='block';return;}
+      const pat={...rows[0].data,_supaId:rows[0].id};
+      _foundPatByCode=pat;
+
+      // Verifica se já tem acesso
+      const u=DB.currentUser;
+      const jaTemAcesso=u?.patientIds==='all'||(Array.isArray(u?.patientIds)&&u.patientIds.includes(pat.id));
+      if(jaTemAcesso){errEl.textContent='Você já tem acesso a este paciente.';errEl.style.display='block';return;}
+
+      document.getElementById('ac-pat-name').textContent=`${pat.name} · ${pat.age} anos`;
+      document.getElementById('ac-pat-info').textContent=`Código: ${pat.code} · ${pat.diag?.split('·')[0]?.trim()||''}`;
+      resEl.style.display='block';
+      document.getElementById('btn-ac-request').style.display='block';
+    }catch(e){errEl.textContent='Erro ao buscar. Verifique sua conexão.';errEl.style.display='block';}
+  });
+
+  wire('btn-ac-request','click',async()=>{
+    if(!_foundPatByCode)return;
+    const u=DB.currentUser;
+    const req={
+      id:'acc'+Date.now(),
+      type:'Solicitação de acesso a paciente',
+      obs:`${u?.name||'Usuário'} (${u?.role||''}) solicita acesso ao paciente ${_foundPatByCode.name} (${_foundPatByCode.code})`,
+      status:'pending',
+      date:today(),
+      requestedBy:u?.id||'',
+      targetPatientId:_foundPatByCode.id,
+      targetPatientCode:_foundPatByCode.code,
+      notifyUserId:_foundPatByCode.createdBy||'u0',
+    };
+    DB.requests.push(req);
+    await sbUpsert('requests',[{id:req.id,data:req}]);
+    document.getElementById('btn-ac-request').style.display='none';
+    document.getElementById('ac-success').style.display='block';
+    _foundPatByCode=null;
   });
 
   // Init tag selectors when navigating to new patient screen
