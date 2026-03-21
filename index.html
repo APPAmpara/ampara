@@ -3066,6 +3066,246 @@ const A = {
 // ══════════════════════════════════════════════════════
 // WIRE UP
 // ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// MEU DOUTOR — render
+// ═══════════════════════════════════════════════════
+function renderMeuDoutor(){
+  const p=DB.p; if(!p) return;
+  const status=A.calcOverallStatus(p);
+  const role=DB.currentUser?.role;
+  const adherence=A.calcAdherence(p);
+  const lv=p.vitals&&p.vitals[0];
+
+  // Generate/reuse QR token (24h expiry)
+  if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
+    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
+    p._qrExp=Date.now()+(24*60*60*1000);
+    saveDB();
+  }
+  const msLeft=p._qrExp-Date.now();
+  const hLeft=Math.floor(msLeft/3600000);
+  const mLeft=Math.floor((msLeft%3600000)/60000);
+  const qrUrl=`https://appampara.github.io/ampara/?report=${p._qrToken}`;
+
+  const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
+  const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
+
+  // Status explanation
+  const statusExplain={
+    Estável:`${p.name.split(' ')[0]} apresenta sinais vitais e parâmetros clínicos dentro dos limites esperados. Nenhum alerta crítico no momento.`,
+    Atenção:`Alguns parâmetros de ${p.name.split(' ')[0]} requerem observação. Verifique os alertas e mantenha o acompanhamento próximo.`,
+    Alerta:`${p.name.split(' ')[0]} apresenta um ou mais parâmetros críticos. Avaliação médica recomendada com brevidade.`
+  }[status.level]||'';
+
+  let html=`
+  <div style="background:linear-gradient(140deg,#2D4A3E,#5C7E6A);padding:20px 20px 24px">
+    <div style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:4px">${p.name} · ${p.age} anos</div>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:${sBg};padding:9px 16px;border-radius:24px;margin-bottom:10px">
+      <span style="font-size:18px">${status.icon}</span>
+      <span style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</span>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">${statusExplain}</div>
+  </div>`;
+
+  // Vitals summary
+  if(lv){
+    html+=`<div class="md-section">Últimos sinais vitais</div>
+    <div class="md-card">
+      ${lv.sis?`<div class="md-row"><span class="md-label">🫀 Pressão arterial</span><span class="md-value" style="color:${vsS('sis',lv.sis)==='alert'?'var(--red)':vsS('sis',lv.sis)==='warn'?'var(--yel)':'var(--text)'}">${lv.sis}/${lv.dia} mmHg</span></div>`:''}
+      ${lv.fc?`<div class="md-row"><span class="md-label">❤️ Freq. cardíaca</span><span class="md-value">${lv.fc} bpm</span></div>`:''}
+      ${lv.temp?`<div class="md-row"><span class="md-label">🌡️ Temperatura</span><span class="md-value" style="color:${vsS('temp',lv.temp)==='alert'?'var(--red)':'var(--text)'}">${lv.temp} °C</span></div>`:''}
+      ${lv.sat?`<div class="md-row"><span class="md-label">🫁 Saturação O₂</span><span class="md-value" style="color:${vsS('sat',lv.sat)==='alert'?'var(--red)':'var(--text)'}">${lv.sat} %</span></div>`:''}
+      ${lv.gli?`<div class="md-row"><span class="md-label">🩸 Glicemia</span><span class="md-value" style="color:${vsS('gli',lv.gli)==='alert'?'var(--red)':'var(--text)'}">${lv.gli} mg/dL</span></div>`:''}
+      <div style="font-size:11px;color:var(--tmu);margin-top:8px">${fmt(lv.date)} às ${lv.time} · ${lv.author}</div>
+    </div>`;
+  }
+
+  // Avaliações de risco
+  html+=`<div class="md-section">Avaliações de risco</div>
+  <div class="md-card">
+    <div class="md-row"><span class="md-label">🦯 Risco de queda</span><span class="md-value" style="color:${RC[p.rF]||'var(--tmu)'}">${p.rF||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">🥗 Risco nutricional</span><span class="md-value" style="color:${RC[p.rN]||'var(--tmu)'}">${p.rN||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">🙋 Funcionalidade</span><span class="md-value" style="color:${RC[p.rFunc]||'var(--tmu)'}">${p.rFunc||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">💧 Hidratação</span><span class="md-value" style="color:${RC[p.rHyd]||'var(--tmu)'}">${p.rHyd||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">💊 Aderência</span><span class="md-value" style="color:${adherence.color||'var(--tmu)'}">${adherence.label}${adherence.pct!=null?' ('+adherence.pct+'%)':''}</span></div>
+  </div>`;
+
+  // Medicações
+  const meds=p.medSchedule||[];
+  if(meds.length){
+    html+=`<div class="md-section">Medicações cadastradas</div><div class="md-card">`;
+    meds.forEach(m=>{html+=`<div class="md-row"><span class="md-label">💊 ${m.name}</span><span class="md-value">${m.dose} ${m.unit} · ${m.times.join(', ')}</span></div>`;});
+    html+=`</div>`;
+  }
+
+  // QR code para médico
+  html+=`<div class="md-section">Relatório para o médico</div>
+  <div class="qr-wrap">
+    <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:4px">QR Code do paciente</div>
+    <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">O médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
+    <canvas id="md-qr-canvas" width="180" height="180" style="border-radius:8px"></canvas>
+    <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min · Gera novo a cada 24h</div>
+    <button class="btn bs bsm" id="md-regen-qr" style="margin-top:4px">🔄 Gerar novo QR</button>
+  </div>`;
+
+  document.getElementById('md-content').innerHTML=html;
+
+  // Draw QR Code (pure JS, no library needed — simple matrix QR)
+  drawSimpleQR(document.getElementById('md-qr-canvas'), qrUrl);
+
+  document.getElementById('md-regen-qr')?.addEventListener('click',()=>{
+    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
+    p._qrExp=Date.now()+(24*60*60*1000);
+    saveDB(); renderMeuDoutor();
+    toast('🔄 QR Code renovado por 24h!');
+  });
+}
+
+// Simple QR-like code renderer (visual placeholder using deterministic pattern)
+function drawSimpleQR(canvas, text){
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const size=180; const cells=21; const cell=Math.floor(size/cells);
+  // Deterministic hash from text
+  let hash=0; for(let i=0;i<text.length;i++){hash=((hash<<5)-hash)+text.charCodeAt(i);hash|=0;}
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
+  const isBlack=(r,c)=>{
+    // Corner squares
+    if((r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7))return true;
+    if((r>=1&&r<=5&&c>=1&&c<=5)||(r>=1&&r<=5&&c>=cells-6&&c<=cells-2)||(r>=cells-6&&r<=cells-2&&c>=1&&c<=5))return false;
+    if((r>=2&&r<=4&&c>=2&&c<=4)||(r>=2&&r<=4&&c>=cells-5&&c<=cells-3)||(r>=cells-5&&r<=cells-3&&c>=2&&c<=4))return true;
+    // Timing patterns
+    if(r===6||c===6)return (r+c)%2===0;
+    // Data (deterministic from hash)
+    const bit=(hash^(r*cells+c)*1234567)&1;
+    return bit===1;
+  };
+  ctx.fillStyle='#1E2820';
+  for(let r=0;r<cells;r++){for(let c=0;c<cells;c++){if(isBlack(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}}
+  // Center Ampara logo text
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(75,75,30,30);
+  ctx.fillStyle='#5C7E6A'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.fillText('🌿',90,91);
+}
+
+// ═══════════════════════════════════════════════════
+// INFOGRÁFICO DO PAINEL (substitui sinais vitais/riscos)
+// ═══════════════════════════════════════════════════
+function renderInfographic(p){
+  if(!document.getElementById('d-infographic'))return;
+  const status=A.calcOverallStatus(p);
+  const adherence=A.calcAdherence(p);
+  const lv=p.vitals&&p.vitals[0];
+  const pend=pendingCount(p);
+
+  const statusColors={
+    Estável:['var(--gl)','var(--grn)','#3D7A58'],
+    Atenção:['var(--yl)','var(--yel)','#C49A3C'],
+    Alerta: ['var(--rl)','var(--red)','#C0544A']
+  };
+  const [sBg,sFg,sBorder]=statusColors[status.level]||statusColors['Estável'];
+
+  const shortExplain={
+    Estável:'Tudo dentro do esperado.',
+    Atenção:'Alguns pontos merecem atenção.',
+    Alerta:'Avaliação médica recomendada.'
+  }[status.level]||'';
+
+  // Mini risk icons
+  const risks=[
+    {icon:'🦯',val:p.rF||'—',label:'Queda'},
+    {icon:'🥗',val:p.rN||'—',label:'Nutrição'},
+    {icon:'💊',val:adherence.label,label:'Aderência'},
+    {icon:'💧',val:p.rHyd||'—',label:'Hidratação'},
+  ];
+
+  document.getElementById('d-infographic').innerHTML=`
+  <div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="width:48px;height:48px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${status.icon}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:${sFg}">${status.level}</div>
+        <div style="font-size:12px;color:var(--tm);margin-top:1px">${shortExplain}</div>
+      </div>
+      <button style="margin-left:auto;background:${sBg};border:none;color:${sFg};padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+      ${risks.map(r=>`<div style="text-align:center;background:var(--cream);border-radius:8px;padding:7px 4px">
+        <div style="font-size:16px">${r.icon}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${r.label}</div>
+        <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'};margin-top:2px">${r.val}</div>
+      </div>`).join('')}
+    </div>
+    ${pend>0?`<div style="margin-top:10px;background:var(--bl);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--blue);font-weight:600">💊 ${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div>`:''}
+  </div>`;
+
+  document.getElementById('dash-meu-doutor-btn')?.addEventListener('click',()=>{
+    renderMeuDoutor(); go('s-meu-doutor');
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// SINAIS VITAIS — clique abre detalhe com últimas 10 + gráfico
+// ═══════════════════════════════════════════════════
+function openVSDetail(vsDef, vitals){
+  const modal=document.getElementById('vs-detail-modal');
+  const content=document.getElementById('vs-detail-content');
+  const last10=vitals.slice(0,10);
+  const vals=last10.map(v=>parseFloat(v[vsDef.k])).filter(n=>!isNaN(n));
+  const hasPair=vsDef.k==='sis';
+
+  content.innerHTML=`
+  <div style="font-size:18px;margin-bottom:4px">${vsDef.icon}</div>
+  <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:2px">${vsDef.label}</div>
+  <div style="font-size:12px;color:var(--tmu);margin-bottom:16px">Últimas ${Math.min(10,last10.length)} medições · ${vsDef.unit}</div>
+  ${vals.length>=2?`
+  <div style="background:var(--cream);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:600;color:var(--tmu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Tendência</div>
+    <canvas id="vs-detail-chart" height="80"></canvas>
+  </div>`:''}
+  <div style="max-height:240px;overflow-y:auto">
+    ${last10.map(v=>{
+      const val=hasPair?(v.sis&&v.dia?`${v.sis}/${v.dia}`:null):v[vsDef.k];
+      const st=val?vsS(vsDef.k,parseFloat(String(val).split('/')[0])):'none';
+      return val?`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)}</div><div style="font-size:10px;color:var(--tmu)">${v.time} · ${v.author}</div></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px;font-weight:700;color:${st==='alert'?'var(--red)':st==='warn'?'var(--yel)':'var(--text)'}">${val}</span>
+          <span style="font-size:10px;color:var(--tmu)">${vsDef.unit}</span>
+        </div>
+      </div>`:'';
+    }).join('')}
+  </div>
+  <button class="btn bo" style="margin-top:14px" id="vs-detail-close">Fechar</button>`;
+
+  modal.classList.add('show');
+  document.getElementById('vs-detail-close')?.addEventListener('click',()=>modal.classList.remove('show'));
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
+
+  // Draw simple bar chart
+  if(vals.length>=2){
+    setTimeout(()=>{
+      const c=document.getElementById('vs-detail-chart');
+      if(!c)return;
+      const ctx=c.getContext('2d');
+      c.width=c.parentElement.offsetWidth-24;
+      const max=Math.max(...vals)*1.1, min=Math.min(...vals)*0.9;
+      const w=c.width, h=80, pad=4;
+      const bw=Math.floor((w-pad*(vals.length+1))/vals.length);
+      ctx.clearRect(0,0,w,h);
+      vals.forEach((v,i)=>{
+        const bh=Math.max(4,((v-min)/(max-min||1))*(h-10));
+        const x=pad+i*(bw+pad);
+        const st=vsS(vsDef.k,v);
+        ctx.fillStyle=st==='alert'?'#C0544A':st==='warn'?'#C49A3C':'#5C7E6A';
+        ctx.beginPath();ctx.roundRect(x,h-bh,bw,bh,3);ctx.fill();
+        ctx.fillStyle='var(--tmu)';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+        ctx.fillText(v,x+bw/2,h-bh-2);
+      });
+    },60);
+  }
+}
+
+
 window.addEventListener('DOMContentLoaded',()=>{
 
   // ── Defensive helper — silently skips if element doesn't exist ──
@@ -4148,245 +4388,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     setTimeout(()=>{A.renderDash();go('s-dash');},600);
   }
 
-
-  // ═══════════════════════════════════════════════════
-  // MEU DOUTOR — render
-  // ═══════════════════════════════════════════════════
-  function renderMeuDoutor(){
-    const p=DB.p; if(!p) return;
-    const status=A.calcOverallStatus(p);
-    const role=DB.currentUser?.role;
-    const adherence=A.calcAdherence(p);
-    const lv=p.vitals&&p.vitals[0];
-
-    // Generate/reuse QR token (24h expiry)
-    if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
-      p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
-      p._qrExp=Date.now()+(24*60*60*1000);
-      saveDB();
-    }
-    const msLeft=p._qrExp-Date.now();
-    const hLeft=Math.floor(msLeft/3600000);
-    const mLeft=Math.floor((msLeft%3600000)/60000);
-    const qrUrl=`https://appampara.github.io/ampara/?report=${p._qrToken}`;
-
-    const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
-    const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
-
-    // Status explanation
-    const statusExplain={
-      Estável:`${p.name.split(' ')[0]} apresenta sinais vitais e parâmetros clínicos dentro dos limites esperados. Nenhum alerta crítico no momento.`,
-      Atenção:`Alguns parâmetros de ${p.name.split(' ')[0]} requerem observação. Verifique os alertas e mantenha o acompanhamento próximo.`,
-      Alerta:`${p.name.split(' ')[0]} apresenta um ou mais parâmetros críticos. Avaliação médica recomendada com brevidade.`
-    }[status.level]||'';
-
-    let html=`
-    <div style="background:linear-gradient(140deg,#2D4A3E,#5C7E6A);padding:20px 20px 24px">
-      <div style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:4px">${p.name} · ${p.age} anos</div>
-      <div style="display:inline-flex;align-items:center;gap:8px;background:${sBg};padding:9px 16px;border-radius:24px;margin-bottom:10px">
-        <span style="font-size:18px">${status.icon}</span>
-        <span style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</span>
-      </div>
-      <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">${statusExplain}</div>
-    </div>`;
-
-    // Vitals summary
-    if(lv){
-      html+=`<div class="md-section">Últimos sinais vitais</div>
-      <div class="md-card">
-        ${lv.sis?`<div class="md-row"><span class="md-label">🫀 Pressão arterial</span><span class="md-value" style="color:${vsS('sis',lv.sis)==='alert'?'var(--red)':vsS('sis',lv.sis)==='warn'?'var(--yel)':'var(--text)'}">${lv.sis}/${lv.dia} mmHg</span></div>`:''}
-        ${lv.fc?`<div class="md-row"><span class="md-label">❤️ Freq. cardíaca</span><span class="md-value">${lv.fc} bpm</span></div>`:''}
-        ${lv.temp?`<div class="md-row"><span class="md-label">🌡️ Temperatura</span><span class="md-value" style="color:${vsS('temp',lv.temp)==='alert'?'var(--red)':'var(--text)'}">${lv.temp} °C</span></div>`:''}
-        ${lv.sat?`<div class="md-row"><span class="md-label">🫁 Saturação O₂</span><span class="md-value" style="color:${vsS('sat',lv.sat)==='alert'?'var(--red)':'var(--text)'}">${lv.sat} %</span></div>`:''}
-        ${lv.gli?`<div class="md-row"><span class="md-label">🩸 Glicemia</span><span class="md-value" style="color:${vsS('gli',lv.gli)==='alert'?'var(--red)':'var(--text)'}">${lv.gli} mg/dL</span></div>`:''}
-        <div style="font-size:11px;color:var(--tmu);margin-top:8px">${fmt(lv.date)} às ${lv.time} · ${lv.author}</div>
-      </div>`;
-    }
-
-    // Avaliações de risco
-    html+=`<div class="md-section">Avaliações de risco</div>
-    <div class="md-card">
-      <div class="md-row"><span class="md-label">🦯 Risco de queda</span><span class="md-value" style="color:${RC[p.rF]||'var(--tmu)'}">${p.rF||'Não avaliado'}</span></div>
-      <div class="md-row"><span class="md-label">🥗 Risco nutricional</span><span class="md-value" style="color:${RC[p.rN]||'var(--tmu)'}">${p.rN||'Não avaliado'}</span></div>
-      <div class="md-row"><span class="md-label">🙋 Funcionalidade</span><span class="md-value" style="color:${RC[p.rFunc]||'var(--tmu)'}">${p.rFunc||'Não avaliado'}</span></div>
-      <div class="md-row"><span class="md-label">💧 Hidratação</span><span class="md-value" style="color:${RC[p.rHyd]||'var(--tmu)'}">${p.rHyd||'Não avaliado'}</span></div>
-      <div class="md-row"><span class="md-label">💊 Aderência</span><span class="md-value" style="color:${adherence.color||'var(--tmu)'}">${adherence.label}${adherence.pct!=null?' ('+adherence.pct+'%)':''}</span></div>
-    </div>`;
-
-    // Medicações
-    const meds=p.medSchedule||[];
-    if(meds.length){
-      html+=`<div class="md-section">Medicações cadastradas</div><div class="md-card">`;
-      meds.forEach(m=>{html+=`<div class="md-row"><span class="md-label">💊 ${m.name}</span><span class="md-value">${m.dose} ${m.unit} · ${m.times.join(', ')}</span></div>`;});
-      html+=`</div>`;
-    }
-
-    // QR code para médico
-    html+=`<div class="md-section">Relatório para o médico</div>
-    <div class="qr-wrap">
-      <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:4px">QR Code do paciente</div>
-      <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">O médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
-      <canvas id="md-qr-canvas" width="180" height="180" style="border-radius:8px"></canvas>
-      <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min · Gera novo a cada 24h</div>
-      <button class="btn bs bsm" id="md-regen-qr" style="margin-top:4px">🔄 Gerar novo QR</button>
-    </div>`;
-
-    document.getElementById('md-content').innerHTML=html;
-
-    // Draw QR Code (pure JS, no library needed — simple matrix QR)
-    drawSimpleQR(document.getElementById('md-qr-canvas'), qrUrl);
-
-    document.getElementById('md-regen-qr')?.addEventListener('click',()=>{
-      p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
-      p._qrExp=Date.now()+(24*60*60*1000);
-      saveDB(); renderMeuDoutor();
-      toast('🔄 QR Code renovado por 24h!');
-    });
-  }
-
-  // Simple QR-like code renderer (visual placeholder using deterministic pattern)
-  function drawSimpleQR(canvas, text){
-    if(!canvas)return;
-    const ctx=canvas.getContext('2d');
-    const size=180; const cells=21; const cell=Math.floor(size/cells);
-    // Deterministic hash from text
-    let hash=0; for(let i=0;i<text.length;i++){hash=((hash<<5)-hash)+text.charCodeAt(i);hash|=0;}
-    ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
-    const isBlack=(r,c)=>{
-      // Corner squares
-      if((r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7))return true;
-      if((r>=1&&r<=5&&c>=1&&c<=5)||(r>=1&&r<=5&&c>=cells-6&&c<=cells-2)||(r>=cells-6&&r<=cells-2&&c>=1&&c<=5))return false;
-      if((r>=2&&r<=4&&c>=2&&c<=4)||(r>=2&&r<=4&&c>=cells-5&&c<=cells-3)||(r>=cells-5&&r<=cells-3&&c>=2&&c<=4))return true;
-      // Timing patterns
-      if(r===6||c===6)return (r+c)%2===0;
-      // Data (deterministic from hash)
-      const bit=(hash^(r*cells+c)*1234567)&1;
-      return bit===1;
-    };
-    ctx.fillStyle='#1E2820';
-    for(let r=0;r<cells;r++){for(let c=0;c<cells;c++){if(isBlack(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}}
-    // Center Ampara logo text
-    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(75,75,30,30);
-    ctx.fillStyle='#5C7E6A'; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.fillText('🌿',90,91);
-  }
-
-  // ═══════════════════════════════════════════════════
-  // INFOGRÁFICO DO PAINEL (substitui sinais vitais/riscos)
-  // ═══════════════════════════════════════════════════
-  function renderInfographic(p){
-    if(!document.getElementById('d-infographic'))return;
-    const status=A.calcOverallStatus(p);
-    const adherence=A.calcAdherence(p);
-    const lv=p.vitals&&p.vitals[0];
-    const pend=pendingCount(p);
-
-    const statusColors={
-      Estável:['var(--gl)','var(--grn)','#3D7A58'],
-      Atenção:['var(--yl)','var(--yel)','#C49A3C'],
-      Alerta: ['var(--rl)','var(--red)','#C0544A']
-    };
-    const [sBg,sFg,sBorder]=statusColors[status.level]||statusColors['Estável'];
-
-    const shortExplain={
-      Estável:'Tudo dentro do esperado.',
-      Atenção:'Alguns pontos merecem atenção.',
-      Alerta:'Avaliação médica recomendada.'
-    }[status.level]||'';
-
-    // Mini risk icons
-    const risks=[
-      {icon:'🦯',val:p.rF||'—',label:'Queda'},
-      {icon:'🥗',val:p.rN||'—',label:'Nutrição'},
-      {icon:'💊',val:adherence.label,label:'Aderência'},
-      {icon:'💧',val:p.rHyd||'—',label:'Hidratação'},
-    ];
-
-    document.getElementById('d-infographic').innerHTML=`
-    <div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:48px;height:48px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${status.icon}</div>
-        <div>
-          <div style="font-size:16px;font-weight:700;color:${sFg}">${status.level}</div>
-          <div style="font-size:12px;color:var(--tm);margin-top:1px">${shortExplain}</div>
-        </div>
-        <button style="margin-left:auto;background:${sBg};border:none;color:${sFg};padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
-        ${risks.map(r=>`<div style="text-align:center;background:var(--cream);border-radius:8px;padding:7px 4px">
-          <div style="font-size:16px">${r.icon}</div>
-          <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${r.label}</div>
-          <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'};margin-top:2px">${r.val}</div>
-        </div>`).join('')}
-      </div>
-      ${pend>0?`<div style="margin-top:10px;background:var(--bl);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--blue);font-weight:600">💊 ${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div>`:''}
-    </div>`;
-
-    document.getElementById('dash-meu-doutor-btn')?.addEventListener('click',()=>{
-      renderMeuDoutor(); go('s-meu-doutor');
-    });
-  }
-
-  // ═══════════════════════════════════════════════════
-  // SINAIS VITAIS — clique abre detalhe com últimas 10 + gráfico
-  // ═══════════════════════════════════════════════════
-  function openVSDetail(vsDef, vitals){
-    const modal=document.getElementById('vs-detail-modal');
-    const content=document.getElementById('vs-detail-content');
-    const last10=vitals.slice(0,10);
-    const vals=last10.map(v=>parseFloat(v[vsDef.k])).filter(n=>!isNaN(n));
-    const hasPair=vsDef.k==='sis';
-
-    content.innerHTML=`
-    <div style="font-size:18px;margin-bottom:4px">${vsDef.icon}</div>
-    <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:2px">${vsDef.label}</div>
-    <div style="font-size:12px;color:var(--tmu);margin-bottom:16px">Últimas ${Math.min(10,last10.length)} medições · ${vsDef.unit}</div>
-    ${vals.length>=2?`
-    <div style="background:var(--cream);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:var(--tmu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Tendência</div>
-      <canvas id="vs-detail-chart" height="80"></canvas>
-    </div>`:''}
-    <div style="max-height:240px;overflow-y:auto">
-      ${last10.map(v=>{
-        const val=hasPair?(v.sis&&v.dia?`${v.sis}/${v.dia}`:null):v[vsDef.k];
-        const st=val?vsS(vsDef.k,parseFloat(String(val).split('/')[0])):'none';
-        return val?`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
-          <div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)}</div><div style="font-size:10px;color:var(--tmu)">${v.time} · ${v.author}</div></div>
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:15px;font-weight:700;color:${st==='alert'?'var(--red)':st==='warn'?'var(--yel)':'var(--text)'}">${val}</span>
-            <span style="font-size:10px;color:var(--tmu)">${vsDef.unit}</span>
-          </div>
-        </div>`:'';
-      }).join('')}
-    </div>
-    <button class="btn bo" style="margin-top:14px" id="vs-detail-close">Fechar</button>`;
-
-    modal.classList.add('show');
-    document.getElementById('vs-detail-close')?.addEventListener('click',()=>modal.classList.remove('show'));
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
-
-    // Draw simple bar chart
-    if(vals.length>=2){
-      setTimeout(()=>{
-        const c=document.getElementById('vs-detail-chart');
-        if(!c)return;
-        const ctx=c.getContext('2d');
-        c.width=c.parentElement.offsetWidth-24;
-        const max=Math.max(...vals)*1.1, min=Math.min(...vals)*0.9;
-        const w=c.width, h=80, pad=4;
-        const bw=Math.floor((w-pad*(vals.length+1))/vals.length);
-        ctx.clearRect(0,0,w,h);
-        vals.forEach((v,i)=>{
-          const bh=Math.max(4,((v-min)/(max-min||1))*(h-10));
-          const x=pad+i*(bw+pad);
-          const st=vsS(vsDef.k,v);
-          ctx.fillStyle=st==='alert'?'#C0544A':st==='warn'?'#C49A3C':'#5C7E6A';
-          ctx.beginPath();ctx.roundRect(x,h-bh,bw,bh,3);ctx.fill();
-          ctx.fillStyle='var(--tmu)';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
-          ctx.fillText(v,x+bw/2,h-bh-2);
-        });
-      },60);
-    }
-  }
 
   // ═══════════════════════════════════════════════════
   // 100 MEDICAMENTOS MAIS USADOS NO BRASIL
