@@ -1484,6 +1484,7 @@ async function sbDelete(table, query){
 
 // ── SAVE — grava tudo no Supabase ──────────────────
 async function saveDB(){
+  pauseSync(8000); // prevent echo of our own write
   try {
     // Pacientes — usa o id da linha do Supabase guardado no _supaId
     const patResults = await Promise.all(DB.patients.map(async p => {
@@ -1567,6 +1568,104 @@ async function loadDB(){
     return false;
   }
 }
+
+// ════════════════════════════════════════════════════
+// SYNC ENGINE — polling em background a cada 15s
+// Detecta mudanças no Supabase e atualiza sem travar a UI
+// ════════════════════════════════════════════════════
+let _syncInterval = null;
+let _syncPaused = false;
+let _lastSyncTs = {};   // { patientId: updated_at }
+let _syncIndicator = null;
+
+function startSync(){
+  if(_syncInterval) return;
+  _syncInterval = setInterval(()=>syncNow(false), 15000);
+  console.log('Ampara: sync iniciado (15s)');
+}
+
+function stopSync(){
+  clearInterval(_syncInterval);
+  _syncInterval = null;
+}
+
+function pauseSync(ms=5000){
+  // Pausa após salvar localmente para evitar echo
+  _syncPaused = true;
+  setTimeout(()=>{ _syncPaused=false; }, ms);
+}
+
+async function syncNow(force=false){
+  if(_syncPaused && !force) return;
+  if(!DB.currentUser) return;
+  try {
+    const rows = await sbGet('patients','?select=id,data,updated_at&order=id');
+    if(!rows.length) return;
+
+    let changed = false;
+    rows.forEach(row => {
+      const sid = String(row.id);
+      const newTs = row.updated_at || '';
+      const prevTs = _lastSyncTs[sid] || '';
+      if(newTs !== prevTs){
+        _lastSyncTs[sid] = newTs;
+        if(prevTs) { // first load doesn't count as change
+          // Merge remote data into local, preserving _supaId
+          const local = DB.patients.find(p => p._supaId === row.id || String(p.id) === String(row.data?.id));
+          if(local){
+            const supaId = local._supaId;
+            Object.assign(local, row.data, { _supaId: supaId });
+          }
+          changed = true;
+          console.log(`Ampara: sync — ${row.data?.name} atualizado`);
+        }
+      }
+    });
+
+    // Seed timestamps on first run
+    if(!Object.keys(_lastSyncTs).length){
+      rows.forEach(r => { _lastSyncTs[String(r.id)] = r.updated_at||''; });
+    }
+
+    if(changed) _onRemoteChange();
+
+  } catch(e){
+    console.warn('Ampara: sync error', e.message);
+  }
+}
+
+function _onRemoteChange(){
+  // Re-render current screen with new data, seamlessly
+  const cur = document.querySelector('.screen.active')?.id || '';
+  const p = DB.p;
+
+  _showSyncBadge();
+
+  // Re-render only if on a screen that shows patient data
+  if(cur === 's-tl')     { DB.tlFilter=DB.tlFilter||'Todos'; A.renderTL(); }
+  if(cur === 's-dash')   { A.renderDash(); }
+  if(cur === 's-meds')   { A.renderMeds(); }
+  if(cur === 's-vs')     { A.renderVS(); }
+  if(cur === 's-prof')   { A.renderProf(); }
+  if(cur === 's-patients'){ A.renderPatList(); }
+}
+
+function _showSyncBadge(){
+  // Show a subtle "Atualizado" badge for 2s
+  const existing = document.getElementById('sync-badge');
+  if(existing){ clearTimeout(existing._t); existing.remove(); }
+  const badge = document.createElement('div');
+  badge.id = 'sync-badge';
+  badge.textContent = '↻ Sincronizado';
+  badge.style.cssText = 'position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-family:'DM Sans',sans-serif';
+  document.querySelector('.shell')?.appendChild(badge);
+  requestAnimationFrame(()=>{ badge.style.opacity='1'; });
+  badge._t = setTimeout(()=>{ badge.style.opacity='0'; setTimeout(()=>badge.remove(),400); }, 2000);
+}
+
+// Pause sync during saves to avoid echoing our own write
+const _origSaveDB = saveDB;
+// saveDB already pauses sync internally
 
 // ── DELETE paciente do Supabase ────────────────────
 async function deletePatient(id){
@@ -3833,6 +3932,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   // ── PRÉ-CARREGA DADOS DO SUPABASE mas sempre exige login ──
   showLoading('Conectando ao Ampara...');
   loadDB().then(() => {
+    // Start background sync after load
+    setTimeout(()=>{ syncNow(true).then(()=>startSync()); }, 2000);
     hideLoading();
     // Sempre mostra o login — nunca pula a autenticação
     // DB.currentUser é limpo para garantir que o login seja sempre feito
@@ -3925,7 +4026,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
   });
   // ADMIN MASTER
-  wire('admin-logout','click',()=>{DB.currentUser=null;saveDB();go('s-login');});
+  wire('admin-logout','click',()=>{DB.currentUser=null;stopSync();saveDB();go('s-login');});
   wire('adm-patients','click',()=>{A.renderPatList();go('s-patients');});
   wire('adm-users','click',()=>{A.renderAdminUsers();go('s-admin-users');});
   wire('adm-requests','click',()=>{A.renderAdminRequests();go('s-admin-requests');});
