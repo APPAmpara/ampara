@@ -1576,6 +1576,11 @@ const SUPA_URL = 'https://vazhqtpjjpatptkyhchk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhemhxdHBqanBhdHB0a3loY2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NjQ2MDcsImV4cCI6MjA4OTU0MDYwN30.iGeGnRtmNJE_3FFfNQcXM7f-YlqVw3BzclIsHHlRmvo';
 const SUPA_HEADERS = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
+// ── ANTHROPIC API KEY ──────────────────────────────
+// Obtenha sua chave em: https://console.anthropic.com/settings/keys
+// Esta chave é necessária para a funcionalidade de leitura de prescrição com IA
+const ANTHROPIC_KEY = 'SUA_CHAVE_AQUI'; // ← substitua aqui
+
 // ── API helpers ─────────────────────────────────────
 async function sbGet(table, query=''){
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, { headers: SUPA_HEADERS });
@@ -4451,9 +4456,17 @@ window.addEventListener('DOMContentLoaded',()=>{
       msg.textContent=msgs[mi%msgs.length]; mi++;
     },1200);
     try{
+      if(!ANTHROPIC_KEY||ANTHROPIC_KEY==='SUA_CHAVE_AQUI'){
+        throw new Error('Chave da API não configurada. Adicione sua chave Anthropic no arquivo index.html (constante ANTHROPIC_KEY).');
+      }
       const res=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': ANTHROPIC_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
         body:JSON.stringify({
           model:'claude-sonnet-4-20250514',
           max_tokens:1000,
