@@ -184,9 +184,17 @@ svg.ic{width:14px;height:14px}
 <div id="page-wrapper">
   <div class="action-bar">
     <div class="brand-wrap">
-      <span style="font-size:22px">🌿</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" style="flex-shrink:0">
+  <defs>
+    <linearGradient id="rl1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#2D4A3E"/><stop offset="100%" stop-color="#5C7E6A"/></linearGradient>
+    <linearGradient id="rl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>
+  </defs>
+  <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#rl1)" opacity="0.95"/>
+  <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#rl1)" opacity="0.6"/>
+  <circle cx="16" cy="15" r="5" fill="url(#rl2)"/>
+</svg>
       <div>
-        <div class="brand-name">Ampara</div>
+        <div class="brand-name" style="font-family:'Lora',Georgia,serif;font-weight:600;letter-spacing:-.3px">ampara</div>
         <div class="brand-sub">Relatório Clínico Confidencial</div>
       </div>
     </div>
@@ -312,8 +320,22 @@ function renderReport(p){
   <div class="rep-header">
     <div class="rep-header-top">
       <div class="rep-brand-row">
-        <div class="rep-brand-icon">🌿</div>
-        <div><div class="rep-brand-name">Ampara</div><div class="rep-brand-sub">Plataforma de cuidado domiciliar para idosos</div></div>
+        <div class="rep-brand-icon" style="padding:0;overflow:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="3 -1 30 31" width="38" height="38">
+            <defs>
+              <linearGradient id="rh1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>
+              <linearGradient id="rh2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>
+            </defs>
+            <path d="M19,22 C19,10 12,3 4,0 C7,7 8,14 11,19 C14,24 17,27 19,28 Z" fill="url(#rh1)" opacity="0.95"/>
+            <path d="M19,22 C19,10 26,3 34,0 C31,7 30,14 27,19 C24,24 21,27 19,28 Z" fill="url(#rh1)" opacity="0.6"/>
+            <circle cx="19" cy="21" r="6.5" fill="url(#rh2)"/>
+            <circle cx="17" cy="19" r="2" fill="rgba(255,255,255,0.55)"/>
+          </svg>
+        </div>
+        <div>
+          <div class="rep-brand-name" style="font-family:'Lora',Georgia,serif;font-weight:600;letter-spacing:-.4px">ampara</div>
+          <div class="rep-brand-sub">Plataforma de cuidado domiciliar para idosos</div>
+        </div>
       </div>
       <div class="rep-header-meta">
         <div class="rep-meta-label">Gerado em</div>
@@ -450,7 +472,15 @@ function renderReport(p){
   <div class="rep-footer">
     <div class="rep-footer-main">
       <div>
-        <div class="rep-footer-brand">🌿 Ampara · Cuidado em família, com carinho</div>
+        <div class="rep-footer-brand" style="display:flex;align-items:center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" style="vertical-align:middle;margin-right:4px">
+  <defs>
+    <linearGradient id="rf1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#2D4A3E"/><stop offset="100%" stop-color="#5C7E6A"/></linearGradient>
+    <linearGradient id="rf2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>
+  </defs>
+  <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#rf1)" opacity="0.95"/>
+  <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#rf1)" opacity="0.6"/>
+  <circle cx="16" cy="15" r="5" fill="url(#rf2)"/>
+</svg> <span style="font-family:'Lora',Georgia,serif;font-weight:600;letter-spacing:-.3px">ampara</span><span style="font-weight:400;margin-left:4px"> · Cuidado em família, com carinho</span></div>
         <div class="rep-footer-url">appampara.github.io/ampara</div>
       </div>
       <div class="rep-footer-meta">
