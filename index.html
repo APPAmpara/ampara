@@ -1597,92 +1597,6 @@ async function sbDelete(table, query){
 }
 
 // ── SAVE — grava tudo no Supabase ──────────────────
-async function saveDB(){
-  pauseSync(8000); // prevent echo of our own write
-  try {
-    // Pacientes — usa o id da linha do Supabase guardado no _supaId
-    const patResults = await Promise.all(DB.patients.map(async p => {
-      const rowId = p._supaId || p.id;
-      const { _supaId, ...patData } = p; // remove _supaId do JSON salvo
-      const r = await fetch(`${SUPA_URL}/rest/v1/patients?id=eq.${rowId}`, {
-        method: 'PATCH',
-        headers: { ...SUPA_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ data: patData, updated_at: new Date().toISOString() })
-      });
-      if(!r.ok){
-        const err = await r.text();
-        console.warn(`Ampara: erro ao salvar paciente ${p.name}:`, err);
-      } else {
-        console.log(`Ampara: ✓ ${p.name} salvo (row=${rowId})`);
-      }
-      return r.ok;
-    }));
-
-    const allOk = patResults.every(Boolean);
-    if(!allOk) console.warn('Ampara: alguns pacientes não foram salvos corretamente');
-
-    // Usuários do app
-    const userRows = DB.users.map(u => ({
-      id: u.id, name: u.name, email: u.email, pass: u.pass,
-      role: u.role, avatar: u.avatar, patient_ids: JSON.stringify(u.patientIds)
-    }));
-    if(userRows.length) await sbUpsert('app_users', userRows);
-
-    // Solicitações
-    const reqRows = DB.requests.map(r => ({ id: r.id, data: r }));
-    if(reqRows.length) await sbUpsert('requests', reqRows);
-
-    // Configurações
-    await sbUpsert('config', [
-      { key: 'alertConfig', value: DB.alertConfig }
-    ]);
-
-    console.log('Ampara: dados salvos com sucesso no Supabase');
-  } catch(e) {
-    console.warn('Ampara: erro ao salvar no Supabase', e.message);
-    // Fallback: salva no localStorage
-    try { localStorage.setItem('ampara_v1', JSON.stringify({ patients: DB.patients, users: DB.users, requests: DB.requests, alertConfig: DB.alertConfig, currentUser: DB.currentUser, pid: DB.pid })); } catch(_){}
-  }
-}
-
-// ── LOAD — carrega tudo do Supabase ────────────────
-async function loadDB(){
-  try {
-    // Carrega em paralelo
-    const [pats, users, reqs, cfgs] = await Promise.all([
-      sbGet('patients', '?select=id,data&order=id'),
-      sbGet('app_users', '?select=*&order=created_at'),
-      sbGet('requests', '?select=data&order=created_at'),
-      sbGet('config', '?select=*'),
-    ]);
-
-    if(pats.length) DB.patients = pats.map(r => ({ ...r.data, _supaId: r.id }));
-    if(reqs.length) DB.requests = reqs.map(r => r.data);
-
-    if(users.length){
-      DB.users = users.map(u => ({
-        id: u.id, name: u.name, email: u.email, pass: u.pass,
-        role: u.role, avatar: u.avatar,
-        patientIds: typeof u.patient_ids === 'string' ? JSON.parse(u.patient_ids) : u.patient_ids
-      }));
-    }
-
-    cfgs.forEach(c => {
-      if(c.key === 'alertConfig' && c.value) DB.alertConfig = c.value;
-    });
-
-    return true;
-  } catch(e) {
-    console.warn('Ampara: erro ao carregar do Supabase', e.message);
-    // Fallback: tenta localStorage
-    try {
-      const raw = localStorage.getItem('ampara_v1');
-      if(raw){ const d=JSON.parse(raw); ['patients','users','requests','alertConfig','currentUser','pid'].forEach(k=>{ if(d[k]!==undefined) DB[k]=d[k]; }); return true; }
-    } catch(_){}
-    return false;
-  }
-}
-
 // ════════════════════════════════════════════════════
 // SYNC ENGINE — polling em background a cada 15s
 // Detecta mudanças no Supabase e atualiza sem travar a UI
@@ -1771,7 +1685,7 @@ function _showSyncBadge(){
   const badge = document.createElement('div');
   badge.id = 'sync-badge';
   badge.textContent = '↻ Sincronizado';
-  badge.style.cssText = 'position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-family:'DM Sans',sans-serif';
+  badge.style.cssText = "position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;font-family:'DM Sans',sans-serif";
   document.querySelector('.shell')?.appendChild(badge);
   requestAnimationFrame(()=>{ badge.style.opacity='1'; });
   badge._t = setTimeout(()=>{ badge.style.opacity='0'; setTimeout(()=>badge.remove(),400); }, 2000);
@@ -1780,6 +1694,92 @@ function _showSyncBadge(){
 // Pause sync during saves to avoid echoing our own write
 const _origSaveDB = saveDB;
 // saveDB already pauses sync internally
+
+async function saveDB(){
+  pauseSync(8000); // prevent echo of our own write
+  try {
+    // Pacientes — usa o id da linha do Supabase guardado no _supaId
+    const patResults = await Promise.all(DB.patients.map(async p => {
+      const rowId = p._supaId || p.id;
+      const { _supaId, ...patData } = p; // remove _supaId do JSON salvo
+      const r = await fetch(`${SUPA_URL}/rest/v1/patients?id=eq.${rowId}`, {
+        method: 'PATCH',
+        headers: { ...SUPA_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ data: patData, updated_at: new Date().toISOString() })
+      });
+      if(!r.ok){
+        const err = await r.text();
+        console.warn(`Ampara: erro ao salvar paciente ${p.name}:`, err);
+      } else {
+        console.log(`Ampara: ✓ ${p.name} salvo (row=${rowId})`);
+      }
+      return r.ok;
+    }));
+
+    const allOk = patResults.every(Boolean);
+    if(!allOk) console.warn('Ampara: alguns pacientes não foram salvos corretamente');
+
+    // Usuários do app
+    const userRows = DB.users.map(u => ({
+      id: u.id, name: u.name, email: u.email, pass: u.pass,
+      role: u.role, avatar: u.avatar, patient_ids: JSON.stringify(u.patientIds)
+    }));
+    if(userRows.length) await sbUpsert('app_users', userRows);
+
+    // Solicitações
+    const reqRows = DB.requests.map(r => ({ id: r.id, data: r }));
+    if(reqRows.length) await sbUpsert('requests', reqRows);
+
+    // Configurações
+    await sbUpsert('config', [
+      { key: 'alertConfig', value: DB.alertConfig }
+    ]);
+
+    console.log('Ampara: dados salvos com sucesso no Supabase');
+  } catch(e) {
+    console.warn('Ampara: erro ao salvar no Supabase', e.message);
+    // Fallback: salva no localStorage
+    try { localStorage.setItem('ampara_v1', JSON.stringify({ patients: DB.patients, users: DB.users, requests: DB.requests, alertConfig: DB.alertConfig, currentUser: DB.currentUser, pid: DB.pid })); } catch(_){}
+  }
+}
+
+// ── LOAD — carrega tudo do Supabase ────────────────
+async function loadDB(){
+  try {
+    // Carrega em paralelo
+    const [pats, users, reqs, cfgs] = await Promise.all([
+      sbGet('patients', '?select=id,data&order=id'),
+      sbGet('app_users', '?select=*&order=created_at'),
+      sbGet('requests', '?select=data&order=created_at'),
+      sbGet('config', '?select=*'),
+    ]);
+
+    if(pats.length) DB.patients = pats.map(r => ({ ...r.data, _supaId: r.id }));
+    if(reqs.length) DB.requests = reqs.map(r => r.data);
+
+    if(users.length){
+      DB.users = users.map(u => ({
+        id: u.id, name: u.name, email: u.email, pass: u.pass,
+        role: u.role, avatar: u.avatar,
+        patientIds: typeof u.patient_ids === 'string' ? JSON.parse(u.patient_ids) : u.patient_ids
+      }));
+    }
+
+    cfgs.forEach(c => {
+      if(c.key === 'alertConfig' && c.value) DB.alertConfig = c.value;
+    });
+
+    return true;
+  } catch(e) {
+    console.warn('Ampara: erro ao carregar do Supabase', e.message);
+    // Fallback: tenta localStorage
+    try {
+      const raw = localStorage.getItem('ampara_v1');
+      if(raw){ const d=JSON.parse(raw); ['patients','users','requests','alertConfig','currentUser','pid'].forEach(k=>{ if(d[k]!==undefined) DB[k]=d[k]; }); return true; }
+    } catch(_){}
+    return false;
+  }
+}
 
 // ── DELETE paciente do Supabase ────────────────────
 async function deletePatient(id){
@@ -4757,9 +4757,7 @@ Regras:
       prev.style.objectFit='cover';
       document.getElementById('ne-photo-placeholder').style.display='none';
       document.getElementById('ne-photo-remove').style.display='flex';
-      document.getElementById('ne-photo-remove').style.display='flex';
-    };
-    reader.readAsDataURL(file);
+    });
   });
   wire('ne-photo-remove','click',e=>{
     e.stopPropagation();
