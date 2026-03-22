@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<meta name="theme-color" content="#5C7E6A"/>
+<meta name="theme-color" content="#2D4A3E"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -11,12 +11,16 @@
 <link rel="manifest" href="manifest.json"/>
 <title>Ampara</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
 <style>
 :root{
+  /* ── Brand palette ── */
   --sage:#5C7E6A;--sl:#E8F0EB;--sm:#A8C4B0;
+  --dark:#2D4A3E;--darker:#1E2820;
   --cream:#FAF8F4;--warm:#F2EDE4;
-  --amber:#D4885C;--al:#FAF0E8;
+  --amber:#D4885C;--amber-light:#E8A87C;--al:#FAF0E8;
   --text:#1E2820;--tm:#4A5E52;--tmu:#8A9E92;
   --border:#DDE8E0;--W:#FFF;
   --red:#C0544A;--rl:#FAECEA;
@@ -24,17 +28,18 @@
   --grn:#3D7A58;--gl:#E6F4EC;
   --blue:#3A6EA5;--bl:#E6EFF8;
   --r:16px;--rs:10px;
-  --sh:0 1px 7px rgba(60,90,70,.09);
+  --sh:0 1px 8px rgba(30,40,32,.10);
+  --sh2:0 4px 20px rgba(30,40,32,.13);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 12px}
-.shell{width:100%;max-width:420px;background:var(--cream);border-radius:36px;box-shadow:0 28px 70px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.5)inset;overflow:hidden;position:relative;display:flex;flex-direction:column;height:calc(100vh - 48px);max-height:900px;min-height:600px}
+body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 12px}
+.shell{width:100%;max-width:420px;background:var(--cream);border-radius:36px;box-shadow:0 32px 80px rgba(30,40,32,.28),0 0 0 1px rgba(255,255,255,.55)inset;overflow:hidden;position:relative;display:flex;flex-direction:column;height:calc(100vh - 48px);max-height:900px;min-height:600px}
 .screen{display:none;flex-direction:column;height:100%;overflow:hidden;position:relative}
 .screen.active{display:flex}
 
 /* NAV */
 .nav{display:flex;align-items:center;justify-content:space-between;padding:15px 20px 11px;background:var(--W);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;z-index:10}
-.ntitle{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--text);white-space:nowrap}
+.ntitle{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--darker);white-space:nowrap}
 .nback{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--sage);font-weight:500;cursor:pointer;background:none;border:none;white-space:nowrap;flex-shrink:0}
 .nback svg{width:16px;height:16px}
 .nact{font-size:13px;color:var(--sage);font-weight:600;cursor:pointer;background:none;border:none;white-space:nowrap;flex-shrink:0}
@@ -46,7 +51,8 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 /* BOTTOM NAV — 4 icons */
 .bnav{display:flex;background:var(--W);border-top:1px solid var(--border);padding:8px 0 14px;flex-shrink:0;z-index:10}
 .bi{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 2px;background:none;border:none;font-size:10px;color:var(--tmu);font-family:'DM Sans',sans-serif;font-weight:500;position:relative}
-.bi.on{color:var(--sage)}
+.bi.on{color:var(--dark)}
+.bi.on::after{content:'';position:absolute;bottom:-2px;width:4px;height:4px;border-radius:50%;background:var(--amber)}
 .bi svg{width:20px;height:20px}
 /* notification dot on bottom nav icon */
 .bi-badge{position:absolute;top:2px;right:calc(50% - 16px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;line-height:14px;min-width:16px;text-align:center}
@@ -59,22 +65,22 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 .fab-lbl{background:var(--text);color:#fff;padding:5px 10px;border-radius:18px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:var(--sh)}
 .fab-s{width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,.18);background:var(--W);flex-shrink:0;transition:transform .12s}
 .fab-s:active{transform:scale(.92)}
-.fab-m{width:56px;height:56px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,136,92,.45);font-size:26px;transition:transform .15s,background .2s}
+.fab-m{width:56px;height:56px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;transition:transform .15s,background .2s}
 .fab-m:active{transform:scale(.92)}
 .fab-m.open{background:var(--red)}
 
 /* BTNS */
 .btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px 18px;border-radius:var(--rs);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:transform .12s,opacity .12s}
 .btn:active{transform:scale(.97);opacity:.88}
-.bp{background:var(--sage);color:#fff}
+.bp{background:linear-gradient(135deg,var(--dark),var(--sage));color:#fff;box-shadow:0 2px 10px rgba(45,74,62,.28)}
 .bs{background:var(--sl);color:var(--sage)}
 .bo{background:transparent;color:var(--tm);border:1.5px solid var(--border)}
 .bd{background:var(--rl);color:var(--red)}
 .bsm{padding:8px 12px;font-size:12px;width:auto;border-radius:8px}
-.bamber{background:var(--amber);color:#fff}
+.bamber{background:linear-gradient(135deg,#C0704A,var(--amber));color:#fff;box-shadow:0 2px 10px rgba(212,136,92,.3)}
 
 /* CARDS */
-.card{background:var(--W);border-radius:var(--r);padding:14px;box-shadow:var(--sh);border:1px solid var(--border)}
+.card{background:var(--W);border-radius:var(--r);padding:14px;box-shadow:var(--sh);border:1px solid var(--border);transition:box-shadow .15s}
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
@@ -233,12 +239,12 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* LOGIN */
-.lbg{background:linear-gradient(155deg,#2D4A3E,#5C7E6A 60%,#7FA893 100%);padding:52px 28px 44px;display:flex;flex-direction:column;align-items:center}
-.llogo{font-family:'Lora',serif;font-size:38px;font-weight:600;color:#fff;letter-spacing:-.5px}
+.lbg{background:linear-gradient(155deg,#162b20 0%,#2D4A3E 45%,#5C7E6A 80%,#7FA893 100%);padding:52px 28px 44px;display:flex;flex-direction:column;align-items:center;position:relative}
+.llogo{font-family:'Lora',serif;font-size:38px;font-weight:600;color:#fff;letter-spacing:-.5px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .lsub{font-size:13px;color:rgba(255,255,255,.72);margin-top:4px}
 
 /* DASH HEADER */
-.dh{background:linear-gradient(140deg,#2D4A3E,#5C7E6A);padding:18px 20px 22px;color:#fff}
+.dh{background:linear-gradient(140deg,#162b20,#2D4A3E 50%,#4A7A60);padding:18px 20px 22px;color:#fff}
 .dname{font-family:'Lora',serif;font-size:20px;font-weight:600}
 .dmeta{font-size:12px;opacity:.78;margin-top:2px}
 .dchip{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(255,255,255,.18);padding:4px 11px;border-radius:18px;font-size:11px;font-weight:600}
@@ -265,6 +271,15 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 
 /* VS STRIP */
 .vssi{background:var(--W);border-radius:var(--rs);padding:10px 11px;border:1px solid var(--border);box-shadow:var(--sh);min-width:86px;flex-shrink:0;cursor:pointer}
+/* PDF generating overlay inside shell */
+.pdf-gen-ov{position:absolute;inset:0;background:rgba(10,20,15,.82);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:36px;opacity:0;pointer-events:none;transition:opacity .2s}
+.pdf-gen-ov.show{opacity:1;pointer-events:all}
+.pdf-gen-box{background:var(--cream);border-radius:16px;padding:28px 32px;text-align:center;width:260px}
+.pdf-gen-emoji{font-size:36px;margin-bottom:12px}
+.pdf-gen-title{font-family:'Lora',serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pdf-gen-status{font-size:12px;color:var(--tmu);margin-bottom:14px}
+.pdf-gen-bar{width:100%;height:5px;background:var(--border);border-radius:10px;overflow:hidden}
+.pdf-gen-fill{height:100%;background:var(--amber);border-radius:10px;width:0;transition:width .4s ease}
 
 /* MEU DOUTOR button */
 .meu-doutor-btn{position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;z-index:20;font-family:'DM Sans',sans-serif;transition:all .15s}
@@ -306,6 +321,29 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 /* Patient register warning */
 .reg-warning{background:#FFF3CD;border:1.5px solid #F0AD4E;border-radius:var(--rs);padding:12px 14px;margin:12px 0;display:flex;gap:9px;align-items:flex-start}
 .reg-warning-text{font-size:12px;color:#7a5500;line-height:1.6}
+
+/* ── PHOTO CROP MODAL ── */
+.crop-overlay{position:absolute;inset:0;background:rgba(10,20,15,.88);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .22s}
+.crop-overlay.show{opacity:1;pointer-events:all}
+.crop-sheet{background:#1a2820;width:100%;border-radius:24px 24px 0 0;padding:18px 20px 36px;display:flex;flex-direction:column;align-items:center;gap:14px;transform:translateY(100%);transition:transform .28s cubic-bezier(.25,.8,.25,1)}
+.crop-overlay.show .crop-sheet{transform:translateY(0)}
+.crop-title{font-family:'Lora',serif;font-size:16px;font-weight:600;color:#fff}
+.crop-sub{font-size:12px;color:rgba(255,255,255,.5);text-align:center;margin-top:-8px}
+.crop-stage{position:relative;width:280px;height:280px;border-radius:12px;overflow:hidden;background:#111;cursor:move;touch-action:none;user-select:none;flex-shrink:0}
+.crop-img{position:absolute;transform-origin:top left}
+.crop-frame{position:absolute;inset:0;border:3px solid rgba(255,255,255,.85);border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.55);pointer-events:none}
+.crop-corner{position:absolute;width:18px;height:18px;border-color:#fff;border-style:solid}
+.crop-corner.tl{top:-1px;left:-1px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.crop-corner.tr{top:-1px;right:-1px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.crop-corner.bl{bottom:-1px;left:-1px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.crop-corner.br{bottom:-1px;right:-1px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.crop-controls{display:flex;align-items:center;gap:12px;width:100%}
+.crop-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.crop-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:4px;background:rgba(255,255,255,.2);outline:none}
+.crop-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#D4885C;cursor:pointer;box-shadow:0 2px 8px rgba(212,136,92,.5)}
+.crop-actions{display:flex;gap:10px;width:100%}
+.crop-btn-cancel{flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.crop-btn-save{flex:1.5;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#C0704A,#D4885C);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 12px rgba(212,136,92,.4)}
 </style>
 </head>
 <body>
@@ -313,7 +351,21 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 
 <!-- ══ LOGIN ══════════════════════════════════════════ -->
 <div class="screen active" id="s-login">
-  <div class="lbg"><div class="llogo">🌿 Ampara</div><div class="lsub">Cuidado em família, com carinho</div></div>
+  <div class="lbg"><div class="llogo" style="display:flex;flex-direction:column;align-items:center;gap:10px">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="64" height="64">
+    <defs>
+      <linearGradient id="ll1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>
+      <linearGradient id="ll2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>
+      <filter id="llf"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/></filter>
+    </defs>
+    <path d="M36,36 C36,18 26,6 12,0 C17,12 18,24 22,33 C26,42 31,48 36,49 Z" fill="url(#ll1)" opacity="0.95"/>
+    <path d="M36,36 C36,18 46,6 60,0 C55,12 54,24 50,33 C46,42 41,48 36,49 Z" fill="url(#ll1)" opacity="0.58"/>
+    <circle cx="36" cy="34" r="10" fill="url(#ll2)" filter="url(#llf)"/>
+    <circle cx="33" cy="31" r="3.2" fill="#FAF8F4" opacity="0.55"/>
+  </svg>
+  <span style="font-family:'Lora',serif;font-size:36px;font-weight:600;letter-spacing:-.5px">ampara</span>
+</div>
+<div class="lsub">Cuidado em família, com carinho</div></div>
   <div class="scroll" style="padding:22px 20px 30px">
     <div class="fg"><label class="fl">E-mail</label><input class="fi" type="email" id="li-email" placeholder="seu@email.com" autocomplete="email"/></div>
     <div class="fg" style="position:relative">
@@ -326,12 +378,28 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
     </div>
     <button class="btn bp" id="btn-login">Entrar</button>
     <div id="li-error" style="display:none;margin-top:10px;background:var(--rl);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--red);text-align:center">E-mail ou senha incorretos.</div>
+
+    <!-- ── ACESSO RÁPIDO ── -->
     <div style="display:flex;align-items:center;gap:10px;margin:20px 0">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--tmu);font-weight:600">ACESSO RÁPIDO</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <button id="btn-quick-ana" style="width:100%;padding:11px 14px;background:var(--warm);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:12px;transition:all .15s;text-align:left" onmouseenter="this.style.borderColor='var(--sage)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2D4A3E,#5C7E6A);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🧑‍⚕️</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Ana Oliveira</div>
+        <div style="font-size:11px;color:var(--tmu);margin-top:1px">Cuidadora profissional · Demo</div>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;color:var(--tmu);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 0">
       <div style="flex:1;height:1px;background:var(--border)"></div>
       <span style="font-size:11px;color:var(--tmu);font-weight:600">OU</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
-    <button class="btn bo" id="lnk-reg" style="font-size:14px">Criar nova conta</button>
+    <button class="btn bo" id="lnk-reg" style="font-size:14px;margin-top:16px">Criar nova conta</button>
     <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--tmu);line-height:1.6">
       Ao entrar você concorda com os termos de uso e política de privacidade do Ampara.
     </div>
@@ -389,9 +457,19 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 
 <!-- ══ PACIENTES — tela de seleção antes do app ══════ -->
 <div class="screen" id="s-patients">
-  <div style="background:linear-gradient(155deg,#2D4A3E,#5C7E6A 60%,#7FA893);padding:28px 20px 22px">
+  <div style="background:linear-gradient(155deg,#162b20 0%,#2D4A3E 45%,#5C7E6A 80%,#7FA893 100%);padding:28px 20px 22px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-      <div style="font-size:12px;color:rgba(255,255,255,.72)" id="pat-greeting">Olá 👋</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="18" height="18">
+        <defs><linearGradient id="phl1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="rgba(168,196,176,0.9)"/><stop offset="100%" stop-color="rgba(200,221,213,0.8)"/></linearGradient>
+        <linearGradient id="phl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient></defs>
+        <path d="M14,14 C14,6 9,1 3,0 C5,5 6,10 8,13 C10,16 12,19 14,19 Z" fill="url(#phl1)" opacity="0.9"/>
+        <path d="M14,14 C14,6 19,1 25,0 C23,5 22,10 20,13 C18,16 16,19 14,19 Z" fill="url(#phl1)" opacity="0.55"/>
+        <circle cx="14" cy="13" r="4.5" fill="url(#phl2)"/>
+      </svg>
+      <span style="font-family:'Lora',serif;font-size:12px;font-weight:500;color:rgba(255,255,255,.7)">ampara</span>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,.72)" id="pat-greeting">Olá 👋</div>
       <div style="display:flex;gap:7px;align-items:center">
         <div id="pat-master-btn" style="display:none;background:rgba(255,255,255,.18);border:none;color:#fff;padding:4px 10px;border-radius:14px;font-size:11px;cursor:pointer;font-weight:600" onclick="A.renderAdmin();go('s-admin')">← Master</div>
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:14px" id="pat-avatar">👩</div>
@@ -556,9 +634,22 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
         <div class="net-recipients" id="net-recipients"></div>
       </div>
       <!-- Actions -->
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <div id="dm-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
         <button class="btn bp" id="dm-confirm">✓ Confirmar administração</button>
         <button class="btn bo" id="dm-cancel">Cancelar</button>
+        <button id="dm-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Remover esta medicação
+        </button>
+      </div>
+      <!-- Confirm removal panel (shown on remove click) -->
+      <div id="dm-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
+        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm-remove-name"></strong> de todas as medicações do paciente.</div>
+        <div style="display:flex;gap:8px">
+          <button id="dm-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
+          <button id="dm-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
+        </div>
       </div>
     </div>
   </div>
@@ -583,8 +674,9 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
     <div class="st" style="margin-top:8px">Toque em um sinal para ver o histórico</div>
     <div class="vsgrid" id="vs-cards"></div>
   </div>
+  <div id="vs-hist" style="display:none"></div>
   <!-- FAB + para novo sinal vital -->
-  <button id="vs-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--sage);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(92,126,106,.45);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
+  <button id="vs-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
   <div class="bnav">
     <button class="bi" id="bn-vs-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
     <button class="bi" id="bn-vs-tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
@@ -602,7 +694,7 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
   </div>
   <div class="scroll">
     <div style="padding:14px 20px 0">
-      <div style="background:linear-gradient(135deg,#2D4A3E,#5C7E6A);border-radius:var(--r);padding:13px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+      <div style="background:linear-gradient(135deg,#162b20,#2D4A3E 50%,#5C7E6A);border-radius:var(--r);padding:13px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
         <div style="font-size:28px">💊</div>
         <div><div style="font-size:14px;font-weight:600;color:#fff" id="nv-pname">—</div><div style="font-size:11px;color:rgba(255,255,255,.72)">Preencha os valores medidos agora</div></div>
       </div>
@@ -649,7 +741,7 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
     <div style="padding:0 20px" id="meds-hist"></div>
   </div>
   <!-- FAB + para adicionar medicação -->
-  <button id="meds-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--sage);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(92,126,106,.45);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
+  <button id="meds-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
   <!-- Dose modal also needed here -->
   <div class="modal-ov" id="dose-modal-meds">
     <div class="modal-sheet">
@@ -672,9 +764,22 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
         <div class="net-alert-body">A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.</div>
         <div class="net-recipients" id="net-recipients-2"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <div id="dm2-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
         <button class="btn bp" id="dm2-confirm">✓ Confirmar administração</button>
         <button class="btn bo" id="dm2-cancel">Cancelar</button>
+        <button id="dm2-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Remover esta medicação
+        </button>
+      </div>
+      <!-- Confirm removal panel -->
+      <div id="dm2-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
+        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm2-remove-name"></strong> de todas as medicações do paciente.</div>
+        <div style="display:flex;gap:8px">
+          <button id="dm2-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
+          <button id="dm2-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
+        </div>
       </div>
     </div>
   </div>
@@ -942,7 +1047,7 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 
 <!-- ══ MASTER — PAINEL ADMIN ══════════════════════════ -->
 <div class="screen" id="s-admin">
-  <div style="background:linear-gradient(135deg,#1a2e28,#2D4A3E);padding:28px 20px 22px;color:#fff;flex-shrink:0">
+  <div style="background:linear-gradient(135deg,#0e1f16,#1E2820 40%,#2D4A3E);padding:28px 20px 22px;color:#fff;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:11px;color:rgba(255,255,255,.6)">Acesso Master</div>
       <button id="admin-logout" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:4px 11px;border-radius:14px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Sair</button>
@@ -1188,6 +1293,43 @@ body{font-family:'DM Sans',sans-serif;background:#CDD8C9;display:flex;align-item
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── PDF GENERATING OVERLAY ── -->
+<div class="pdf-gen-ov" id="pdf-gen-ov">
+  <div class="pdf-gen-box">
+    <div class="pdf-gen-emoji">📄</div>
+    <div class="pdf-gen-title">Gerando PDF...</div>
+    <div class="pdf-gen-status" id="pdf-gen-status">Preparando relatório</div>
+    <div class="pdf-gen-bar"><div class="pdf-gen-fill" id="pdf-gen-fill"></div></div>
+  </div>
+</div>
+
+<!-- ── PHOTO CROP MODAL ── -->
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-sheet">
+    <div class="crop-title">Ajustar foto</div>
+    <div class="crop-sub">Arraste para reposicionar · Use o controle para ajustar o zoom</div>
+    <div class="crop-stage" id="crop-stage">
+      <img id="crop-img" class="crop-img" draggable="false"/>
+      <div class="crop-frame">
+        <div class="crop-corner tl"></div>
+        <div class="crop-corner tr"></div>
+        <div class="crop-corner bl"></div>
+        <div class="crop-corner br"></div>
+      </div>
+    </div>
+    <div class="crop-controls">
+      <span class="crop-label">Zoom</span>
+      <input type="range" class="crop-slider" id="crop-zoom" min="100" max="300" value="100" step="1"/>
+      <span style="font-size:11px;color:rgba(255,255,255,.4)" id="crop-zoom-val">1×</span>
+    </div>
+    <div class="crop-actions">
+      <button class="crop-btn-cancel" id="crop-cancel">Cancelar</button>
+      <button class="crop-btn-save" id="crop-save">✓ Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /shell -->
 
 <script data-cfasync="false">
@@ -1816,11 +1958,16 @@ const A = {
         DB.pid=parseInt(el.dataset.pid);
         const p=DB.p;
         if(!p) return;
-        // Avaliação obrigatória se: nunca feita, ou lembrete vencido
-        const reminderExpired=p._evalReminderAt&&Date.now()>p._evalReminderAt;
-        if(!p.initialEvalDone&&(!p._evalReminderAt||reminderExpired)){
+        // Avaliação inicial apenas se: nunca feita E paciente sem dados (recém cadastrado)
+        // Pacientes existentes com vitais ou eventos NÃO abrem a avaliação
+        const hasData = (p.vitals&&p.vitals.length>0)||(p.events&&p.events.length>0)||(p.medSchedule&&p.medSchedule.length>0);
+        const isForced = p._evalReminderAt && Date.now()>p._evalReminderAt && !p.initialEvalDone && !hasData;
+        const isNew = !p.initialEvalDone && !hasData && !p._evalReminderAt;
+        if(isNew || isForced){
           A.renderInitialEval();go('s-initial-eval');
         } else {
+          // Marca como feita se tem dados (paciente migrado do sistema antigo)
+          if(!p.initialEvalDone && hasData){ p.initialEvalDone=true; saveDB(); }
           A.renderDash();go('s-dash');
         }
       });
@@ -2001,8 +2148,13 @@ const A = {
         <button style="display:flex;align-items:center;gap:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif" id="dh-back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>Pacientes
         </button>
-        <button style="background:rgba(255,255,255,.18);border:none;color:#fff;padding:6px 12px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:5px" id="dh-meu-doutor">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Meu Doutor
+        <button style="background:var(--amber);border:none;color:#fff;padding:7px 13px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(212,136,92,.4)" id="dh-meu-doutor">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="13" height="13">
+            <defs><linearGradient id="dhml" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient></defs>
+            <path d="M10,10 C10,4 6,1 2,0 C4,3 4,7 6,9.5 C8,12 9,13.5 10,14 Z" fill="url(#dhml)"/>
+            <path d="M10,10 C10,4 14,1 18,0 C16,3 16,7 14,9.5 C12,12 11,13.5 10,14 Z" fill="rgba(255,255,255,0.55)"/>
+            <circle cx="10" cy="9.5" r="3.2" fill="rgba(255,255,255,0.9)"/>
+          </svg>Meu Doutor
         </button>
       </div>
       <div style="display:flex;align-items:center;gap:13px">
@@ -2021,7 +2173,7 @@ const A = {
         </div>
       </div>`;
     document.getElementById('dh-back').addEventListener('click',()=>go('s-patients'));
-    document.getElementById('dh-meu-doutor').addEventListener('click',()=>{renderMeuDoutor();go('s-meu-doutor');});
+    document.getElementById('dh-meu-doutor').addEventListener('click',()=>{renderMeuDoutor().then(()=>go('s-meu-doutor'));});
     document.getElementById('dh-status-btn').addEventListener('click',()=>A.openStatusModal(status,p));
 
     // Read-only banner for doctors
@@ -2257,6 +2409,18 @@ const A = {
   closeDoseModal(modalId){
     document.getElementById(modalId).classList.remove('show');
     A._dCtx=null;
+    // Reset inline confirm panels
+    if(modalId==='dose-modal'){
+      const p=document.getElementById('dm-confirm-remove');
+      const m=document.getElementById('dm-actions-main');
+      if(p) p.style.display='none';
+      if(m) m.style.display='flex';
+    } else {
+      const p=document.getElementById('dm2-confirm-remove');
+      const m=document.getElementById('dm2-actions-main');
+      if(p) p.style.display='none';
+      if(m) m.style.display='flex';
+    }
   },
 
   confirmDose(modalId){
@@ -2332,7 +2496,7 @@ const A = {
         openVSDetail(VSDEF[idx],vitals);
       });
     });
-    document.getElementById('vs-hist').innerHTML=vitals.length===0
+    if(document.getElementById('vs-hist')) document.getElementById('vs-hist').innerHTML=vitals.length===0
       ?`<div style="padding:14px 0;text-align:center;color:var(--tmu);font-size:13px">Nenhum registro ainda.</div>`
       :vitals.map(v=>`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
           <div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)}</div><div style="font-size:10px;color:var(--tmu)">${v.time} · ${v.author}</div></div>
@@ -2652,23 +2816,7 @@ const A = {
         <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:1.6">${p.diag}</div>
         <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Comorbidades</div>
         <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px">${p.como}</div>
-        
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-          <div style="font-size:12px;font-weight:700;color:var(--text)">Medicações prescritas</div>
-          <button class="btn bsm" style="font-size:11px;padding:5px 10px;background:var(--sl);color:var(--sage);border:none" id="prof-add-med">+ Adicionar</button>
-        </div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px" id="prof-med-list">
-          ${(p.medSchedule||[]).length===0?'<div style="font-size:13px;color:var(--tmu)">Nenhuma medicação cadastrada.</div>':
-          (p.medSchedule||[]).map(m=>`
-            <div class="msr">
-              <div style="flex:1">
-                <div class="msr-name">${m.name} <span style="color:var(--tmu);font-weight:400;font-size:12px">${m.dose} ${m.unit}</span></div>
-                <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">${m.times.map(t=>`<span class="msr-time">${t}</span>`).join('')}</div>
-              </div>
-              <button style="background:var(--rl);border:none;color:var(--red);font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif" data-del-med="${m.id}">Remover</button>
-            </div>`).join('')}
-        </div>
-        
+
         <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Rede de apoio</div>
         <div class="card" style="padding:11px 13px;margin-bottom:12px">
           ${(p.suporte||[]).map(s=>`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text)">👤 ${s}</div>`).join('')}
@@ -2684,29 +2832,22 @@ const A = {
         <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;color:var(--tm);line-height:1.6">${p.obs||'—'}</div>
         <div style="margin-bottom:28px"><button class="btn bd" id="btn-rem">🗑 Remover paciente</button></div>
       </div>`;
-    document.getElementById('prof-add-med').addEventListener('click',()=>document.getElementById('addmed-modal').classList.add('show'));
-    document.querySelectorAll('[data-del-med]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const mid=btn.dataset.delMed;
-        p.medSchedule=p.medSchedule.filter(m=>m.id!==mid);
-        A.renderProf();toast('Medicação removida.');
-      });
-    });
+    // medications managed via the Medicações tab
     document.getElementById('btn-rem').addEventListener('click',()=>{
       if(!confirm('Remover este paciente?'))return;
       DB.patients=DB.patients.filter(x=>x.id!==DB.pid);DB.pid=null;A.renderPatList();go('s-patients');toast('Paciente removido.');
     });
-    // Profile photo upload
+    // Profile photo upload — with CropTool
     document.getElementById('prof-photo-input').addEventListener('change',function(){
       const file=this.files[0];if(!file)return;
-      const reader=new FileReader();
-      reader.onload=e=>{
-        p.photo=e.target.result;
-        A.renderProf(); // re-render to show new photo
-        A.renderDash(); // update dash header too
+      this.value=''; // reset input
+      CropTool.open(file, (base64)=>{
+        p.photo=base64;
+        saveDB();
+        A.renderProf();
+        A.renderDash();
         toast('✓ Foto atualizada!');
-      };
-      reader.readAsDataURL(file);
+      });
     });
   },
 
@@ -3070,18 +3211,25 @@ const A = {
 // ═══════════════════════════════════════════════════
 // MEU DOUTOR — render
 // ═══════════════════════════════════════════════════
-function renderMeuDoutor(){
+async function renderMeuDoutor(){
   const p=DB.p; if(!p) return;
   const status=A.calcOverallStatus(p);
   const role=DB.currentUser?.role;
   const adherence=A.calcAdherence(p);
   const lv=p.vitals&&p.vitals[0];
 
-  // Generate/reuse QR token (24h expiry)
+  // Generate/reuse QR token (24h expiry) — await save before showing QR
   if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
     p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
     p._qrExp=Date.now()+(24*60*60*1000);
-    saveDB();
+    // Show loading state while saving
+    document.getElementById('md-content').innerHTML=
+      '<div style="padding:40px 20px;text-align:center;color:var(--tmu)">'+
+      '<div style="font-size:32px;margin-bottom:10px">🔐</div>'+
+      '<div style="font-size:13px;font-weight:600">Gerando QR Code seguro...</div>'+
+      '<div style="font-size:11px;margin-top:4px">Salvando token no servidor</div></div>';
+    go('s-meu-doutor');
+    await saveDB();
   }
   const msLeft=p._qrExp-Date.now();
   const hLeft=Math.floor(msLeft/3600000);
@@ -3099,8 +3247,28 @@ function renderMeuDoutor(){
   }[status.level]||'';
 
   let html=`
-  <div style="background:linear-gradient(140deg,#2D4A3E,#5C7E6A);padding:20px 20px 24px">
-    <div style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:4px">${p.name} · ${p.age} anos</div>
+  <div style="background:linear-gradient(140deg,#162b20,#2D4A3E 50%,#4A7A60);padding:20px 20px 24px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;opacity:.8">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="22" height="22">
+        <defs><linearGradient id="mdl1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>
+        <linearGradient id="mdl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient></defs>
+        <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#mdl1)" opacity="0.9"/>
+        <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#mdl1)" opacity="0.55"/>
+        <circle cx="16" cy="15" r="5" fill="url(#mdl2)"/>
+      </svg>
+      <span style="font-family:'Lora',serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">ampara</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:2px">· Meu Doutor</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px">
+      <div>
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:#fff;line-height:1.2">${p.name}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${p.age} anos · ${p.sex||'—'}</div>
+      </div>
+      ${p.code?`<div style="background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.22);border-radius:10px;padding:8px 13px;text-align:center;flex-shrink:0">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:3px">ID do paciente</div>
+        <div style="font-size:17px;font-weight:700;color:#fff;font-family:monospace;letter-spacing:2px">${p.code}</div>
+      </div>`:''}
+    </div>
     <div style="display:inline-flex;align-items:center;gap:8px;background:${sBg};padding:9px 16px;border-radius:24px;margin-bottom:10px">
       <span style="font-size:18px">${status.icon}</span>
       <span style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</span>
@@ -3146,7 +3314,13 @@ function renderMeuDoutor(){
     <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">O médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
     <div id="md-qr-canvas" style="background:#fff;padding:8px;border-radius:10px;display:inline-block"></div>
     <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min · Gera novo a cada 24h</div>
-    <button class="btn bs bsm" id="md-regen-qr" style="margin-top:4px">🔄 Gerar novo QR</button>
+    <div style="display:flex;gap:8px;margin-top:4px;width:100%">
+      <button class="btn bs bsm" id="md-regen-qr" style="flex:1">🔄 Novo QR</button>
+      <button id="md-pdf-btn" style="flex:1.4;display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;background:linear-gradient(135deg,var(--dark),var(--sage));color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(45,74,62,.3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar PDF
+      </button>
+    </div>
   </div>`;
 
   document.getElementById('md-content').innerHTML=html;
@@ -3169,10 +3343,219 @@ function renderMeuDoutor(){
   document.getElementById('md-regen-qr')?.addEventListener('click',async ()=>{
     p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
     p._qrExp=Date.now()+(24*60*60*1000);
+    toast('⏳ Salvando novo QR Code...');
     await saveDB();
-    renderMeuDoutor();
-    toast('🔄 QR Code renovado por 24h!');
+    await renderMeuDoutor();
+    toast('🔄 QR Code renovado e salvo!');
   });
+
+  // ── PDF DOWNLOAD ──
+  document.getElementById('md-pdf-btn')?.addEventListener('click',()=>gerarPDFApp(p));
+}
+
+// ════════════════════════════════════════════════════
+// PDF GENERATION — inside the app
+// ════════════════════════════════════════════════════
+async function gerarPDFApp(p){
+  if(!window.jspdf||!window.html2canvas){
+    toast('⚠ Bibliotecas PDF ainda carregando, tente novamente.');
+    return;
+  }
+  const ov=document.getElementById('pdf-gen-ov');
+  const fill=document.getElementById('pdf-gen-fill');
+  const status=document.getElementById('pdf-gen-status');
+  const btn=document.getElementById('md-pdf-btn');
+
+  const prog=(pct,msg)=>{ fill.style.width=pct+'%'; status.textContent=msg; };
+
+  ov.classList.add('show');
+  if(btn) btn.disabled=true;
+
+  try{
+    prog(10,'Preparando relatório...');
+    await new Promise(r=>setTimeout(r,100));
+
+    // Build a temporary off-screen report div
+    const reportDiv=document.createElement('div');
+    reportDiv.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;font-family:DM Sans,sans-serif;font-size:13px;color:#1E2820;z-index:-1';
+    reportDiv.innerHTML=buildPDFReport(p);
+    document.body.appendChild(reportDiv);
+
+    prog(30,'Renderizando conteúdo...');
+    await new Promise(r=>setTimeout(r,200));
+
+    const canvas=await html2canvas(reportDiv,{
+      scale:2, useCORS:true, allowTaint:true,
+      backgroundColor:'#ffffff', logging:false,
+      width:800, scrollX:0, scrollY:0
+    });
+    document.body.removeChild(reportDiv);
+
+    prog(65,'Construindo PDF...');
+    await new Promise(r=>setTimeout(r,80));
+
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    const pageW=pdf.internal.pageSize.getWidth();
+    const pageH=pdf.internal.pageSize.getHeight();
+    const margin=10, imgW=pageW-margin*2;
+    const imgH=(canvas.height*imgW)/canvas.width;
+    const totalPages=Math.ceil(imgH/(pageH-margin*2));
+
+    for(let i=0;i<totalPages;i++){
+      if(i>0) pdf.addPage();
+      const sy=i*(pageH-margin*2)*(canvas.width/imgW);
+      const sh=Math.min((pageH-margin*2)*(canvas.width/imgW),canvas.height-sy);
+      const sc=document.createElement('canvas');
+      sc.width=canvas.width; sc.height=sh;
+      sc.getContext('2d').drawImage(canvas,0,sy,canvas.width,sh,0,0,canvas.width,sh);
+      const sliceH=(sh*imgW)/canvas.width;
+      pdf.addImage(sc.toDataURL('image/jpeg',.92),'JPEG',margin,margin,imgW,sliceH);
+    }
+
+    prog(90,'Salvando arquivo...');
+    await new Promise(r=>setTimeout(r,100));
+
+    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+    const name=(p.name||'paciente').split(' ').slice(0,2).join('_')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z_]/g,'');
+    pdf.save('Ampara_'+name+'_'+date+'.pdf');
+
+    prog(100,'PDF salvo!');
+    await new Promise(r=>setTimeout(r,800));
+    toast('✅ PDF baixado com sucesso!');
+
+  }catch(e){
+    status.textContent='Erro: '+e.message;
+    await new Promise(r=>setTimeout(r,2500));
+    toast('⚠ Erro ao gerar PDF.');
+  }finally{
+    ov.classList.remove('show');
+    if(btn) btn.disabled=false;
+    fill.style.width='0';
+  }
+}
+
+// Build the HTML report for PDF capture
+function buildPDFReport(p){
+  const lv=p.vitals&&p.vitals[0];
+  const meds=p.medSchedule||[];
+  const events=(p.events||[]).slice(0,6);
+  const MON_F=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const fmtD=ds=>{if(!ds)return'—';try{const[y,m,d]=ds.split('-');return`${parseInt(d)} de ${MON_F[parseInt(m)-1]} de ${y}`;}catch{return ds;}};
+  const fmtS=ds=>{if(!ds)return'—';try{const[y,m,d]=ds.split('-');return`${d}/${m}/${y}`;}catch{return ds;}};
+  const now=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const vsStatus=(k,v)=>{
+    if(v==null||isNaN(parseFloat(v)))return'none';
+    v=parseFloat(v);
+    if(k==='sis'){if(v>=160)return'alert';if(v>=140)return'warn';return'ok';}
+    if(k==='sat'){if(v<91)return'alert';if(v<94)return'warn';return'ok';}
+    if(k==='temp'){if(v>=38.5)return'alert';if(v>=37.5)return'warn';return'ok';}
+    if(k==='gli'){if(v>=200)return'alert';if(v>=140)return'warn';return'ok';}
+    if(k==='fc'){if(v<49||v>100)return'warn';return'ok';}
+    return'ok';
+  };
+  const stColor=s=>s==='alert'?'#C0392B':s==='warn'?'#B7860B':'#1E2820';
+  const riskColor=v=>({Alto:'#C0392B',Alta:'#C0392B',Moderado:'#B7860B',Moderada:'#B7860B',Baixo:'#1E7E4A',Baixa:'#1E7E4A','Bem nutrido':'#1E7E4A',Independente:'#1E7E4A','Em risco':'#B7860B',Desnutrido:'#C0392B'}[v]||'#7A9288');
+
+  const ss=(l,bg='#f0f5f1')=>`<div style="font-size:10px;font-weight:700;color:#2D5A3D;text-transform:uppercase;letter-spacing:1px;margin:20px 0 8px;padding:6px 0;border-bottom:2px solid #2D5A3D">${l}</div>`;
+  const row=(l,v,vc='#1E2820')=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E8F2EC"><span style="font-size:12px;color:#7A9288">${l}</span><span style="font-size:12px;font-weight:600;color:${vc}">${v}</span></div>`;
+
+  let h=`<div style="background:linear-gradient(135deg,#162b20,#2D4A3E 50%,#4A7A60);padding:32px;color:#fff;margin-bottom:0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;opacity:.75">
+      <span style="font-size:22px">🌿</span>
+      <span style="font-family:Georgia,serif;font-size:16px;font-weight:600;letter-spacing:.3px">ampara</span>
+      <span style="font-size:11px;opacity:.6;margin-left:4px">· Relatório Clínico</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div>
+        <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;letter-spacing:-.5px">${p.name}</div>
+        <div style="font-size:13px;opacity:.75;margin-top:4px">${p.age} anos · ${p.sex||'—'} · ${(p.diag||'—').split('·')[0].trim()}</div>
+      </div>
+      ${p.code?`<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:9px;opacity:.55;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">ID</div>
+        <div style="font-size:16px;font-weight:700;font-family:monospace;letter-spacing:2px">${p.code}</div>
+      </div>`:''}
+    </div>
+    <div style="font-size:10px;opacity:.5;margin-top:16px">Gerado em ${now} · Documento confidencial</div>
+  </div>
+  <div style="padding:24px 32px">`;
+
+  // Identificação
+  h+=ss('Identificação do paciente');
+  h+=row('Nome completo',p.name);
+  h+=row('Idade',p.age+' anos');
+  h+=row('Sexo',p.sex||'—');
+  h+=row('Diagnóstico',(p.diag||'—').split('·')[0].trim());
+  if(p.como) h+=row('Comorbidades',p.como);
+  if(p.obs) h+=row('Observações',p.obs);
+
+  // Sinais vitais
+  if(lv){
+    h+=ss('Sinais vitais — '+fmtS(lv.date)+' às '+lv.time);
+    const vsItems=[
+      {k:'sis',l:'Pressão arterial',v:lv.sis?lv.sis+'/'+lv.dia:'—',u:'mmHg'},
+      {k:'fc',l:'Freq. cardíaca',v:lv.fc,u:'bpm'},
+      {k:'temp',l:'Temperatura',v:lv.temp,u:'°C'},
+      {k:'sat',l:'Saturação O₂',v:lv.sat,u:'%'},
+      {k:'gli',l:'Glicemia',v:lv.gli,u:'mg/dL'},
+      {k:'fr',l:'Freq. resp.',v:lv.fr,u:'irpm'},
+      {k:'peso',l:'Peso',v:lv.peso,u:'kg'},
+    ].filter(i=>i.v&&i.v!=='—'&&i.v!=='null/null');
+    vsItems.forEach(i=>h+=row(i.l,i.v+' '+i.u,stColor(vsStatus(i.k,parseFloat(String(i.v).split('/')[0])))));
+    h+=row('Registrado por',lv.author||'—');
+  }
+
+  // Riscos
+  const risks=[
+    {l:'Risco de queda (Morse)',v:p.rF},
+    {l:'Nutricional (MNA)',v:p.rN},
+    {l:'Funcional (Barthel)',v:p.rFunc},
+    {l:'Hidratação',v:p.rHyd},
+  ].filter(r=>r.v&&r.v!=='—');
+  if(risks.length){
+    h+=ss('Avaliações de risco');
+    risks.forEach(r=>h+=row(r.l,r.v,riskColor(r.v)));
+  }
+
+  // Medicações
+  if(meds.length){
+    h+=ss('Medicações em uso ('+meds.length+')');
+    h+=`<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">
+      <tr style="background:#E8F2EC"><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase;letter-spacing:.6px">Medicamento</th><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase">Dose</th><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase">Horários</th></tr>
+      ${meds.map((m,i)=>`<tr style="background:${i%2===0?'#fff':'#fafcfa'}"><td style="padding:8px;font-weight:600">💊 ${m.name}</td><td style="padding:8px">${m.dose} ${m.unit}</td><td style="padding:8px">${(m.times||[]).join(', ')}</td></tr>`).join('')}
+    </table>`;
+  }
+
+  // Eventos
+  if(events.length){
+    h+=ss('Eventos recentes');
+    events.forEach(e=>{
+      h+=`<div style="padding:8px 0;border-bottom:1px solid #E8F2EC">
+        <div style="font-size:12px;font-weight:600;color:#1E2820">${e.type} <span style="font-weight:400;color:#7A9288">· ${fmtS(e.date)}</span></div>
+        ${e.desc?`<div style="font-size:12px;color:#4A5E52;margin-top:2px">${(e.desc||'').slice(0,200)}</div>`:''}
+        <div style="font-size:10px;color:#7A9288;margin-top:2px">Por: ${e.author||'—'} · Gravidade: ${e.grav||'—'}</div>
+      </div>`;
+    });
+  }
+
+  // Contato
+  const en=p.emergName||p.emerg_name;
+  if(en){
+    h+=ss('Contato de referência');
+    h+=row('Nome',en);
+    if(p.emergRel||p.emerg_rel) h+=row('Parentesco',p.emergRel||p.emerg_rel);
+    if(p.emergTel||p.emerg_tel) h+=row('Telefone',p.emergTel||p.emerg_tel);
+  }
+
+  h+=`</div>
+  <div style="background:#E8F2EC;padding:14px 32px;font-size:10px;color:#7A9288;line-height:1.6;text-align:center">
+    🌿 Ampara · appampara.github.io/ampara · Gerado em ${now}<br/>
+    <strong>⚠ CONFIDENCIAL</strong> · Uso exclusivo do profissional de saúde responsável
+  </div>`;
+
+  return h;
 }
 
 // QR Code rendered by QRCode.js library (loaded via CDN)
@@ -3216,7 +3599,7 @@ function renderInfographic(p){
         <div style="font-size:16px;font-weight:700;color:${sFg}">${status.level}</div>
         <div style="font-size:12px;color:var(--tm);margin-top:1px">${shortExplain}</div>
       </div>
-      <button style="margin-left:auto;background:${sBg};border:none;color:${sFg};padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
+      <button style="margin-left:auto;background:var(--amber);border:none;color:#fff;padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(212,136,92,.35)" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
       ${risks.map(r=>`<div style="text-align:center;background:var(--cream);border-radius:8px;padding:7px 4px">
@@ -3229,7 +3612,7 @@ function renderInfographic(p){
   </div>`;
 
   document.getElementById('dash-meu-doutor-btn')?.addEventListener('click',()=>{
-    renderMeuDoutor(); go('s-meu-doutor');
+    renderMeuDoutor().then(()=>go('s-meu-doutor'));
   });
 }
 
@@ -3296,6 +3679,149 @@ function openVSDetail(vsDef, vitals){
 }
 
 
+// ════════════════════════════════════════════════════
+// PHOTO CROP ENGINE — shared by profile + new patient
+// ════════════════════════════════════════════════════
+const CropTool = {
+  _cb: null,       // callback(base64) after crop
+  _scale: 1,       // current zoom scale
+  _ox: 0, _oy: 0,  // image offset (px within stage)
+  _dragging: false,
+  _lastX: 0, _lastY: 0,
+  _natW: 0, _natH: 0,  // natural image size
+  _stageW: 280, _stageH: 280,
+
+  open(file, callback){
+    if(!file) return;
+    this._cb = callback;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('crop-img');
+      img.onload = () => {
+        this._natW = img.naturalWidth;
+        this._natH = img.naturalHeight;
+        this._scale = 1;
+        this._ox = 0;
+        this._oy = 0;
+        document.getElementById('crop-zoom').value = 100;
+        document.getElementById('crop-zoom-val').textContent = '1×';
+        this._applyTransform();
+        document.getElementById('crop-overlay').classList.add('show');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  _applyTransform(){
+    const img = document.getElementById('crop-img');
+    const zoom = parseInt(document.getElementById('crop-zoom').value) / 100;
+    this._scale = zoom;
+    // Fit image so smallest side fills stage at zoom=1
+    const fitScale = Math.max(this._stageW / this._natW, this._stageH / this._natH);
+    const s = fitScale * zoom;
+    const w = this._natW * s;
+    const h = this._natH * s;
+    // Clamp offset so image always covers stage
+    this._ox = Math.min(0, Math.max(this._ox, this._stageW - w));
+    this._oy = Math.min(0, Math.max(this._oy, this._stageH - h));
+    img.style.width = w + 'px';
+    img.style.height = h + 'px';
+    img.style.transform = `translate(${this._ox}px,${this._oy}px)`;
+  },
+
+  crop(){
+    const img = document.getElementById('crop-img');
+    const zoom = parseInt(document.getElementById('crop-zoom').value) / 100;
+    const fitScale = Math.max(this._stageW / this._natW, this._stageH / this._natH);
+    const s = fitScale * zoom;
+    // Source rect in natural image coords
+    const srcX = -this._ox / s;
+    const srcY = -this._oy / s;
+    const srcW = this._stageW / s;
+    const srcH = this._stageH / s;
+    const canvas = document.createElement('canvas');
+    canvas.width = 400; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 400, 400);
+    return canvas.toDataURL('image/jpeg', 0.88);
+  },
+
+  close(){
+    document.getElementById('crop-overlay').classList.remove('show');
+    this._cb = null;
+  }
+};
+
+// Init crop tool drag & zoom interactions
+(function initCrop(){
+  const stage = document.getElementById('crop-stage');
+  const zoomEl = document.getElementById('crop-zoom');
+  if(!stage) return;
+
+  // Drag (mouse)
+  stage.addEventListener('mousedown', e => {
+    CropTool._dragging = true;
+    CropTool._lastX = e.clientX;
+    CropTool._lastY = e.clientY;
+    stage.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if(!CropTool._dragging) return;
+    CropTool._ox += e.clientX - CropTool._lastX;
+    CropTool._oy += e.clientY - CropTool._lastY;
+    CropTool._lastX = e.clientX;
+    CropTool._lastY = e.clientY;
+    CropTool._applyTransform();
+  });
+  document.addEventListener('mouseup', () => {
+    CropTool._dragging = false;
+    stage.style.cursor = 'move';
+  });
+
+  // Drag (touch)
+  stage.addEventListener('touchstart', e => {
+    if(e.touches.length === 1){
+      CropTool._dragging = true;
+      CropTool._lastX = e.touches[0].clientX;
+      CropTool._lastY = e.touches[0].clientY;
+    }
+    e.preventDefault();
+  }, {passive:false});
+  stage.addEventListener('touchmove', e => {
+    if(!CropTool._dragging || e.touches.length !== 1) return;
+    CropTool._ox += e.touches[0].clientX - CropTool._lastX;
+    CropTool._oy += e.touches[0].clientY - CropTool._lastY;
+    CropTool._lastX = e.touches[0].clientX;
+    CropTool._lastY = e.touches[0].clientY;
+    CropTool._applyTransform();
+    e.preventDefault();
+  }, {passive:false});
+  stage.addEventListener('touchend', () => { CropTool._dragging = false; });
+
+  // Zoom slider
+  zoomEl.addEventListener('input', () => {
+    const v = parseInt(zoomEl.value);
+    document.getElementById('crop-zoom-val').textContent = (v/100).toFixed(1) + '×';
+    CropTool._applyTransform();
+  });
+
+  // Cancel
+  document.getElementById('crop-cancel').addEventListener('click', () => CropTool.close());
+  document.getElementById('crop-overlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('crop-overlay')) CropTool.close();
+  });
+
+  // Save
+  document.getElementById('crop-save').addEventListener('click', () => {
+    const base64 = CropTool.crop();
+    const cb = CropTool._cb;
+    CropTool.close();
+    if(cb) cb(base64);
+  });
+})();
+
 window.addEventListener('DOMContentLoaded',()=>{
 
   // ── Defensive helper — silently skips if element doesn't exist ──
@@ -3329,6 +3855,18 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // ── NAVEGAR PARA CADASTRO ──
   wire('lnk-reg','click',()=>go('s-register'));
+
+  // ── ACESSO RÁPIDO — Ana Oliveira ──
+  wire('btn-quick-ana','click',()=>{
+    document.getElementById('li-email').value='ana@familia.com';
+    document.getElementById('li-pass').value='12345';
+    document.getElementById('li-error').style.display='none';
+    // Pequeno delay visual para mostrar o preenchimento
+    const btn=document.getElementById('btn-quick-ana');
+    btn.style.borderColor='var(--sage)';
+    btn.style.background='var(--sl)';
+    setTimeout(()=>document.getElementById('btn-login').click(), 350);
+  });
   wire('reg-back','click',()=>go('s-login'));
   wire('lnk-login','click',()=>go('s-login'));
 
@@ -3570,6 +4108,30 @@ window.addEventListener('DOMContentLoaded',()=>{
   wire('dm-confirm','click',()=>{if(!canWrite())return;A.confirmDose('dose-modal');});
   wire('dm-cancel','click',()=>A.closeDoseModal('dose-modal'));
   wire('dose-modal','click',e=>{if(e.target===document.getElementById('dose-modal'))A.closeDoseModal('dose-modal');});
+  // dm-remove: show inline confirm panel
+  wire('dm-remove-btn','click',()=>{
+    const ctx=A._dCtx; if(!ctx) return;
+    document.getElementById('dm-remove-name').textContent=ctx.med.name;
+    document.getElementById('dm-actions-main').style.display='none';
+    document.getElementById('dm-confirm-remove').style.display='block';
+  });
+  wire('dm-remove-no','click',()=>{
+    document.getElementById('dm-confirm-remove').style.display='none';
+    document.getElementById('dm-actions-main').style.display='flex';
+  });
+  wire('dm-remove-yes','click',()=>{
+    const ctx=A._dCtx; if(!ctx) return;
+    const medName=ctx.med.name;
+    const p=DB.p; if(!p) return;
+    p.medSchedule=(p.medSchedule||[]).filter(m=>m.name!==medName);
+    A.closeDoseModal('dose-modal');
+    document.getElementById('dm-confirm-remove').style.display='none';
+    document.getElementById('dm-actions-main').style.display='flex';
+    saveDB();
+    A.renderMeds();
+    A.renderDash();
+    toast('✓ "'+medName+'" removida das medicações.');
+  });
 
   // DOSE MODAL (meds screen)
   wire('dm2-val','input',function(){
@@ -3592,6 +4154,30 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
   wire('dm2-confirm','click',()=>{if(!canWrite())return;A.confirmDose('dose-modal-meds');});
   wire('dm2-cancel','click',()=>A.closeDoseModal('dose-modal-meds'));
+  // dm2-remove: show inline confirm panel
+  wire('dm2-remove-btn','click',()=>{
+    const ctx=A._dCtx; if(!ctx) return;
+    document.getElementById('dm2-remove-name').textContent=ctx.med.name;
+    document.getElementById('dm2-actions-main').style.display='none';
+    document.getElementById('dm2-confirm-remove').style.display='block';
+  });
+  wire('dm2-remove-no','click',()=>{
+    document.getElementById('dm2-confirm-remove').style.display='none';
+    document.getElementById('dm2-actions-main').style.display='flex';
+  });
+  wire('dm2-remove-yes','click',()=>{
+    const ctx=A._dCtx; if(!ctx) return;
+    const medName=ctx.med.name;
+    const p=DB.p; if(!p) return;
+    p.medSchedule=(p.medSchedule||[]).filter(m=>m.name!==medName);
+    A.closeDoseModal('dose-modal-meds');
+    document.getElementById('dm2-confirm-remove').style.display='none';
+    document.getElementById('dm2-actions-main').style.display='flex';
+    saveDB();
+    A.renderMeds();
+    A.renderDash();
+    toast('✓ "'+medName+'" removida das medicações.');
+  });
   wire('dose-modal-meds','click',e=>{if(e.target===document.getElementById('dose-modal-meds'))A.closeDoseModal('dose-modal-meds');});
 
   // VS NAV
@@ -3737,16 +4323,15 @@ window.addEventListener('DOMContentLoaded',()=>{
     setTimeout(()=>{A.renderDash();DB.tlFilter='Todos';A.renderTL();go('s-tl');},900);
   });
 
-  // Photo upload in new patient
+  // Photo upload in new patient — with CropTool
   wire('np-photo-input','change',function(){
     const file=this.files[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=e=>{
-      DB._newPatPhoto=e.target.result;
+    this.value='';
+    CropTool.open(file, (base64)=>{
+      DB._newPatPhoto=base64;
       const disp=document.getElementById('np-photo-display');
-      disp.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"/>`;
-    };
-    reader.readAsDataURL(file);
+      disp.innerHTML=`<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    });
   });
 
   // Phone mask for emergency contact
