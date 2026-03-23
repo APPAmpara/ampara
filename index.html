@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.json"/>
 <title>Ampara</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
@@ -38,11 +39,11 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 .screen.active{display:flex}
 
 /* NAV */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 20px 11px;background:var(--W);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;z-index:10}
-.ntitle{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--darker);white-space:nowrap}
-.nback{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--sage);font-weight:500;cursor:pointer;background:none;border:none;white-space:nowrap;flex-shrink:0}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 20px 11px;background:linear-gradient(135deg,#1E2820 0%,#2D4A3E 60%,#3d6b55 100%);border-bottom:none;flex-shrink:0;gap:8px;z-index:10}
+.ntitle{font-family:'Lora',serif;font-size:17px;font-weight:600;color:#fff;white-space:nowrap}
+.nback{display:flex;align-items:center;gap:4px;font-size:13px;color:rgba(255,255,255,.85);font-weight:500;cursor:pointer;background:none;border:none;white-space:nowrap;flex-shrink:0}
 .nback svg{width:16px;height:16px}
-.nact{font-size:13px;color:var(--sage);font-weight:600;cursor:pointer;background:none;border:none;white-space:nowrap;flex-shrink:0}
+.nact{font-size:12px;color:rgba(255,255,255,.92);font-weight:700;cursor:pointer;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;white-space:nowrap;flex-shrink:0;padding:5px 11px}
 
 /* SCROLL */
 .scroll{flex:1;overflow-y:auto;padding-bottom:90px}
@@ -280,6 +281,11 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 .doc-date{font-size:10px;color:var(--muted,#aaa);margin-top:4px}
 .rx-step{display:none}
 .rx-step.active{display:block}
+/* Avaliação diária */
+.mood-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:10px;border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:var(--tmu);transition:all .13s;min-width:52px}
+.mood-btn.sel{border-color:var(--sage);background:var(--sl);color:var(--sage)}
+.pain-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tmu);transition:all .12s}
+.pain-dot.sel{border-color:var(--sage);background:var(--sage);color:#fff}
 /* PDF generating overlay inside shell */
 .pdf-gen-ov{position:absolute;inset:0;background:rgba(10,20,15,.82);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:36px;opacity:0;pointer-events:none;transition:opacity .2s}
 .pdf-gen-ov.show{opacity:1;pointer-events:all}
@@ -466,6 +472,13 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 
 <!-- ══ PACIENTES — tela de seleção antes do app ══════ -->
 <div class="screen" id="s-patients">
+  <div id="pat-demo-bar" style="display:none;background:#FEF9E7;border-bottom:1.5px solid #F0C040;padding:10px 16px;align-items:center;gap:10px;flex-shrink:0">
+    <span style="font-size:18px">🧪</span>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:700;color:#7a5a00">Modo demonstração</div>
+      <div style="font-size:11px;color:#B7860B;margin-top:1px">Você está visualizando pacientes de exemplo do sistema.</div>
+    </div>
+  </div>
   <div style="background:linear-gradient(155deg,#162b20 0%,#2D4A3E 45%,#5C7E6A 80%,#7FA893 100%);padding:28px 20px 22px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
@@ -575,8 +588,15 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     </div>
   </div>
     <div style="padding:14px 20px 0" id="d-infographic"></div>
-    <div class="st">Últimos eventos</div>
-    <div style="padding:0 20px" id="d-events"></div>
+    <!-- Tarefas do dia -->
+    <div style="padding:0 20px 8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.6px">✅ Tarefas de hoje</div>
+        <button id="task-add-btn" style="font-size:11px;font-weight:700;color:var(--sage);background:var(--sl);border:1px solid var(--sm);border-radius:10px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar</button>
+      </div>
+      <div id="d-tasks"></div>
+    </div>
+    <div id="d-events" style="display:none"></div>
     <!-- hidden placeholders kept for JS compatibility -->
     <div id="d-vs-strip" style="display:none"></div>
     <div id="d-risks" style="display:none"></div>
@@ -584,6 +604,8 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   <!-- FAB -->
   <div class="fab-wrap" id="fab-wrap">
     <div class="fab-rows">
+      <div class="fab-row" id="fr-daily"><div class="fab-lbl">Avaliação diária</div><div class="fab-s" id="fab-daily">☀️</div></div>
+      <div class="fab-row" id="fr-shift"><div class="fab-lbl">Passagem de plantão</div><div class="fab-s" id="fab-shift">🔄</div></div>
       <div class="fab-row" id="fr-ev"><div class="fab-lbl">Registrar evento</div><div class="fab-s" id="fab-ev">📝</div></div>
       <div class="fab-row" id="fr-vs"><div class="fab-lbl">Sinais vitais</div><div class="fab-s" id="fab-vs">💊</div></div>
       <div class="fab-row" id="fr-morse"><div class="fab-lbl">Av. risco de queda</div><div class="fab-s" id="fab-morse">🦯</div></div>
@@ -594,11 +616,11 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     <div class="fab-m" id="fab-m">+</div>
   </div>
   <div class="bnav">
-    <button class="bi on" id="bn-d-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi" id="bn-d-cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="bi" id="bn-d-tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
     <button class="bi" id="bn-d-vs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Sinais vitais</button>
     <button class="bi" id="bn-d-meds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Medicações</button>
-    <button class="bi" id="bn-d-prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
   </div>
 </div>
 
@@ -609,6 +631,7 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     <div class="ntitle" id="tl-title">Timeline</div>
     <div></div>
   </div>
+
   <!-- MEDS TODAY — collapsible accordion -->
   <div id="tl-meds-bar" style="flex-shrink:0;padding:10px 20px 0"></div>
   <div class="scroll" style="padding-top:10px">
@@ -665,10 +688,10 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   <button id="tl-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
   <div class="bnav">
     <button class="bi" id="bn-tl-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi" id="bn-tl-cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="bi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
     <button class="bi" id="bn-tl-vs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Sinais vitais</button>
     <button class="bi" id="bn-tl-meds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Medicações</button>
-    <button class="bi" id="bn-tl-prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
   </div>
 </div>
 
@@ -689,10 +712,38 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   <button id="vs-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
   <div class="bnav">
     <button class="bi" id="bn-vs-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi" id="bn-vs-cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="bi" id="bn-vs-tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
     <button class="bi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Sinais vitais</button>
     <button class="bi" id="bn-vs-meds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Medicações</button>
-    <button class="bi" id="bn-vs-prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
+  </div>
+</div>
+
+<!-- ══ GRÁFICO SINAL VITAL ═══════════════════════════ -->
+<div class="screen" id="s-vs-chart">
+  <div class="nav">
+    <button class="nback" id="vsc-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Sinais vitais</button>
+    <div class="ntitle" id="vsc-title">Evolução</div>
+    <div id="vsc-period" style="display:flex;gap:4px">
+      <button data-per="7"  class="vsc-per-btn" style="font-size:11px;padding:4px 8px;border-radius:12px;border:1.5px solid var(--sage);background:var(--sage);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700">7d</button>
+      <button data-per="30" class="vsc-per-btn" style="font-size:11px;padding:4px 8px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--tmu);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">30d</button>
+      <button data-per="90" class="vsc-per-btn" style="font-size:11px;padding:4px 8px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--tmu);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">90d</button>
+    </div>
+  </div>
+  <div class="scroll" style="padding:16px 16px 30px">
+    <!-- Status atual -->
+    <div id="vsc-current" style="background:var(--warm);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px"></div>
+    <!-- Gráfico -->
+    <div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:16px;box-shadow:var(--sh)">
+      <div style="position:relative;height:220px">
+        <canvas id="vsc-chart"></canvas>
+      </div>
+    </div>
+    <!-- Estatísticas -->
+    <div id="vsc-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px"></div>
+    <!-- Histórico -->
+    <div style="font-size:11px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Histórico de medições</div>
+    <div id="vsc-history"></div>
   </div>
 </div>
 
@@ -752,6 +803,11 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   </div>
   <!-- FAB + para adicionar medicação -->
   <button id="meds-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
+  <!-- Botão Ler Prescrição com IA -->
+  <button id="meds-rx-btn" style="position:absolute;bottom:82px;left:16px;display:flex;align-items:center;gap:7px;padding:10px 14px;background:var(--sl);color:var(--sage);border:1.5px solid var(--sm);border-radius:24px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(92,126,106,.2);z-index:50">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="3" fill="currentColor" stroke="none" opacity=".3"/><path d="M16.5 4.5l3 3"/></svg>
+    Ler Prescrição
+  </button>
   <!-- Dose modal also needed here -->
   <div class="modal-ov" id="dose-modal-meds">
     <div class="modal-sheet">
@@ -795,10 +851,10 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   </div>
   <div class="bnav">
     <button class="bi" id="bn-meds-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi" id="bn-meds-cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="bi" id="bn-meds-tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
     <button class="bi" id="bn-meds-vs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Sinais vitais</button>
     <button class="bi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Medicações</button>
-    <button class="bi" id="bn-meds-prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
   </div>
 </div>
 
@@ -1312,6 +1368,7 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="save-indicator" style="position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:#4db080;opacity:0;transition:opacity .3s;z-index:300;pointer-events:none;box-shadow:0 0 6px rgba(77,176,128,.6)"></div>
 
 <!-- ── PDF GENERATING OVERLAY ── -->
 <div class="pdf-gen-ov" id="pdf-gen-ov">
@@ -1350,7 +1407,176 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 </div>
 
 
-<!-- ── DOCUMENTOS IMPORTANTES ── -->
+<!-- ══ CALENDÁRIO ══════════════════════════════════ -->
+<div class="screen" id="s-cal">
+  <div class="nav">
+    <button class="nback" id="cal-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Painel</button>
+    <div class="ntitle" id="cal-title">Agenda</div>
+    <button class="nact" id="cal-add-btn">+ Consulta</button>
+  </div>
+  <div class="scroll" style="padding-bottom:30px">
+    <!-- Navegação mês -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px">
+      <button id="cal-prev" style="background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--sage)">‹</button>
+      <div id="cal-month-label" style="font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--text)"></div>
+      <button id="cal-next" style="background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--sage)">›</button>
+    </div>
+    <!-- Grade do calendário -->
+    <div id="cal-grid" style="padding:0 16px 12px"></div>
+    <!-- Consultas do dia selecionado -->
+    <div id="cal-appts" style="padding:0 16px"></div>
+  </div>
+  <div class="bnav">
+    <button class="bi" id="bn-cal-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
+    <button class="bi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
+    <button class="bi" id="bn-cal-tl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Timeline</button>
+    <button class="bi" id="bn-cal-vs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Sinais vitais</button>
+    <button class="bi" id="bn-cal-meds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Medicações</button>
+  </div>
+</div>
+
+<!-- ── MODAL NOVA CONSULTA ── -->
+<div class="modal-ov" id="appt-modal">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
+    <div class="drag"></div>
+    <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:16px" id="appt-modal-title">Nova consulta</div>
+    <!-- Especialidade -->
+    <div class="fg">
+      <label class="fl">Tipo de profissional</label>
+      <div id="appt-type-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px">
+        <button class="appt-type-btn sel" data-type="Médico" data-icon="👨‍⚕️" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--sage);background:var(--sl);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--sage);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">👨‍⚕️</span>Médico</button>
+        <button class="appt-type-btn" data-type="Fisioterapia" data-icon="🦴" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🦴</span>Fisioterapia</button>
+        <button class="appt-type-btn" data-type="Psicólogo" data-icon="🧠" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🧠</span>Psicólogo</button>
+        <button class="appt-type-btn" data-type="Terapeuta Ocupacional" data-icon="🤲" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🤲</span>T. Ocupacional</button>
+        <button class="appt-type-btn" data-type="Fonoaudiologia" data-icon="🗣️" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🗣️</span>Fonoaudiologia</button>
+        <button class="appt-type-btn" data-type="Nutricionista" data-icon="🥗" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🥗</span>Nutricionista</button>
+        <button class="appt-type-btn" data-type="Enfermagem" data-icon="💉" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">💉</span>Enfermagem</button>
+        <button class="appt-type-btn" data-type="Dentista" data-icon="🦷" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🦷</span>Dentista</button>
+        <button class="appt-type-btn" data-type="Outro" data-icon="🏥" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:20px">🏥</span>Outro</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Nome do profissional</label><input class="fi" id="appt-prof" placeholder="Ex: Dr. Carlos Silva"/></div>
+    <div class="fg"><label class="fl">Especialidade / Detalhe</label><input class="fi" id="appt-spec" placeholder="Ex: Cardiologista, Psicoterapia..."/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="fl">Data <span style="color:var(--red)">*</span></label><input class="fi" type="date" id="appt-date"/></div>
+      <div class="fg"><label class="fl">Horário</label><input class="fi" type="time" id="appt-time"/></div>
+    </div>
+    <div class="fg"><label class="fl">Local / Clínica</label><input class="fi" id="appt-local" placeholder="Ex: Clínica Santa Maria, Telessaúde..."/></div>
+    <div class="fg"><label class="fl">Observações</label><textarea class="fta" id="appt-obs" placeholder="Levar exames, jejum, orientações..." style="min-height:70px"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn bo" id="appt-cancel-btn" style="flex:1">Cancelar</button>
+      <button class="btn bp" id="appt-save-btn" style="flex:1.5">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Agendar consulta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL NOVA TAREFA ── -->
+<div class="modal-ov" id="task-modal">
+  <div class="modal-sheet">
+    <div class="drag"></div>
+    <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:14px">Nova tarefa</div>
+    <div class="fg"><label class="fl">Descrição <span style="color:var(--red)">*</span></label><input class="fi" id="task-title-input" placeholder="Ex: Dar banho, Exercício de fisioterapia..."/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="fl">Horário</label><input class="fi" type="time" id="task-time-input"/></div>
+      <div class="fg"><label class="fl">Responsável</label><input class="fi" id="task-who-input" placeholder="Cuidador..."/></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn bo" id="task-cancel-btn" style="flex:1">Cancelar</button>
+      <button class="btn bp" id="task-save-btn" style="flex:1.5">✓ Adicionar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AVALIAÇÃO DIÁRIA MODAL ── -->
+<div class="modal-ov" id="daily-modal">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="drag"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--sl);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">☀️</div>
+      <div>
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text)">Como está hoje?</div>
+        <div style="font-size:11px;color:var(--tmu)" id="daily-date-label"></div>
+      </div>
+    </div>
+    <!-- Humor -->
+    <div class="fg">
+      <label class="fl">😊 Humor / Bem-estar</label>
+      <div style="display:flex;gap:8px;justify-content:space-between">
+        <button class="mood-btn" data-mood="5" data-label="Ótimo"><span style="font-size:24px">😄</span>Ótimo</button>
+        <button class="mood-btn" data-mood="4" data-label="Bem"><span style="font-size:24px">🙂</span>Bem</button>
+        <button class="mood-btn" data-mood="3" data-label="Regular"><span style="font-size:24px">😐</span>Regular</button>
+        <button class="mood-btn" data-mood="2" data-label="Mal"><span style="font-size:24px">😔</span>Mal</button>
+        <button class="mood-btn" data-mood="1" data-label="Muito mal"><span style="font-size:24px">😰</span>Muito mal</button>
+      </div>
+    </div>
+
+    <!-- Alimentação -->
+    <div class="fg">
+      <label class="fl">🍽️ Alimentação hoje</label>
+      <div style="display:flex;gap:8px">
+        <button class="mood-btn" data-food="Boa" style="flex:1"><span style="font-size:20px">😋</span>Boa</button>
+        <button class="mood-btn" data-food="Regular" style="flex:1"><span style="font-size:20px">😑</span>Regular</button>
+        <button class="mood-btn" data-food="Ruim" style="flex:1"><span style="font-size:20px">😞</span>Ruim</button>
+        <button class="mood-btn" data-food="Recusou" style="flex:1"><span style="font-size:20px">🚫</span>Recusou</button>
+      </div>
+    </div>
+    <!-- Sono -->
+    <div class="fg">
+      <label class="fl">🌙 Sono na noite anterior</label>
+      <div style="display:flex;gap:8px">
+        <button class="mood-btn" data-sleep="Bom" style="flex:1"><span style="font-size:20px">😴</span>Bom</button>
+        <button class="mood-btn" data-sleep="Regular" style="flex:1"><span style="font-size:20px">🥱</span>Regular</button>
+        <button class="mood-btn" data-sleep="Ruim" style="flex:1"><span style="font-size:20px">😩</span>Ruim</button>
+        <button class="mood-btn" data-sleep="Insônia" style="flex:1"><span style="font-size:20px">😳</span>Insônia</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">📝 Observação</label><textarea class="fta" id="daily-obs" placeholder="Algo relevante sobre o dia do paciente..." style="min-height:60px"></textarea></div>
+    <div class="fg"><label class="fl">Registrado por</label><input class="fi" id="daily-author" value="Ana Oliveira"/></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn bo" id="daily-cancel" style="flex:1">Cancelar</button>
+      <button class="btn bp" id="daily-save" style="flex:1.5">✓ Registrar avaliação</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PASSAGEM DE PLANTÃO MODAL ── -->
+<div class="modal-ov" id="shift-modal">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="drag"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--sl);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔄</div>
+      <div>
+        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:var(--text)">Passagem de plantão</div>
+        <div style="font-size:11px;color:var(--tmu)" id="shift-date-label"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="fl">Entrada do plantão</label><input class="fi" type="time" id="shift-start"/></div>
+      <div class="fg"><label class="fl">Saída do plantão</label><input class="fi" type="time" id="shift-end"/></div>
+    </div>
+    <div class="fg"><label class="fl">Cuidador de entrada</label><input class="fi" id="shift-in" placeholder="Quem está chegando..."/></div>
+    <div class="fg"><label class="fl">Cuidador de saída</label><input class="fi" id="shift-out" placeholder="Quem está saindo..."/></div>
+    <div style="font-size:11px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">📋 Resumo do plantão</div>
+    <div class="fg"><label class="fl">Medicações administradas</label>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <button class="mood-btn sel" data-meds-ok="Sim" style="flex:1"><span style="font-size:18px">✅</span>Todas OK</button>
+        <button class="mood-btn" data-meds-ok="Parcial" style="flex:1"><span style="font-size:18px">⚠️</span>Parcial</button>
+        <button class="mood-btn" data-meds-ok="Não" style="flex:1"><span style="font-size:18px">❌</span>Não tomou</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Ocorrências do plantão</label><textarea class="fta" id="shift-obs" placeholder="Descreva o que aconteceu: humor, alimentação, intercorrências, visitas..." style="min-height:90px"></textarea></div>
+    <div class="fg"><label class="fl">Pendências para o próximo plantão</label><textarea class="fta" id="shift-pending" placeholder="O que o próximo cuidador precisa saber ou fazer..." style="min-height:60px"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn bo" id="shift-cancel" style="flex:1">Cancelar</button>
+      <button class="btn bp" id="shift-save" style="flex:1.5">✓ Registrar plantão</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DOCUMENTOS IMPORTANTES ── -->
 <div class="screen" id="s-docs">
   <div class="nav">
     <button class="nback" id="docs-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Perfil</button>
@@ -1539,7 +1765,8 @@ const DB = {
         {id:1001,date:'2025-01-14',time:'09:00',sis:132,dia:78,fc:72,temp:36.8,sat:97,gli:null,fr:16,peso:null,author:'Cuidadora Lúcia',obs:''},
         {id:1002,date:'2025-01-13',time:'09:15',sis:128,dia:76,fc:70,temp:36.6,sat:98,gli:null,fr:15,peso:null,author:'Cuidadora Lúcia',obs:''},
         {id:1003,date:'2025-01-12',time:'08:45',sis:135,dia:80,fc:73,temp:36.7,sat:97,gli:null,fr:16,peso:55.2,author:'Cuidadora Lúcia',obs:''},
-      ]
+      ],
+      initialEvalDone:true
     },
     { id:3, name:'Antônio Costa', age:71, sex:'Masculino', initials:'AC', ab:'#E0EAF4', ac:'#2E5A8A',
       diag:'Doença de Parkinson inicial (Hoehn & Yahr 2)',
@@ -1564,7 +1791,8 @@ const DB = {
         {id:1101,date:'2025-01-14',time:'07:00',sis:124,dia:76,fc:68,temp:36.2,sat:98,gli:null,fr:15,peso:82.0,author:'Fernanda Costa',obs:''},
         {id:1102,date:'2025-01-13',time:'07:10',sis:122,dia:74,fc:66,temp:36.3,sat:99,gli:null,fr:14,peso:null,author:'Fernanda Costa',obs:''},
         {id:1103,date:'2025-01-12',time:'07:00',sis:126,dia:78,fc:69,temp:36.1,sat:98,gli:null,fr:15,peso:82.1,author:'Fernanda Costa',obs:''},
-      ]
+      ],
+      initialEvalDone:true
     }
   ]
 };
@@ -1700,8 +1928,106 @@ function _showSyncBadge(){
 const _origSaveDB = saveDB;
 // saveDB already pauses sync internally
 
+// ══════════════════════════════════════════════════
+// NOTIFICAÇÕES PWA
+// ══════════════════════════════════════════════════
+async function _requestNotificationPermission(){
+  if(!('Notification' in window)) return false;
+  if(Notification.permission==='granted') return true;
+  if(Notification.permission==='denied') return false;
+  const perm=await Notification.requestPermission();
+  return perm==='granted';
+}
+
+function _sendNotification(title, body, opts={}){
+  if(!('Notification' in window)||Notification.permission!=='granted') return;
+  try{
+    const n=new Notification(title,{
+      body,
+      icon:opts.icon||'/ampara/icon-192.png',
+      badge:opts.badge||'/ampara/icon-192.png',
+      tag:opts.tag||'ampara-'+Date.now(),
+      silent:opts.silent||false,
+    });
+    n.onclick=()=>{ window.focus(); n.close(); };
+    setTimeout(()=>n.close(), 8000);
+  }catch(e){ console.warn('Notification error:',e); }
+}
+
+// Schedule medication reminders for today
+function _scheduleMedReminders(){
+  if(!DB.p||!DB.currentUser) return;
+  if(Notification.permission!=='granted') return;
+  const p=DB.p;
+  const meds=p.medSchedule||[];
+  if(!meds.length) return;
+
+  meds.forEach(med=>{
+    (med.times||[]).forEach(t=>{
+      const[h,m]=t.split(':').map(Number);
+      const now=new Date();
+      const target=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0);
+      const diff=target-now;
+      if(diff>0&&diff<86400000){ // within next 24h
+        // Reminder 5 min before
+        const reminderDiff=diff-5*60*1000;
+        if(reminderDiff>0){
+          setTimeout(()=>{
+            if(DB.p&&DB.p.id===p.id)
+              _sendNotification(`💊 Medicação em 5 min`,`${med.name} ${med.dose}${med.unit} · ${t}`,{tag:'med-remind-'+med.id+t});
+          }, reminderDiff);
+        }
+        // Alert at exact time
+        setTimeout(()=>{
+          if(DB.p&&DB.p.id===p.id)
+            _sendNotification(`💊 Hora da medicação`,`${p.name} · ${med.name} ${med.dose}${med.unit}`,{tag:'med-'+med.id+t});
+        }, diff);
+      }
+    });
+  });
+}
+
+// Schedule appointment reminders
+function _scheduleApptReminders(){
+  if(!DB.p||!DB.currentUser) return;
+  if(Notification.permission!=='granted') return;
+  const p=DB.p;
+  const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowStr=tomorrow.toISOString().split('T')[0];
+  const tmrAppts=(p.appointments||[]).filter(a=>a.date===tomorrowStr);
+  if(tmrAppts.length){
+    // Notify today at 9pm about tomorrow's appointments
+    const now=new Date();
+    const remind=new Date(now.getFullYear(),now.getMonth(),now.getDate(),21,0,0);
+    const diff=remind-now;
+    if(diff>0){
+      setTimeout(()=>{
+        if(DB.p&&DB.p.id===p.id)
+          _sendNotification(`📅 Consulta amanhã`,`${p.name} tem ${tmrAppts.length} consulta(s) amanhã`,{tag:'appt-tmr'});
+      }, diff);
+    }
+  }
+}
+
+async function _initNotifications(){
+  const granted=await _requestNotificationPermission();
+  if(granted){
+    _scheduleMedReminders();
+    _scheduleApptReminders();
+    console.log('Ampara: notificações ativas');
+  }
+}
+
 async function saveDB(){
   pauseSync(8000); // prevent echo of our own write
+  // Check online status
+  if(!navigator.onLine){
+    const t=document.getElementById('toast');
+    if(t){t.textContent='⚠️ Sem conexão — dados não salvos';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+    // Save to localStorage as fallback
+    try{localStorage.setItem('ampara_v1',JSON.stringify({patients:DB.patients,users:DB.users,requests:DB.requests,alertConfig:DB.alertConfig,currentUser:DB.currentUser,pid:DB.pid}));}catch(_){}
+    return;
+  }
   try {
     // Pacientes — usa o id da linha do Supabase guardado no _supaId
     const patResults = await Promise.all(DB.patients.map(async p => {
@@ -1741,8 +2067,14 @@ async function saveDB(){
     ]);
 
     console.log('Ampara: dados salvos com sucesso no Supabase');
+    // Update sync indicator
+    const ind=document.getElementById('save-indicator');
+    if(ind){ind.style.opacity='1';setTimeout(()=>{ind.style.opacity='0';},1500);}
   } catch(e) {
     console.warn('Ampara: erro ao salvar no Supabase', e.message);
+    // Show user feedback
+    const t=document.getElementById('toast');
+    if(t){t.textContent='⚠️ Erro ao salvar — verifique a conexão';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
     // Fallback: salva no localStorage
     try { localStorage.setItem('ampara_v1', JSON.stringify({ patients: DB.patients, users: DB.users, requests: DB.requests, alertConfig: DB.alertConfig, currentUser: DB.currentUser, pid: DB.pid })); } catch(_){}
   }
@@ -1766,7 +2098,9 @@ async function loadDB(){
       DB.users = users.map(u => ({
         id: u.id, name: u.name, email: u.email, pass: u.pass,
         role: u.role, avatar: u.avatar,
-        patientIds: typeof u.patient_ids === 'string' ? JSON.parse(u.patient_ids) : u.patient_ids
+        patientIds: typeof u.patient_ids === 'string' && u.patient_ids
+          ? JSON.parse(u.patient_ids)
+          : Array.isArray(u.patient_ids) ? u.patient_ids : 'all'
       }));
     }
 
@@ -1856,6 +2190,32 @@ const MON={1:'Janeiro',2:'Fevereiro',3:'Março',4:'Abril',5:'Maio',6:'Junho',7:'
 const fmt=ds=>{const[y,m,d]=ds.split('-');return`${parseInt(d)} ${MOS[parseInt(m)-1]}`;};
 const today=()=>new Date().toISOString().slice(0,10);
 const nowTime=()=>new Date().toTimeString().slice(0,5);
+// ── UTILITÁRIO DE CONFIRMAÇÃO INLINE ──────────────
+function showConfirm(msg, onYes, opts={}){
+  const existing=document.getElementById('inline-confirm-ov');
+  if(existing) existing.remove();
+  const ov=document.createElement('div');
+  ov.id='inline-confirm-ov';
+  ov.style.cssText='position:absolute;inset:0;background:rgba(10,20,15,.7);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(2px)';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--cream);border-radius:16px;padding:24px 20px;width:100%;max-width:300px;box-shadow:0 20px 40px rgba(0,0,0,.3)';
+  const icon=opts.icon||'⚠️';
+  const yesLabel=opts.yesLabel||'Confirmar';
+  const yesStyle=opts.danger?'background:var(--red);color:#fff;':'background:var(--sage);color:#fff;';
+  box.innerHTML=`
+    <div style="font-size:32px;text-align:center;margin-bottom:10px">${icon}</div>
+    <div style="font-size:14px;font-weight:600;color:var(--text);text-align:center;margin-bottom:6px;line-height:1.4">${msg}</div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button id="ic-no" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--tm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button id="ic-yes" style="flex:1;padding:11px;border-radius:10px;border:none;${yesStyle}font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">${yesLabel}</button>
+    </div>`;
+  ov.appendChild(box);
+  document.querySelector('.shell').appendChild(ov);
+  document.getElementById('ic-no').addEventListener('click',()=>ov.remove());
+  document.getElementById('ic-yes').addEventListener('click',()=>{ ov.remove(); onYes(); });
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+}
+
 const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const s=document.getElementById(id);s.classList.add('active');s.querySelector('.scroll')?.scrollTo(0,0);};
 const toast=(msg,dur=2600)=>{const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),dur);};
 const medKey=(name,time)=>name+'§'+time;
@@ -1975,10 +2335,11 @@ const A = {
     }).join('');
     document.querySelectorAll('[data-del-user]').forEach(btn=>{
       btn.addEventListener('click',()=>{
-        if(!confirm('Remover este usuário?')) return;
-        DB.users=DB.users.filter(u=>u.id!==btn.dataset.delUser);
-        deleteUser(btn.dataset.delUser);
-        A.renderAdminUsers(); saveDB(); toast('Usuário removido.');
+        showConfirm('Remover este usuário?', ()=>{
+          DB.users=DB.users.filter(u=>u.id!==btn.dataset.delUser);
+          deleteUser(btn.dataset.delUser);
+          A.renderAdminUsers(); saveDB(); toast('Usuário removido.');
+        },{danger:true,icon:'🗑️',yesLabel:'Remover'});
       });
     });
   },
@@ -2108,10 +2469,11 @@ const A = {
       go('s-admin');
     });
     document.getElementById('ep-delete').addEventListener('click',()=>{
-      if(!confirm(`Remover ${p.name}? Esta ação não pode ser desfeita.`)) return;
-      DB.patients=DB.patients.filter(x=>x.id!==pid);
-      deletePatient(pid);
-      A.renderAdmin(); saveDB(); toast('Paciente removido.'); go('s-admin');
+      showConfirm(`Remover ${p.name}?`, ()=>{
+        DB.patients=DB.patients.filter(x=>x.id!==pid);
+        deletePatient(pid);
+        A.renderAdmin(); saveDB(); toast('Paciente removido.'); go('s-admin');
+      },{danger:true,icon:'🗑️',yesLabel:'Remover'});
     });
     go('s-admin-edit-pat');
   },
@@ -2127,6 +2489,12 @@ const A = {
 
   renderPatList(list){
     const u=DB.currentUser;
+    // ── BANNER DEMO para Ana ──
+    const demoBar=document.getElementById('pat-demo-bar');
+    if(demoBar){
+      const isAna=u&&(u.id==='u1'||u.email==='ana@familia.com');
+      demoBar.style.display=isAna?'flex':'none';
+    }
     // Update header greeting
     const greet=document.getElementById('pat-greeting');
     const avatar=document.getElementById('pat-avatar');
@@ -2139,7 +2507,7 @@ const A = {
     let pts;
     if(list){
       pts=list;
-    } else if(!u||u.role==='master'||u.patientIds==='all'){
+    } else if(!u||u.role==='master'||u.patientIds==='all'||!u.patientIds||!Array.isArray(u.patientIds)||u.patientIds.length===0){
       pts=DB.patients;
     } else {
       const ids=(u.patientIds||[]).map(Number);
@@ -2182,11 +2550,16 @@ const A = {
         const isForced = p._evalReminderAt && Date.now()>p._evalReminderAt && !p.initialEvalDone && !hasData;
         const isNew = !p.initialEvalDone && !hasData && !p._evalReminderAt;
         if(isNew || isForced){
-          A.renderInitialEval();go('s-initial-eval');
+          // Mark as done and go to dash instead of forcing eval on existing patients
+          p.initialEvalDone=true; saveDB();
+          A.renderDash();go('s-dash');
+          setTimeout(()=>{ _scheduleMedReminders(); _scheduleApptReminders(); }, 500);
         } else {
           // Marca como feita se tem dados (paciente migrado do sistema antigo)
           if(!p.initialEvalDone && hasData){ p.initialEvalDone=true; saveDB(); }
           A.renderDash();go('s-dash');
+          // Reschedule reminders for this patient
+          setTimeout(()=>{ _scheduleMedReminders(); _scheduleApptReminders(); }, 500);
         }
       });
     });
@@ -2366,14 +2739,19 @@ const A = {
         <button style="display:flex;align-items:center;gap:4px;font-size:13px;color:rgba(255,255,255,.82);font-weight:500;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif" id="dh-back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>Pacientes
         </button>
-        <button style="background:var(--amber);border:none;color:#fff;padding:7px 13px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(212,136,92,.4)" id="dh-meu-doutor">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="13" height="13">
-            <defs><linearGradient id="dhml" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient></defs>
-            <path d="M10,10 C10,4 6,1 2,0 C4,3 4,7 6,9.5 C8,12 9,13.5 10,14 Z" fill="url(#dhml)"/>
-            <path d="M10,10 C10,4 14,1 18,0 C16,3 16,7 14,9.5 C12,12 11,13.5 10,14 Z" fill="rgba(255,255,255,0.55)"/>
-            <circle cx="10" cy="9.5" r="3.2" fill="rgba(255,255,255,0.9)"/>
-          </svg>Meu Doutor
-        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button style="background:var(--amber);border:none;color:#fff;padding:7px 13px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(212,136,92,.4)" id="dh-meu-doutor">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="13" height="13">
+              <defs><linearGradient id="dhml" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient></defs>
+              <path d="M10,10 C10,4 6,1 2,0 C4,3 4,7 6,9.5 C8,12 9,13.5 10,14 Z" fill="url(#dhml)"/>
+              <path d="M10,10 C10,4 14,1 18,0 C16,3 16,7 14,9.5 C12,12 11,13.5 10,14 Z" fill="rgba(255,255,255,0.55)"/>
+              <circle cx="10" cy="9.5" r="3.2" fill="rgba(255,255,255,0.9)"/>
+            </svg>Meu Doutor
+          </button>
+          <button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 11px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;display:flex;align-items:center;gap:5px" id="dh-perfil-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil
+          </button>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:13px">
         ${p.photo
@@ -2392,6 +2770,7 @@ const A = {
       </div>`;
     document.getElementById('dh-back').addEventListener('click',()=>go('s-patients'));
     document.getElementById('dh-meu-doutor').addEventListener('click',()=>{renderMeuDoutor().then(()=>go('s-meu-doutor'));});
+    document.getElementById('dh-perfil-btn').addEventListener('click',()=>{A.renderProf();go('s-prof');});
     document.getElementById('dh-status-btn').addEventListener('click',()=>A.openStatusModal(status,p));
 
     // Read-only banner for doctors
@@ -2407,9 +2786,7 @@ const A = {
 
     // Alerts
     const lv=p.vitals&&p.vitals[0];
-    const pend=pendingCount(p);
     let ah='';
-    if(pend>0) ah+=`<div class="alrt aab" id="d-meds-alert" style="cursor:pointer"><span style="font-size:17px">💊</span><div><div style="font-size:12px;font-weight:600;color:var(--blue)">${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div><div style="font-size:11px;color:var(--tm)">Toque para ver e confirmar as administrações</div></div></div>`;
     // Network alerts: recent important med events (dose altered, med added)
     const netEvents=p.events.filter(e=>e.isNetworkAlert).slice(0,3);
     netEvents.forEach(e=>{ah+=`<div class="alrt aay"><span style="font-size:17px">🔔</span><div><div style="font-size:12px;font-weight:600;color:var(--yel)">${e.type}</div><div style="font-size:11px;color:var(--tm)">${e.desc.slice(0,80)}${e.desc.length>80?'…':''}</div><div style="font-size:10px;color:var(--tmu);margin-top:2px">${fmt(e.date)} · ${e.author}</div></div></div>`;});
@@ -2430,1439 +2807,234 @@ const A = {
 
     // Render infographic (replaces VS strip + risk grid + ações rápidas)
     renderInfographic(p);
-
-    // Events
-    const evs=p.events.slice(0,3);
-    document.getElementById('d-events').innerHTML=evs.length===0
-      ?`<div style="color:var(--tmu);font-size:13px;padding:4px 0 8px">Nenhum evento registrado.</div>`
-      :evs.map(e=>`<div class="card" style="cursor:pointer;margin-bottom:8px" data-cev>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:600;color:var(--tm)">${fmt(e.date)}</span>
-          <span class="badge ${GC[e.grav]||'bbmu'}">${e.type}</span>
-        </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.5">${e.desc.slice(0,90)}${e.desc.length>90?'…':''}</div>
-        <div style="font-size:11px;color:var(--tmu);margin-top:5px">Por: ${e.author}</div>
-      </div>`).join('');
-    document.querySelectorAll('[data-cev]').forEach(el=>el.addEventListener('click',()=>{DB.tlFilter='Todos';A.renderTL();go('s-tl');}));
+    // Daily assessment card
+    // Tasks
+    A.renderTasks();
   },
 
-  // ── TIMELINE ─────────────────────────────────────
-  renderTL(){
+  renderVSChart(def,vitals,days){
     const p=DB.p;if(!p)return;
-    document.getElementById('tl-title').textContent=p.name.split(' ')[0]+' · Timeline';
+    DB._vscDef=def;DB._vscDays=days||7;
+    const period=DB._vscDays;
+    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-period);
+    const cutStr=cutoff.toISOString().split('T')[0];
+    const allVitals=(vitals||p.vitals||[]).filter(v=>v.date>=cutStr).slice().reverse();
+    const vals=allVitals.map(v=>{const raw=def.k==='sis'?v.sis:v[def.k];return{date:v.date,time:v.time||'',val:parseFloat(raw),val2:def.k==='sis'?parseFloat(v.dia):null,author:v.author||''};}).filter(v=>!isNaN(v.val));
+    document.getElementById('vsc-title').textContent=def.icon+' '+def.label;
+    document.querySelectorAll('.vsc-per-btn').forEach(b=>{const isA=parseInt(b.dataset.per)===period;b.style.background=isA?'var(--sage)':'transparent';b.style.color=isA?'#fff':'var(--tmu)';b.style.borderColor=isA?'var(--sage)':'var(--border)';});
+    const lv=p.vitals&&p.vitals[0];
+    const curVal=lv?(def.k==='sis'&&lv.sis?`${lv.sis}/${lv.dia}`:lv[def.k]||'—'):'—';
+    const st=lv?vsS(def.k,parseFloat(String(curVal).split('/')[0])):'none';
+    const stColor=st==='alert'?'var(--red)':st==='warn'?'var(--yel)':'var(--text)';
+    document.getElementById('vsc-current').innerHTML=`<div style="font-size:36px">${def.icon}</div><div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${def.label}</div><div style="font-size:28px;font-weight:700;color:${stColor};line-height:1">${curVal}</div><div style="font-size:11px;color:var(--tmu);margin-top:2px">${def.unit}</div></div>${lv?`<div style="text-align:right;font-size:11px;color:var(--tmu)"><div>${fmt(lv.date)}</div><div>${lv.time||''}</div></div>`:''}`;
+    if(vals.length>0){const nums=vals.map(v=>v.val);const avg=(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1);const min=Math.min(...nums).toFixed(1);const max=Math.max(...nums).toFixed(1);document.getElementById('vsc-stats').innerHTML=`<div style="background:var(--W);border:1px solid var(--border);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;margin-bottom:4px">Mínimo</div><div style="font-size:18px;font-weight:700;color:var(--text)">${min}</div><div style="font-size:10px;color:var(--tmu)">${def.unit}</div></div><div style="background:var(--W);border:1px solid var(--border);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;margin-bottom:4px">Média</div><div style="font-size:18px;font-weight:700;color:var(--sage)">${avg}</div><div style="font-size:10px;color:var(--tmu)">${def.unit}</div></div><div style="background:var(--W);border:1px solid var(--border);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;margin-bottom:4px">Máximo</div><div style="font-size:18px;font-weight:700;color:var(--text)">${max}</div><div style="font-size:10px;color:var(--tmu)">${def.unit}</div></div>`;}else{document.getElementById('vsc-stats').innerHTML='';}
+    const ctx=document.getElementById('vsc-chart');
+    if(ctx){
+      if(ctx._chartInstance)ctx._chartInstance.destroy();
+      if(vals.length>=2){const labels=vals.map(v=>{const[,m,d]=v.date.split('-');return`${parseInt(d)}/${parseInt(m)}`;});const color=def.color||'#5C7E6A';const datasets=[{label:def.label,data:vals.map(v=>v.val),borderColor:color,backgroundColor:color+'22',borderWidth:2.5,pointRadius:4,pointBackgroundColor:color,tension:0.3,fill:true}];if(def.k==='sis')datasets.push({label:'Diastólica',data:vals.map(v=>v.val2).filter(Boolean),borderColor:'#3A6EA5',backgroundColor:'#3A6EA522',borderWidth:2,pointRadius:3,pointBackgroundColor:'#3A6EA5',tension:0.3,fill:false});ctx._chartInstance=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:def.k==='sis',labels:{font:{size:11},boxWidth:12}},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:7}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10}},beginAtZero:false}},interaction:{mode:'nearest',axis:'x',intersect:false}}});}
+      else{const ct2=ctx.getContext('2d');if(ct2){ct2.clearRect(0,0,ctx.width,ctx.height);ct2.fillStyle='#aaa';ct2.font='13px DM Sans,sans-serif';ct2.textAlign='center';ct2.fillText('Mínimo 2 registros para exibir o gráfico',ctx.width/2,80);}}
+    }
+    document.getElementById('vsc-history').innerHTML=(p.vitals||[]).slice(0,20).map(v=>{const raw=def.k==='sis'?v.sis:v[def.k];const dispV=def.k==='sis'&&v.sis?`${v.sis}/${v.dia}`:raw||'—';const stH=raw?vsS(def.k,parseFloat(String(dispV).split('/')[0])):'none';return`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)} ${v.time||''}</div><div style="font-size:10px;color:var(--tmu)">${v.author||''}</div></div><div style="font-size:15px;font-weight:700;color:${stH==='alert'?'var(--red)':stH==='warn'?'var(--yel)':'var(--text)'}">${dispV} <span style="font-size:10px;font-weight:400;color:var(--tmu)">${def.unit}</span></div></div>`;}).join('')||`<div style="padding:20px;text-align:center;color:var(--tmu)">Sem registros.</div>`;
+    document.querySelectorAll('.vsc-per-btn').forEach(b=>{b.onclick=()=>A.renderVSChart(def,null,parseInt(b.dataset.per));});
+  },
 
-    // ── COLLAPSIBLE MEDS ACCORDION ──
-    const d=today();
+  renderCal(){
+    const p=DB.p;if(!p)return;
+    if(!DB.calYear||DB.calMonth===null||DB.calMonth===undefined){const now=new Date();DB.calYear=now.getFullYear();DB.calMonth=now.getMonth();}
+    const year=DB.calYear,month=DB.calMonth;
+    const MON_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const DAYS=['D','S','T','Q','Q','S','S'];
+    document.getElementById('cal-month-label').textContent=MON_FULL[month]+' '+year;
+    document.getElementById('cal-title').textContent='Agenda';
+    const apptMap={};(p.appointments||[]).forEach(a=>{if(!apptMap[a.date])apptMap[a.date]=[];apptMap[a.date].push(a);});
+    const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate();
+    const todayStr=new Date().toISOString().split('T')[0],selDate=DB.calSelDate||todayStr;
+    let grid=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px">`;
+    DAYS.forEach(d=>{grid+=`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;padding:5px 0">${d}</div>`;});
+    for(let i=0;i<firstDay;i++)grid+=`<div></div>`;
+    for(let day=1;day<=daysInMonth;day++){
+      const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const isToday=ds===todayStr,isSel=ds===selDate,hasAppt=(apptMap[ds]||[]).length>0,isPast=ds<todayStr;
+      grid+=`<div data-cal-day="${ds}" style="aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:${isSel?'var(--sage)':isToday?'var(--sl)':'transparent'};border:${isToday&&!isSel?'1.5px solid var(--sage)':'1.5px solid transparent'};gap:2px;transition:all .12s"><span style="font-size:12px;font-weight:${isToday||isSel?'700':'400'};color:${isSel?'#fff':isToday?'var(--sage)':isPast?'var(--tmu)':'var(--text)'}">${day}</span>${hasAppt?`<div style="width:5px;height:5px;border-radius:50%;background:${isSel?'rgba(255,255,255,.85)':'var(--amber)'}"></div>`:'<div style="width:5px;height:5px"></div>'}</div>`;
+    }
+    grid+=`</div>`;
+    document.getElementById('cal-grid').innerHTML=grid;
+    A.renderCalAppts(selDate,apptMap[selDate]||[]);
+    document.getElementById('cal-grid').querySelectorAll('[data-cal-day]').forEach(el=>{el.addEventListener('click',()=>{DB.calSelDate=el.dataset.calDay;A.renderCal();});});
+    document.getElementById('cal-prev').onclick=()=>{if(DB.calMonth===0){DB.calMonth=11;DB.calYear--;}else DB.calMonth--;DB.calSelDate=null;A.renderCal();};
+    document.getElementById('cal-next').onclick=()=>{if(DB.calMonth===11){DB.calMonth=0;DB.calYear++;}else DB.calMonth++;DB.calSelDate=null;A.renderCal();};
+  },
+
+  renderCalAppts(date,appts){
+    const el=document.getElementById('cal-appts');if(!el)return;
+    const p=DB.p;if(!p)return;
+    const MON_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const[y,m,d]=date.split('-');
+    const dateLabel=`${parseInt(d)} de ${MON_FULL[parseInt(m)-1]} de ${y}`;
+    const isToday=date===new Date().toISOString().split('T')[0];
+    const isPast=date<new Date().toISOString().split('T')[0];
+    let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:700;color:var(--text)">${dateLabel}${isToday?' <span style="font-size:10px;background:var(--sl);color:var(--sage);padding:2px 7px;border-radius:8px;font-weight:700">Hoje</span>':''}</div><div style="font-size:11px;color:var(--tmu);margin-top:2px">${appts.length} consulta${appts.length!==1?'s':''}</div></div><button id="cal-day-add-btn" data-date="${date}" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--sl);color:var(--sage);border:1.5px solid var(--sm);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+ Nova consulta</button></div>`;
+    if(!appts.length){html+=`<div style="text-align:center;padding:32px 20px;color:var(--tmu)"><div style="font-size:40px;margin-bottom:10px">📅</div><div style="font-size:13px;font-weight:600;color:var(--tm)">Nenhuma consulta</div><div style="font-size:12px;margin-top:4px">${isPast?'Nenhuma registrada':'Toque em + Nova consulta para agendar'}</div></div>`;}
+    else{[...appts].sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(a=>{html+=`<div style="background:var(--W);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:10px;border-left:4px solid var(--sage)"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0"><div style="width:40px;height:40px;border-radius:50%;background:var(--sl);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${a.icon||'🏥'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">${a.type}</div>${a.prof?`<div style="font-size:12px;color:var(--tm)">${a.prof}</div>`:''}</div></div><div style="text-align:right;flex-shrink:0">${a.time?`<div style="font-size:13px;font-weight:700;color:var(--sage)">${a.time}</div>`:''}<button data-del-appt="${a.id}" style="background:none;border:none;color:var(--tmu);font-size:16px;cursor:pointer;padding:2px;line-height:1">✕</button></div></div>${a.local?`<div style="font-size:11px;color:var(--tmu);margin-top:8px">📍 ${a.local}</div>`:''}</div>`;});}
+    el.innerHTML=html;
+    document.getElementById('cal-day-add-btn')?.addEventListener('click',()=>{A._openApptModal(document.getElementById('cal-day-add-btn').dataset.date);});
+    el.querySelectorAll('[data-del-appt]').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();showConfirm('Remover esta consulta?',()=>{if(!p)return;p.appointments=(p.appointments||[]).filter(a=>String(a.id)!==String(btn.dataset.delAppt));saveDB();A.renderCal();toast('Consulta removida.');},{danger:true,icon:'🗑️',yesLabel:'Remover'});});});
+  },
+
+  _openApptModal(date){
+    DB._apptEditId=null;
+    document.getElementById('appt-modal-title').textContent='Nova consulta';
+    document.getElementById('appt-date').value=date||new Date().toISOString().split('T')[0];
+    ['appt-time','appt-prof','appt-spec','appt-local','appt-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.querySelectorAll('.appt-type-btn').forEach(b=>{const isSel=b.dataset.type==='Médico';b.style.border=isSel?'2px solid var(--sage)':'2px solid var(--border)';b.style.background=isSel?'var(--sl)':'var(--W)';b.style.color=isSel?'var(--sage)':'var(--tm)';});
+    DB._apptType='Médico';DB._apptIcon='👨‍⚕️';
+    document.getElementById('appt-modal').classList.add('show');
+  },
+
+  openDailyModal(){
+    const p=DB.p;if(!p)return;
+    DB._dailyMood=null;DB._dailyFood=null;DB._dailySleep=null;
+    const _nowH=new Date().getHours();
+    const _shift=_nowH<12?'Manhã (1º turno)':'Noite (2º turno)';
+    document.getElementById('daily-date-label').textContent=`${p.name} · ${fmt(today())} · ${_shift}`;
+    document.getElementById('daily-obs').value='';
+    document.getElementById('daily-author').value=DB.currentUser?.name||'Cuidador';
+    document.querySelectorAll('[data-mood],[data-food],[data-sleep]').forEach(b=>b.classList.remove('sel'));
+    document.getElementById('daily-modal').classList.add('show');
+  },
+
+  openShiftModal(){
+    const p=DB.p;if(!p)return;
+    DB._shiftMeds='Sim';
+    document.getElementById('shift-date-label').textContent=`${p.name} · ${fmt(today())}`;
+    document.getElementById('shift-start').value=nowTime();
+    ['shift-end','shift-in','shift-obs','shift-pending'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('shift-out').value=DB.currentUser?.name||'';
+    document.querySelectorAll('[data-meds-ok]').forEach(b=>b.classList.remove('sel'));
+    document.querySelector('[data-meds-ok="Sim"]')?.classList.add('sel');
+    document.getElementById('shift-modal').classList.add('show');
+  },
+
+  calcAdherenceDetail(p){
     const sched=p.medSchedule||[];
-    const pend=sched.reduce((a,m)=>a+m.times.filter(t=>!getMedLog(p,d,m.name,t)).length,0);
-    const bar=document.getElementById('tl-meds-bar');
-    bar.innerHTML=`<div id="meds-accordion" style="background:var(--W);border-radius:var(--r);border:1.5px solid ${pend>0?'var(--yel)':'var(--sm)'};box-shadow:var(--sh);overflow:hidden;cursor:pointer">
-      <div id="meds-acc-header" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px">
-        <div style="display:flex;align-items:center;gap:9px">
-          <span style="font-size:18px">💊</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text)">Medicações de hoje</div>
-            <div style="font-size:11px;color:${pend>0?'var(--yel)':'var(--grn)'};font-weight:600;margin-top:1px">${pend>0?`${pend} pendente${pend>1?'s':''}  — toque para ver`:'✓ Todas administradas'}</div>
-          </div>
-        </div>
-        <span id="meds-acc-chevron" style="font-size:16px;color:var(--tmu);transition:transform .2s">›</span>
-      </div>
-      <div id="meds-acc-body" style="display:none;border-top:1px solid var(--border);padding:10px 14px 12px"></div>
-    </div>`;
-    // Render body content
-    if(sched.length){
-      const allItems=[];
-      sched.forEach(m=>m.times.forEach(t=>allItems.push({med:m,time:t,log:getMedLog(p,d,m.name,t)})));
-      allItems.sort((a,b)=>a.time.localeCompare(b.time));
-      const now=nowTime();
-      document.getElementById('meds-acc-body').innerHTML=allItems.map(({med,time,log})=>{
-        const isPast=time<=now,isOverdue=isPast&&!log,isDone=!!log;
-        const cls=isDone?'done':isOverdue?'overdue':'';
-        return`<div class="mci ${cls}" style="margin-bottom:6px" data-mn="${med.name}" data-mt="${time}" data-modal="dose-modal">
-          <div class="mci-check">${isDone?'✓':''}</div>
-          <div style="flex:1">
-            <div class="mci-name">${med.name}</div>
-            <div class="mci-meta">${isDone?`${log.doseGiven} ${med.unit} · ${log.author}${log.altered?' <span style="color:var(--yel);font-weight:700">⚠ dose alterada</span>':''}`:med.dose+' '+med.unit}</div>
-          </div>
-          <div class="mci-time">${time}</div>
-        </div>`;
-      }).join('');
-      document.querySelectorAll('#meds-acc-body .mci:not(.done)').forEach(el=>{
-        el.addEventListener('click',e=>{e.stopPropagation();const mn=el.dataset.mn,mt=el.dataset.mt;const m=p.medSchedule.find(x=>x.name===mn);if(m)A.openDoseModal(m,mt,'dose-modal');});
-      });
-    } else {
-      document.getElementById('meds-acc-body').innerHTML=`<div style="font-size:13px;color:var(--tmu);padding:4px 0">Nenhuma medicação cadastrada.</div>`;
-    }
-    // Toggle accordion
-    const header=document.getElementById('meds-acc-header');
-    const body=document.getElementById('meds-acc-body');
-    const chevron=document.getElementById('meds-acc-chevron');
-    let open=false;
-    header.addEventListener('click',()=>{
-      open=!open;
-      body.style.display=open?'block':'none';
-      chevron.style.transform=open?'rotate(90deg)':'rotate(0deg)';
-    });
-
-    // ── TIMELINE EVENTS ──
-    const allTypes=[...new Set(p.events.map(e=>e.type))];
-    const filters=['Todos',...allTypes];
-    const evts=DB.tlFilter==='Todos'?p.events:p.events.filter(e=>e.type===DB.tlFilter);
-    const groups={};
-    evts.forEach(e=>{const k=e.date.slice(0,7);if(!groups[k])groups[k]=[];groups[k].push(e);});
-    let html=`<div class="frow">${filters.map(f=>`<button class="fc ${DB.tlFilter===f?'on':'off'}" data-f="${f}">${f}</button>`).join('')}</div>`;
-    if(!evts.length){html+=`<div style="padding:28px 20px;text-align:center;color:var(--tmu);font-size:13px">Nenhum evento deste tipo.</div>`;}
-    else{
-      const sk=Object.keys(groups).sort().reverse();
-      sk.forEach((key,ki)=>{
-        const[y2,m2]=key.split('-');
-        html+=`<div class="mlabel">${MON[parseInt(m2)]} ${y2}</div>`;
-        groups[key].forEach((e,ei)=>{
-          const last=ki===sk.length-1&&ei===groups[key].length-1;
-          const dotBg=GDOT[e.grav]||'#E8F0EB';
-          // Social card style if has photo or social note
-          const isPost=e.photo||e.socialNote;
-          if(isPost){
-            html+=`<div class="tli"><div class="tll"><div class="tldot" style="background:${dotBg}">${TE[e.type]||'📝'}</div>${!last?'<div class="tlline"></div>':''}</div>
-            <div class="tlc" style="padding:0;overflow:hidden">
-              ${e.photo?`<div style="width:100%;aspect-ratio:1;border-radius:10px;margin-top:8px;overflow:hidden"><img src="${e.photo}" style="width:100%;height:100%;object-fit:cover"/></div>`:'' }
-              <div style="padding:11px 13px">
-                ${e.socialNote?`<div style="font-size:14px;color:var(--text);line-height:1.5;margin-bottom:8px">${e.socialNote}</div>`:''}
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
-                  <span class="badge ${GC[e.grav]||'bbmu'}" style="font-size:10px">${e.type}</span>
-                  <span style="font-size:11px;color:var(--tmu)">${fmt(e.date)} · ${e.author}</span>
-                </div>
-                ${e.desc?`<div style="font-size:12px;color:var(--tmu);margin-top:6px;line-height:1.4">${e.desc}</div>`:''}
-              </div>
-            </div></div>`;
-          } else {
-            html+=`<div class="tli"><div class="tll"><div class="tldot" style="background:${dotBg}">${TE[e.type]||'📝'}</div>${!last?'<div class="tlline"></div>':''}</div><div class="tlc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:700;color:var(--tm)">${e.type}</span><span class="badge ${GC[e.grav]||'bbmu'}" style="font-size:10px">${e.grav}</span></div><div style="font-size:13px;color:var(--text);line-height:1.5">${e.desc||'—'}</div><div style="font-size:11px;color:var(--tmu);margin-top:5px">${fmt(e.date)} · Por ${e.author}</div></div></div>`;
-          }
-        });
-      });
-    }
-    document.getElementById('tl-content').innerHTML=html;
-    document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{DB.tlFilter=b.dataset.f;A.renderTL();}));
+    if(!sched.length)return{pct:null,missed:[],label:'—'};
+    const days=[],now=new Date();
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+    let total=0,done=0;const missed=[];
+    days.forEach(d=>{sched.forEach(m=>{m.times.forEach(t=>{total++;const log=getMedLog(p,d,m.name,t);if(log)done++;else missed.push({date:d,med:m.name,dose:m.dose,unit:m.unit,time:t});});});});
+    if(total===0)return{pct:null,missed:[],label:'—'};
+    const pct=Math.round(done/total*100);
+    const cfg=DB.alertConfig;
+    return{pct,missed,label:pct>=cfg.adherence_mid?'Boa':pct>=cfg.adherence_low?'Regular':'Baixa',total,done};
   },
 
-  // ── MEDS CHECKLIST (shared between tl and meds screens) ──
-  renderMedsChecklist(containerId, modalId){
+  openAdherenceDetail(){
     const p=DB.p;if(!p)return;
-    const d=today();
-    const sched=p.medSchedule||[];
-    if(!sched.length){document.getElementById(containerId).innerHTML='';return;}
-    const allItems=[];
-    sched.forEach(m=>m.times.forEach(t=>{allItems.push({med:m,time:t,log:getMedLog(p,d,m.name,t)});}));
-    allItems.sort((a,b)=>a.time.localeCompare(b.time));
-    const pend=allItems.filter(x=>!x.log).length;
-    const now=nowTime();
-    let html=`<div style="background:var(--W);border-radius:var(--r);padding:13px 14px;border:1px solid var(--border);box-shadow:var(--sh)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">💊 Medicações de hoje</div>
-        <div style="font-size:11px;color:${pend===0?'var(--grn)':'var(--yel)'};font-weight:700">${pend===0?'✓ Todas administradas':`${pend} pendente${pend>1?'s':''}`}</div>
-      </div>`;
-    allItems.forEach(({med,time,log})=>{
-      const isPast=time<=now,isOverdue=isPast&&!log,isDone=!!log;
-      const cls=isDone?'done':isOverdue?'overdue':'';
-      html+=`<div class="mci ${cls}" data-mn="${med.name}" data-mt="${time}" data-modal="${modalId}">
-        <div class="mci-check">${isDone?'✓':''}</div>
-        <div style="flex:1">
-          <div class="mci-name">${med.name}</div>
-          <div class="mci-meta">${isDone?`${log.doseGiven} ${med.unit} · ${log.author}${log.altered?' <span style="color:var(--yel);font-weight:700">⚠ dose alterada</span>':''}`:med.dose+' '+med.unit}</div>
-        </div>
-        <div class="mci-time">${time}</div>
-      </div>`;
-    });
-    html+=`</div>`;
-    document.getElementById(containerId).innerHTML=html;
-    document.querySelectorAll(`[data-modal="${modalId}"]:not(.done)`).forEach(el=>{
-      el.addEventListener('click',()=>{
-        const mn=el.dataset.mn,mt=el.dataset.mt;
-        const m=p.medSchedule.find(x=>x.name===mn);if(!m)return;
-        A.openDoseModal(m,mt,modalId);
-      });
-    });
-  },
-
-  // ── DOSE MODAL ────────────────────────────────────
-  _dCtx:null,
-  openDoseModal(med,time,modalId){
-    A._dCtx={med,time,modalId};
-    const pre=modalId==='dose-modal'?'dm-':'dm2-';
-    const nalertId=modalId==='dose-modal'?'net-alert':'net-alert-2';
-    const nreciId=modalId==='dose-modal'?'net-recipients':'net-recipients-2';
-
-    document.getElementById(pre+'title').textContent=`Confirmar — ${med.name}`;
-    document.getElementById(pre+'sub').textContent=`Horário prescrito: ${time}`;
-    document.getElementById(pre+'name').textContent=med.name;
-    document.getElementById(pre+'prescribed').textContent=`Dose prescrita: ${med.dose} ${med.unit}`;
-    document.getElementById(pre+'val').value=med.dose;
-    document.getElementById(pre+'unit').textContent=med.unit;
-
-    // Check if administering more than 1h before scheduled time
-    const now=nowTime();
-    const [sh,sm]=time.split(':').map(Number);
-    const [nh,nm]=now.split(':').map(Number);
-    const diffMin=(sh*60+sm)-(nh*60+nm);
-    const earlyAlert=diffMin>60; // more than 1h early
-
-    const nalert=document.getElementById(nalertId);
-    const p=DB.p;
-    if(earlyAlert){
-      nalert.querySelector('.net-alert-title').textContent='⚠ Administração antecipada';
-      nalert.querySelector('.net-alert-body').textContent=`Este medicamento está sendo administrado mais de 1 hora antes do horário prescrito (${time}). Esta informação será comunicada à rede de apoio do paciente.`;
-      if(p) document.getElementById(nreciId).innerHTML=(p.suporte||[]).map(s=>`<div class="net-tag">👤 ${s}</div>`).join('');
-      nalert.classList.add('show');
-    } else {
-      nalert.querySelector('.net-alert-title').textContent='⚠ Dose diferente da prescrição';
-      nalert.querySelector('.net-alert-body').textContent='A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.';
-      nalert.classList.remove('show');
-    }
-
-    // Store early flag in context
-    A._dCtx.earlyAdmin=earlyAlert;
-    document.getElementById(modalId).classList.add('show');
-  },
-
-  closeDoseModal(modalId){
-    document.getElementById(modalId).classList.remove('show');
-    A._dCtx=null;
-    // Reset inline confirm panels
-    if(modalId==='dose-modal'){
-      const p=document.getElementById('dm-confirm-remove');
-      const m=document.getElementById('dm-actions-main');
-      if(p) p.style.display='none';
-      if(m) m.style.display='flex';
-    } else {
-      const p=document.getElementById('dm2-confirm-remove');
-      const m=document.getElementById('dm2-actions-main');
-      if(p) p.style.display='none';
-      if(m) m.style.display='flex';
-    }
-  },
-
-  confirmDose(modalId){
-    const ctx=A._dCtx;if(!ctx)return;
-    const p=DB.p;if(!p)return;
-    const {med,time,earlyAdmin}=ctx;
-    const pre=modalId==='dose-modal'?'dm-':'dm2-';
-    const doseGiven=(document.getElementById(pre+'val').value||med.dose).trim();
-    const altered=doseGiven!==med.dose;
-    const isNetworkAlert=altered||earlyAdmin;
-    const author='Ana Oliveira';
-    const d=today();
-    if(!p.medLog[d])p.medLog[d]={};
-    p.medLog[d][medKey(med.name,time)]={medName:med.name,time,doseGiven,unit:med.unit,prescribed:med.dose,altered,earlyAdmin:!!earlyAdmin,author,date:d};
-
-    // Build timeline event description
-    let desc=`${med.name} ${med.dose} ${med.unit} administrado`;
-    if(earlyAdmin&&altered) desc+=`. ⚠ Dose administrada: ${doseGiven} ${med.unit} (diferente da prescrita). Administração mais de 1h antes do horário (${time}). Rede de apoio notificada.`;
-    else if(earlyAdmin) desc+=`. ⚠ Administrado mais de 1h antes do horário prescrito (${time}). Rede de apoio notificada.`;
-    else if(altered) desc+=`. Dose prescrita: ${med.dose} ${med.unit}. Dose administrada: ${doseGiven} ${med.unit}. ⚠ Rede de apoio notificada sobre a alteração de dose.`;
-    else desc+=` conforme prescrição.`;
-
-    p.events.unshift({id:Date.now(),date:d,type:'Administração de medicamento',grav:'Leve',desc,author,isNetworkAlert});
-    A.closeDoseModal(modalId);
-    saveDB();
-
-    // Toast
-    let msg;
-    if(earlyAdmin&&altered) msg=`⚠ Dose alterada e horário antecipado registrados. Rede notificada.`;
-    else if(earlyAdmin) msg=`⚠ Horário antecipado registrado. Rede de apoio será notificada.`;
-    else if(altered) msg=`⚠ Dose alterada registrada. Rede de apoio será notificada.`;
-    else msg=`✓ ${med.name} ${med.dose} ${med.unit} administrado!`;
-    toast(msg,3500);
-
-    if(modalId==='dose-modal'){A.renderTL();}
-    else{A.renderMeds();}
-    A.renderDash();
-  },
-
-  // ── SINAIS VITAIS ─────────────────────────────────
-  renderVS(){
-    const p=DB.p;if(!p)return;
-    const vitals=p.vitals||[];
-    document.getElementById('vs-title').textContent=p.name.split(' ')[0]+' · Sinais vitais';
-    document.getElementById('vs-last').textContent=vitals.length?`Último: ${fmt(vitals[0].date)} às ${vitals[0].time} · ${vitals[0].author}`:'Nenhum registro ainda.';
-    const lv=vitals[0]||{};
-    const VSDEF=[
-      {k:'sis',k2:'dia',icon:'🫀',label:'Pressão arterial',unit:'mmHg',color:'#C0544A',disp:v=>v.sis?`${v.sis}/${v.dia}`:'—'},
-      {k:'fc',icon:'❤️',label:'Freq. cardíaca',unit:'bpm',color:'#D4885C',disp:v=>v.fc},
-      {k:'temp',icon:'🌡️',label:'Temperatura',unit:'°C',color:'#C49A3C',disp:v=>v.temp},
-      {k:'sat',icon:'🫁',label:'Saturação O₂',unit:'%',color:'#3A6EA5',disp:v=>v.sat},
-      {k:'gli',icon:'🩸',label:'Glicemia',unit:'mg/dL',color:'#854f0b',disp:v=>v.gli},
-      {k:'fr',icon:'🫧',label:'Freq. resp.',unit:'irpm',color:'#3D7A58',disp:v=>v.fr},
-      {k:'peso',icon:'⚖️',label:'Peso',unit:'kg',color:'#5C7E6A',disp:v=>v.peso},
-    ];
-    document.getElementById('vs-cards').innerHTML=VSDEF.map((d,i)=>{
-      const disp=d.disp(lv);const hasVal=disp!==null&&disp!==undefined&&disp!=='—'&&String(disp)!=='null/null';
-      const st=hasVal?vsS(d.k,parseFloat(String(disp).split('/')[0])):'none';
-      return`<div class="vscard" style="cursor:pointer" data-vs-idx="${i}">
-        <div style="font-size:21px;margin-bottom:4px">${d.icon}</div>
-        <div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.4px">${d.label}</div>
-        <div style="font-size:20px;font-weight:600;color:${st==='alert'?'var(--red)':st==='warn'?'var(--yel)':'var(--text)'};margin-top:2px;line-height:1">${hasVal?disp:'—'}</div>
-        <div style="font-size:10px;color:var(--tmu);margin-top:2px">${d.unit}</div>
-        <div class="vs-status ${vsC(st)}">${vsL(st)}</div>
-        <canvas class="spark" id="sp-${d.k}"></canvas>
-      </div>`;
-    }).join('');
-    setTimeout(()=>{VSDEF.forEach(d=>{const vals=vitals.slice().reverse().map(v=>parseFloat(v[d.k])).filter(n=>!isNaN(n));if(vals.length>=2){const c=document.getElementById('sp-'+d.k);if(c)spark(c,vals,d.color);}});},60);
-    // Tappable cards → open detail sheet
-    document.querySelectorAll('#vs-cards .vscard[data-vs-idx]').forEach(card=>{
-      card.addEventListener('click',()=>{
-        const idx=parseInt(card.dataset.vsIdx);
-        openVSDetail(VSDEF[idx],vitals);
-      });
-    });
-    if(document.getElementById('vs-hist')) document.getElementById('vs-hist').innerHTML=vitals.length===0
-      ?`<div style="padding:14px 0;text-align:center;color:var(--tmu);font-size:13px">Nenhum registro ainda.</div>`
-      :vitals.map(v=>`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)}</div><div style="font-size:10px;color:var(--tmu)">${v.time} · ${v.author}</div></div>
-          <div style="display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end">
-            ${v.sis?`<span style="font-size:13px;font-weight:600;color:${vsS('sis',v.sis)==='alert'?'var(--red)':'var(--text)'}">${v.sis}/${v.dia}<small style="font-size:10px;color:var(--tmu);font-weight:400"> mmHg</small></span>`:''}
-            ${v.fc?`<span style="font-size:13px;font-weight:600">${v.fc}<small style="font-size:10px;color:var(--tmu);font-weight:400"> bpm</small></span>`:''}
-            ${v.temp?`<span style="font-size:13px;font-weight:600">${v.temp}<small style="font-size:10px;color:var(--tmu);font-weight:400"> °C</small></span>`:''}
-            ${v.sat?`<span style="font-size:13px;font-weight:600;color:${vsS('sat',v.sat)==='alert'?'var(--red)':'var(--text)'}">${v.sat}<small style="font-size:10px;color:var(--tmu);font-weight:400"> %</small></span>`:''}
-          </div>
-        </div>`).join('');
-  },
-
-  openNewVS(){
-    const p=DB.p;if(!p)return;
-    document.getElementById('nv-pname').textContent=p.name;
-    document.getElementById('nv-date').value=today();
-    document.getElementById('nv-time').value=nowTime();
-    ['nv-sis','nv-dia','nv-fc','nv-temp','nv-sat','nv-gli','nv-fr','nv-peso','nv-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    go('s-new-vs');
-  },
-
-  // ── MEDICAÇÕES SCREEN ────────────────────────────
-  // ── BASE DE INTERAÇÕES MEDICAMENTOSAS (CBMPI + Beers 2023 + STOPP) ──
-  // Formato: { drugs: [array de nomes normalizados], effect: texto, severity: 'grave'|'moderada', symptomLinks: [palavras-chave de eventos] }
-  _DRUG_DB:[
-    // ── COMBINAÇÕES GRAVES ──────────────────────────────────────────────
-    {drugs:['anticolinérgico','biperideno','prometazina','oxibutinina','escopolamina'],
-     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','lorazepam','midazolam'],
-     effect:'Risco elevado de delirium, confusão mental e queda. Efeito anticolinérgico somado ao sedativo pode comprometer gravemente a cognição em idosos.',severity:'grave',symptomLinks:['confusão','esquecimento','delirium','queda','agitação']},
-
-    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno','indometacina'],
-     pair:['corticoide','prednisona','dexametasona','prednisolona','hidrocortisona'],
-     effect:'Risco grave de sangramento gastrointestinal. A combinação de AINE com corticoide multiplica o risco de úlcera e hemorragia digestiva.',severity:'grave',symptomLinks:['dor abdominal','vômito','sangramento']},
-
-    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno'],
-     pair:['losartana','enalapril','captopril','ramipril','lisinopril','valsartana','irbesartana'],
-     effect:'Risco de deterioração da função renal e redução do efeito anti-hipertensivo. AINEs bloqueiam prostaglandinas renais vasodilatadoras, agravando a pressão e sobrecarregando os rins.',severity:'grave',symptomLinks:['inchaço','pressão','tontura','redução urinária']},
-
-    {drugs:['varfarina','warfarin'],
-     pair:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','aas','aspirina'],
-     effect:'Risco grave de sangramento. A combinação aumenta significativamente o efeito anticoagulante e o risco de hemorragia interna.',severity:'grave',symptomLinks:['sangramento','hematoma','dor abdominal']},
-
-    {drugs:['digoxina','digitálico'],
-     pair:['furosemida','hidroclorotiazida','espironolactona','amilorida'],
-     effect:'Diuréticos podem causar hipocalemia (queda de potássio), que aumenta o risco de toxicidade pela digoxina — arritmias, náuseas e visão borrada.',severity:'grave',symptomLinks:['tontura','palpitação','náusea','visão borrada','arritmia']},
-
-    {drugs:['metformina','glibenclamida','glicazida','insulina','glipizida'],
-     pair:['enalapril','captopril','lisinopril','ramipril'],
-     effect:'IECA podem potencializar o efeito hipoglicemiante. Risco aumentado de hipoglicemia, especialmente em idosos que não reconhecem os sintomas precocemente.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor','fraqueza']},
-
-    {drugs:['relaxante muscular','ciclobenzaprina','carisoprodol','metaxalona'],
-     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','opioides','codeína','tramadol','morfina'],
-     effect:'Combinação de depressores do sistema nervoso central. Risco elevado de sedação excessiva, queda e depressão respiratória em idosos.',severity:'grave',symptomLinks:['queda','sonolência','confusão','fraqueza']},
-
-    // ── COMBINAÇÕES MODERADAS ───────────────────────────────────────────
-    {drugs:['furosemida','hidroclorotiazida','clortalidona'],
-     pair:['losartana','enalapril','captopril','ramipril','valsartana'],
-     effect:'Combinação pode causar hipotensão, tontura e quedas, especialmente ao levantar. Monitorar pressão arterial e sinais de desidratação.',severity:'moderada',symptomLinks:['tontura','queda','fraqueza','hipotensão']},
-
-    {drugs:['furosemida','hidroclorotiazida'],
-     pair:['furosemida','hidroclorotiazida','espironolactona'],
-     effect:'Uso de dois diuréticos simultaneamente aumenta o risco de desidratação, desequilíbrio de eletrólitos e hipotensão.',severity:'moderada',symptomLinks:['tontura','câimbra','fraqueza','confusão']},
-
-    {drugs:['betabloqueador','atenolol','propranolol','metoprolol','carvedilol'],
-     pair:['diltiazem','verapamil'],
-     effect:'Risco de bradicardia e bloqueio cardíaco. A combinação pode reduzir excessivamente a frequência cardíaca.',severity:'moderada',symptomLinks:['palpitação','tontura','fadiga','desmaio']},
-
-    {drugs:['inibidor de bomba','omeprazol','pantoprazol','lansoprazol','esomeprazol'],
-     pair:['clopidogrel'],
-     effect:'Omeprazol e pantoprazol reduzem a ativação do clopidogrel, diminuindo sua eficácia como antiagregante plaquetário.',severity:'moderada',symptomLinks:[]},
-
-    {drugs:['estatina','sinvastatina','atorvastatina','rosuvastatina','lovastatina'],
-     pair:['diltiazem','verapamil','amiodarona','fluconazol','cetoconazol'],
-     effect:'Inibidores do citocromo P450 aumentam os níveis plasmáticos das estatinas, elevando o risco de miopatia e rabdomiólise.',severity:'moderada',symptomLinks:['dor muscular','fraqueza','câimbra']},
-
-    {drugs:['lítio'],
-     pair:['aine','ibuprofeno','naproxeno','furosemida','hidroclorotiazida','enalapril'],
-     effect:'AINEs e diuréticos elevam os níveis de lítio no sangue, podendo causar toxicidade — tremor, confusão e disfunção renal.',severity:'grave',symptomLinks:['tremor','confusão','náusea']},
-
-    {drugs:['ssri','sertralina','fluoxetina','paroxetina','escitalopram','citalopram'],
-     pair:['tramadol','linezolida','triptano'],
-     effect:'Risco de síndrome serotoninérgica — agitação, tremor, febre alta e confusão. Pode ser grave e requerer atenção médica imediata.',severity:'grave',symptomLinks:['agitação','tremor','confusão','febre']},
-
-    {drugs:['amiodarona'],
-     pair:['varfarina','warfarin'],
-     effect:'Amiodarona inibe o metabolismo da varfarina, aumentando muito o efeito anticoagulante e o risco de sangramento.',severity:'grave',symptomLinks:['sangramento','hematoma']},
-
-    // ── MEDICAMENTO ISOLADO DE RISCO EM IDOSOS ──────────────────────────
-    {drugs:['glibenclamida'],
-     pair:[],
-     effect:'Glibenclamida tem meia-vida prolongada em idosos e causa hipoglicemia grave e prolongada. Critérios de Beers e CBMPI recomendam evitar em idosos — preferir glicazida ou glipizida.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor']},
-
-    {drugs:['prometazina','difenidramina','hidroxizina'],
-     pair:[],
-     effect:'Antihistamínicos de 1ª geração têm efeito anticolinérgico pronunciado em idosos: causam confusão, sedação excessiva e hipotensão ortostática. Devem ser evitados.',severity:'grave',symptomLinks:['confusão','tontura','sonolência','queda']},
-
-    {drugs:['nitrofurantoína'],
-     pair:[],
-     effect:'Em idosos com função renal reduzida, nitrofurantoína pode se acumular e causar toxicidade pulmonar e neurológica. Deve ser usada com cautela e monitoramento.',severity:'moderada',symptomLinks:['falta de ar','fraqueza']},
-  ],
-
-  // ── CALCULA INTERAÇÕES PARA UM PACIENTE ──────────────────────────────
-  calcDrugInteractions(p){
-    const sched=p.medSchedule||[];
-    if(!sched.length) return[];
-
-    // Normaliza nomes para comparação case-insensitive
-    const normalize=n=>n.toLowerCase().trim();
-    const names=sched.map(m=>normalize(m.name));
-
-    // Palavras-chave de eventos recentes (últimos 60 dias)
-    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-60);
-    const cutoffStr=cutoff.toISOString().slice(0,10);
-    const recentEventText=p.events
-      .filter(e=>e.date>=cutoffStr)
-      .map(e=>((e.desc||'')+(e.type||'')+(e.socialNote||'')).toLowerCase())
-      .join(' ');
-
-    const alerts=[];
-
-    A._DRUG_DB.forEach(rule=>{
-      const rDrugs=rule.drugs.map(normalize);
-      const rPair=rule.pair.map(normalize);
-
-      // Verificar se algum medicamento do paciente bate com os drugs da regra
-      const matchedDrug=names.find(n=>rDrugs.some(d=>n.includes(d)||d.includes(n)));
-      if(!matchedDrug) return;
-
-      if(rPair.length===0){
-        // Medicamento isolado de risco
-        const medName=sched.find(m=>normalize(m.name).includes(matchedDrug)||matchedDrug.includes(normalize(m.name)))?.name||matchedDrug;
-        const symptomMatch=rule.symptomLinks.some(s=>recentEventText.includes(s));
-        alerts.push({
-          type:'single',
-          med:medName,
-          effect:rule.effect,
-          severity:rule.severity,
-          symptomMatch,
-          key:medName
-        });
-        return;
-      }
-
-      // Verificar se há um segundo medicamento que bate com pair
-      const matchedPair=names.find(n=>rPair.some(d=>n.includes(d)||d.includes(n)));
-      if(!matchedPair) return;
-
-      const med1=sched.find(m=>normalize(m.name).includes(matchedDrug)||matchedDrug.includes(normalize(m.name)))?.name||matchedDrug;
-      const med2=sched.find(m=>normalize(m.name).includes(matchedPair)||matchedPair.includes(normalize(m.name)))?.name||matchedPair;
-      if(med1===med2) return; // mesmo med, ignorar
-
-      const symptomMatch=rule.symptomLinks.some(s=>recentEventText.includes(s));
-      alerts.push({
-        type:'pair',
-        med:med1,
-        med2,
-        effect:rule.effect,
-        severity:rule.severity,
-        symptomMatch,
-        key:`${med1}+${med2}`
-      });
-    });
-
-    // Deduplicar por key
-    const seen=new Set();
-    return alerts.filter(a=>{if(seen.has(a.key))return false;seen.add(a.key);return true;})
-      .sort((a,b)=>(b.severity==='grave'?1:0)-(a.severity==='grave'?1:0));
-  },
-
-  renderMeds(){
-    const p=DB.p;if(!p)return;
-    document.getElementById('meds-title').textContent=p.name.split(' ')[0]+' · Medicações';
-    const d=today();const[y,m,day]=d.split('-');
-    document.getElementById('meds-date').textContent=`Hoje: ${parseInt(day)} de ${MON[parseInt(m)]} ${y}`;
-
-    // ── ADHERENCE HIGHLIGHT ──
-    const adh=A.calcAdherence(p);
-    const adhColor=adh.color||'var(--tmu)';
-    const adhBg=adh.pct===null?'var(--warm)':adh.pct>=90?'var(--gl)':adh.pct>=80?'var(--yl)':'var(--rl)';
-    const adhBorder=adh.pct===null?'var(--border)':adh.pct>=90?'var(--grn)':adh.pct>=80?'var(--yel)':'var(--red)';
-    const adhIcon=adh.pct===null?'—':adh.pct>=90?'✅':adh.pct>=80?'⚡':'⚠';
-    const adhDesc=adh.pct===null?'Sem dados suficientes (menos de 1 semana de registro)':adh.pct>=90?'Aderência excelente — paciente segue a prescrição corretamente.':adh.pct>=80?'Aderência moderada — alguns horários perdidos nos últimos 7 dias.':'Aderência baixa — vários horários não foram registrados. Verificar com o paciente.';
-    document.getElementById('meds-content').innerHTML=`
-      <div style="margin:0 20px 14px;background:${adhBg};border:1.5px solid ${adhBorder};border-radius:var(--r);padding:13px 14px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <span style="font-size:22px">${adhIcon}</span>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:${adhColor}">Aderência medicamentosa: <span>${adh.label}</span></div>
-            <div style="font-size:11px;color:var(--tm);margin-top:1px">${adh.pct!=null?adh.pct+'% nos últimos 7 dias':''}</div>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--tm);line-height:1.5">${adhDesc}</div>
-        ${adh.pct!=null?`<div style="background:rgba(0,0,0,.08);border-radius:10px;height:6px;overflow:hidden;margin-top:8px"><div style="height:100%;border-radius:10px;background:${adhColor};width:${adh.pct}%;transition:width .4s"></div></div>`:''}
-      </div>`;
-    // Append checklist below
-    const checkWrap=document.createElement('div');
-    checkWrap.id='mci-wrap';
-    document.getElementById('meds-content').appendChild(checkWrap);
-    A.renderMedsChecklist('mci-wrap','dose-modal-meds');
-
-    // ── INTERAÇÕES MEDICAMENTOSAS ──
-    const interactions=A.calcDrugInteractions(p);
-    const intEl=document.createElement('div');
-    intEl.id='meds-interactions';
-    if(interactions.length){
-      const graves=interactions.filter(x=>x.severity==='grave');
-      const mods=interactions.filter(x=>x.severity==='moderada');
-      const headerBg=graves.length?'var(--rl)':'var(--yl)';
-      const headerBorder=graves.length?'var(--red)':'var(--yel)';
-      const headerColor=graves.length?'var(--red)':'var(--yel)';
-      const headerIcon=graves.length?'⚠️':'⚡';
-      const totalLabel=`${interactions.length} interaç${interactions.length>1?'ões':'ão'} identificada${interactions.length>1?'s':''}`;
-      intEl.innerHTML=`
-        <div style="margin:14px 20px 0">
-          <div style="background:${headerBg};border:1.5px solid ${headerBorder};border-radius:var(--r);overflow:hidden">
-            <!-- Header clicável -->
-            <div id="int-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer">
-              <div style="display:flex;align-items:center;gap:9px">
-                <span style="font-size:20px">${headerIcon}</span>
-                <div>
-                  <div style="font-size:13px;font-weight:700;color:${headerColor}">Interações medicamentosas</div>
-                  <div style="font-size:11px;color:var(--tm);margin-top:1px">${totalLabel} — toque para ver detalhes</div>
-                </div>
-              </div>
-              <span id="int-chevron" style="font-size:16px;color:var(--tmu);transition:transform .2s">›</span>
-            </div>
-            <!-- Body expansível -->
-            <div id="int-body" style="display:none;border-top:1px solid ${headerBorder}">
-              <div style="padding:6px 14px 4px;font-size:11px;color:var(--tmu);font-style:italic;line-height:1.5">
-                Baseado nos Critérios de Beers 2023, STOPP e Consenso Brasileiro (CBMPI). Estas informações são orientativas — não substituem a avaliação do médico ou farmacêutico responsável.
-              </div>
-              ${interactions.map(int=>{
-                const isGrave=int.severity==='grave';
-                const bg=isGrave?'rgba(192,84,74,.07)':'rgba(196,154,60,.07)';
-                const color=isGrave?'var(--red)':'var(--yel)';
-                const icon=isGrave?'🔴':'🟡';
-                const medLabel=int.type==='pair'?`${int.med} + ${int.med2}`:int.med;
-                const symptomBadge=int.symptomMatch?`<span style="display:inline-flex;align-items:center;gap:3px;background:var(--rl);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:5px">⚡ Sintoma registrado recentemente</span>`:'';
-                return`<div style="padding:11px 14px;border-top:1px solid rgba(0,0,0,.06);background:${bg}">
-                  <div style="display:flex;align-items:flex-start;gap:8px">
-                    <span style="font-size:15px;flex-shrink:0;margin-top:1px">${icon}</span>
-                    <div style="flex:1">
-                      <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:3px;line-height:1.3">${medLabel}</div>
-                      <div style="font-size:12px;color:var(--tm);line-height:1.5">${int.effect}</div>
-                      ${symptomBadge}
-                    </div>
-                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${isGrave?'var(--rl)':'var(--yl)'};color:${color};white-space:nowrap;flex-shrink:0;margin-top:1px">${int.severity==='grave'?'Grave':'Moderada'}</span>
-                  </div>
-                </div>`;
-              }).join('')}
-              <div style="padding:11px 14px;font-size:12px;color:var(--tm);line-height:1.5;border-top:1px solid rgba(0,0,0,.06);background:rgba(0,0,0,.02)">
-                💡 <strong>O que fazer:</strong> Informe o médico ou farmacêutico responsável sobre todas as medicações em uso. Não interrompa nenhum medicamento sem orientação profissional.
-              </div>
-            </div>
-          </div>
-        </div>`;
-
-      // Toggle accordion
-      let intOpen=false;
-      intEl.querySelector('#int-header').addEventListener('click',()=>{
-        intOpen=!intOpen;
-        intEl.querySelector('#int-body').style.display=intOpen?'block':'none';
-        intEl.querySelector('#int-chevron').style.transform=intOpen?'rotate(90deg)':'rotate(0deg)';
-      });
-    } else {
-      intEl.innerHTML=`
-        <div style="margin:14px 20px 0">
-          <div style="background:var(--gl);border:1.5px solid var(--grn);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:9px">
-            <span style="font-size:18px">✅</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--grn)">Sem interações identificadas</div>
-              <div style="font-size:11px;color:var(--tm);margin-top:1px">Nenhuma combinação de risco detectada nas medicações cadastradas.</div>
-            </div>
-          </div>
-        </div>`;
-    }
-    document.getElementById('meds-content').appendChild(intEl);
-    // History
-    const all=[];
-    Object.entries(p.medLog).forEach(([date,dl])=>Object.entries(dl).forEach(([,log])=>all.push(log)));
-    all.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
-    document.getElementById('meds-hist').innerHTML=all.length===0
-      ?`<div style="padding:12px 0;color:var(--tmu);font-size:13px">Nenhuma administração registrada ainda.</div>`
-      :all.slice(0,30).map(l=>`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">💊 ${l.medName}</div>
-            <div style="font-size:11px;color:var(--tmu);margin-top:2px">${fmt(l.date)} às ${l.time} · ${l.author}</div>
-            ${l.altered?`<div style="font-size:11px;color:var(--yel);font-weight:700;margin-top:2px">⚠ Dose alterada: ${l.doseGiven} ${l.unit} (prescrita: ${l.prescribed} ${l.unit})</div>`:''}
-          </div>
-          <span class="badge ${l.altered?'bby':'bgg'}">${l.doseGiven} ${l.unit}</span>
-        </div>`).join('');
-  },
-
-  // ── PERFIL ────────────────────────────────────────
-  renderProf(){
-    const p=DB.p;if(!p)return;
-    document.getElementById('prof-content').innerHTML=`
-      <div style="background:var(--warm);padding:20px 20px 16px">
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="position:relative;flex-shrink:0">
-            ${p.photo
-              ? `<img src="${p.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--sm)"/>`
-              : `<div class="av" style="background:${p.ab};color:${p.ac};width:64px;height:64px;font-size:23px">${p.initials}</div>`
-            }
-            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--sage);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid var(--warm);cursor:pointer" id="prof-photo-btn">✎</div>
-            <input type="file" id="prof-photo-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;border-radius:50%"/>
-          </div>
-          <div>
-            <div style="font-size:18px;font-family:'Lora',serif;font-weight:600">${p.name}</div>
-            <div style="font-size:12px;color:var(--tmu);margin-top:1px">${p.age} anos · ${p.sex}</div>
-            <div style="margin-top:6px"><span class="badge ${GC[p.rF]||'bbmu'}">${p.rF==='Alto'?'⚠ Risco alto':p.rF==='Moderado'?'⚡ Atenção':'✓ Estável'}</span></div>
-          </div>
-        </div>
-      </div>
-      <div style="padding:13px 20px 0">
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Diagnóstico</div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:1.6">${p.diag}</div>
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Comorbidades</div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px">${p.como}</div>
-
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Rede de apoio</div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px">
-          ${(p.suporte||[]).map(s=>`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text)">👤 ${s}</div>`).join('')}
-          <div style="font-size:12px;color:var(--tmu);margin-top:8px;font-style:italic">Estas pessoas serão notificadas em caso de alteração de dose ou eventos críticos.</div>
-        </div>
-        
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Dados gerais</div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px">
-          <div class="pdr"><div class="pdl">Emergência</div><div class="pdv" style="color:var(--sage)">${p.emerg}</div></div>
-          <div class="pdr" style="border:none"><div class="pdl">Eventos registrados</div><div class="pdv">${p.events.length}</div></div>
-        </div>
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Observações</div>
-        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;color:var(--tm);line-height:1.6">${p.obs||'—'}</div>
-        <!-- BOTÕES DE ACESSO RÁPIDO -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <button id="btn-open-docs" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--W);border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .13s">
-            <span style="font-size:26px">📁</span>
-            <span style="font-size:12px;font-weight:600;color:var(--text)">Documentos</span>
-            <span style="font-size:10px;color:var(--tmu)" id="docs-count-badge">${(p.docs||[]).length} arquivo(s)</span>
-          </button>
-          <button id="btn-open-rx" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;background:var(--sl);border:1.5px solid var(--sm);border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .13s">
-            <span style="font-size:26px">🤖</span>
-            <span style="font-size:12px;font-weight:600;color:var(--sage)">Ler Prescrição</span>
-            <span style="font-size:10px;color:var(--tmu)">com Inteligência Artificial</span>
-          </button>
-        </div>
-        <div style="margin-bottom:28px"><button class="btn bd" id="btn-rem">🗑 Remover paciente</button></div>
-      </div>`;
-    // medications managed via the Medicações tab
-    document.getElementById('btn-rem').addEventListener('click',()=>{
-      if(!confirm('Remover este paciente?'))return;
-      DB.patients=DB.patients.filter(x=>x.id!==DB.pid);DB.pid=null;A.renderPatList();go('s-patients');toast('Paciente removido.');
-    });
-    document.getElementById('btn-open-docs').addEventListener('click',()=>{ A.renderDocs(); go('s-docs'); });
-    document.getElementById('btn-open-rx').addEventListener('click',()=>{ A.openRxModal(); });
-    // Profile photo upload — with CropTool
-    document.getElementById('prof-photo-input').addEventListener('change',function(){
-      const file=this.files[0];if(!file)return;
-      this.value=''; // reset input
-      CropTool.open(file, (base64)=>{
-        p.photo=base64;
-        saveDB();
-        A.renderProf();
-        A.renderDash();
-        toast('✓ Foto atualizada!');
-      });
-    });
+    const det=A.calcAdherenceDetail(p);
+    const MON=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const byDate={};det.missed.forEach(m=>{if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m);});
+    const pctColor=det.pct>=90?'var(--grn,#4CAF50)':det.pct>=80?'var(--yel)':'var(--red)';
+    let html=`<div style="text-align:center;padding:16px 0 20px"><div style="font-size:48px;font-weight:700;color:${pctColor}">${det.pct!==null?det.pct+'%':'—'}</div><div style="font-size:13px;color:var(--tmu);margin-top:4px">Aderência 7 dias · ${det.done||0}/${det.total||0} doses</div></div>`;
+    if(!det.missed.length){html+=`<div style="background:var(--sl);border-radius:var(--r);padding:16px;text-align:center"><div style="font-size:24px;margin-bottom:8px">🎉</div><div style="font-size:14px;font-weight:600;color:var(--sage)">Todas as doses administradas!</div></div>`;}
+    else{html+=`<div style="font-size:11px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">❌ Doses não administradas (${det.missed.length})</div>`;Object.keys(byDate).sort().reverse().forEach(date=>{const[y,m,d]=date.split('-');const isToday=date===today();html+=`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;padding:4px 8px;background:var(--warm);border-radius:6px;display:inline-block">${isToday?'Hoje':parseInt(d)+' de '+(MON[parseInt(m)-1]||m)}</div>`;byDate[date].forEach(miss=>{html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--W);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--rs);margin-bottom:5px"><div style="font-size:20px">💊</div><div><div style="font-size:13px;font-weight:600;color:var(--text)">${miss.med}</div><div style="font-size:11px;color:var(--tmu)">${miss.dose} ${miss.unit} · ⏰ ${miss.time}</div></div></div>`;});html+=`</div>`;});}
+    const ov=document.createElement('div');ov.style.cssText='position:absolute;inset:0;background:rgba(10,20,15,.75);z-index:600;display:flex;flex-direction:column;backdrop-filter:blur(2px)';
+    ov.innerHTML=`<div style="background:var(--cream);border-radius:20px 20px 0 0;margin-top:auto;max-height:85vh;display:flex;flex-direction:column"><div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0"><div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text)">Aderência medicamentosa</div><button id="adh-close" style="background:none;border:none;font-size:22px;color:var(--tmu);cursor:pointer;padding:4px;line-height:1">✕</button></div><div style="overflow-y:auto;padding:12px 20px 32px">${html}</div></div>`;
+    document.querySelector('.shell').appendChild(ov);
+    document.getElementById('adh-close').addEventListener('click',()=>ov.remove());
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
   },
 
   renderDocs(){
-    const p=DB.p; if(!p) return;
+    const p=DB.p;if(!p)return;
     const docs=p.docs||[];
-    const el=document.getElementById('docs-list');
-    if(!el) return;
-    if(!docs.length){
-      el.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--tmu)">
-        <div style="font-size:48px;margin-bottom:12px">📁</div>
-        <div style="font-size:14px;font-weight:600;color:var(--tm)">Nenhum documento</div>
-        <div style="font-size:12px;margin-top:4px">Toque em "+ Novo" para adicionar</div>
-      </div>`;
-      return;
-    }
-    el.innerHTML=docs.map((d,i)=>`
-      <div class="doc-card" data-doc-i="${i}">
-        ${d.photo
-          ?`<img class="doc-thumb" src="${d.photo}" data-view-doc="${i}"/>`
-          :`<div class="doc-thumb-ph">📄</div>`}
-        <div class="doc-info">
-          <div class="doc-title">${d.title}</div>
-          ${d.desc?`<div class="doc-desc">${d.desc}</div>`:''}
-          <div class="doc-date">${d.date||''}</div>
-        </div>
-        <button data-del-doc="${i}" style="background:none;border:none;color:var(--muted,#aaa);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">✕</button>
-      </div>`).join('');
-    el.querySelectorAll('[data-view-doc]').forEach(img=>{
-      img.addEventListener('click',()=>{
-        const d=docs[parseInt(img.dataset.viewDoc)];
-        if(d&&d.photo){
-          const ov=document.createElement('div');
-          ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:700;display:flex;align-items:center;justify-content:center;cursor:pointer';
-          ov.innerHTML=`<img src="${d.photo}" style="max-width:95%;max-height:90%;border-radius:10px;object-fit:contain"/>`;
-          ov.addEventListener('click',()=>ov.remove());
-          document.querySelector('.shell').appendChild(ov);
-        }
-      });
-    });
-    el.querySelectorAll('[data-del-doc]').forEach(btn=>{
-      btn.addEventListener('click',e=>{
-        e.stopPropagation();
-        const i=parseInt(btn.dataset.delDoc);
-        if(!confirm('Remover este documento?'))return;
-        p.docs.splice(i,1);
-        saveDB(); A.renderDocs(); toast('Documento removido.');
-      });
-    });
+    const el=document.getElementById('docs-list');if(!el)return;
+    if(!docs.length){el.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--tmu)"><div style="font-size:48px;margin-bottom:12px">📁</div><div style="font-size:14px;font-weight:600;color:var(--tm)">Nenhum documento</div><div style="font-size:12px;margin-top:4px">Toque em "+ Novo" para adicionar</div></div>`;return;}
+    el.innerHTML=docs.map((d,i)=>`<div class="doc-card"><div>${d.photo?`<img class="doc-thumb" src="${d.photo}" data-view-doc="${i}"/>`:`<div class="doc-thumb-ph">📄</div>`}</div><div class="doc-info"><div class="doc-title">${d.title}</div>${d.desc?`<div class="doc-desc">${d.desc}</div>`:''}<div class="doc-date">${d.date||''}</div></div><button data-del-doc="${i}" style="background:none;border:none;color:var(--muted,#aaa);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">✕</button></div>`).join('');
+    el.querySelectorAll('[data-view-doc]').forEach(img=>{img.addEventListener('click',()=>{const d=docs[parseInt(img.dataset.viewDoc)];if(d&&d.photo){const ov=document.createElement('div');ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:700;display:flex;align-items:center;justify-content:center;cursor:pointer';ov.innerHTML=`<img src="${d.photo}" style="max-width:95%;max-height:90%;border-radius:10px;object-fit:contain"/>`;ov.addEventListener('click',()=>ov.remove());document.querySelector('.shell').appendChild(ov);}});});
+    el.querySelectorAll('[data-del-doc]').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();showConfirm('Remover este documento?',()=>{p.docs.splice(parseInt(btn.dataset.delDoc),1);saveDB();A.renderDocs();toast('Documento removido.');},{danger:true,icon:'🗑️',yesLabel:'Remover'});});});
   },
 
-  openRxModal(){
-    // Reset to step 1
-    document.querySelectorAll('.rx-step').forEach(s=>s.classList.remove('active'));
-    document.getElementById('rx-step-1').classList.add('active');
-    document.getElementById('rx-photo-preview').style.display='none';
-    document.getElementById('rx-photo-ph').style.display='flex';
-    document.getElementById('rx-photo-input').value='';
-    document.getElementById('rx-analyze-btn').disabled=true;
-    document.getElementById('rx-analyze-btn').style.opacity='.45';
-    document.getElementById('rx-analyze-btn').style.pointerEvents='none';
-    DB._rxPhotoBase64=null;
-    document.getElementById('rx-modal').classList.add('show');
-  },
-
-  renderEvalResult(label,result,rbc,icon,cat){
-    const p=DB.p;
-    if(p){
-      if(cat==='Queda')p.rF=result;if(cat==='Nutricional')p.rN=result;if(cat==='Funcional')p.rFunc=result;
-      p.events.unshift({id:Date.now(),date:today(),type:`Avaliação — ${cat}`,grav:'Leve',desc:`${label}: ${result}.`,author:'Ana Oliveira'});
-    }
-    const tips={Queda:['Instalar barras de apoio no banheiro','Retirar tapetes do chão','Iluminação noturna','Revisar medicamentos que causam tontura','Comunicar ao médico ou fisioterapeuta'],Nutricional:['Refeições menores e mais frequentes','Enriquecer alimentos com azeite','Registrar ingestão de líquidos','Consultar nutricionista','Verificar dificuldade de deglutição'],Funcional:['Adaptar ambiente para autonomia','Estimular atividades independentes','Terapeuta ocupacional','Fisioterapia regular','Registrar mudanças de dependência']};
-    const tl=tips[cat]||tips['Queda'];
-    const isGood=result==='Baixo'||result==='Baixa';
-    const c=isGood?'var(--grn)':result==='Moderado'||result==='Moderada'?'var(--yel)':'var(--red)';
-    document.getElementById('eval-r-content').innerHTML=`<div style="padding:24px 20px">
-      <div style="text-align:center;margin-bottom:22px"><div style="font-size:50px;margin-bottom:9px">${isGood?'✅':icon}</div>
-      <div style="font-size:19px;font-family:'Lora',serif;font-weight:600;color:${c}">${label}: ${result}</div>
-      <div style="font-size:12px;color:var(--tmu);margin-top:4px">Avaliado em ${fmt(today())} · Por Ana Oliveira</div></div>
-      <div class="card" style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px">Nível de risco</div><div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div class="rbar ${rbc}"><div class="rfill"></div></div></div><div style="font-size:15px;font-weight:700;color:${c}">${result}</div></div></div>
-      <div class="card" style="background:var(--al);border-color:#F0C8A0;margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px">💡 Sugestões</div><div style="font-size:12px;line-height:1.8">${tl.map(t=>'• '+t).join('<br/>')}</div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-top:14px;padding-bottom:20px">
-        <button class="btn bp" id="er-dash">Voltar ao painel</button>
-        <button class="btn bs" id="er-tl">Ver no histórico</button>
-      </div></div>`;
-    document.getElementById('er-dash').addEventListener('click',()=>{A.renderDash();go('s-dash');});
-    document.getElementById('er-tl').addEventListener('click',()=>{DB.tlFilter='Todos';A.renderTL();go('s-tl');});
-    go('s-eval-r');
-  },
-
-  // ── ADHERENCE CALCULATOR ──────────────────────────
-  calcAdherence(p){
-    const sched=p.medSchedule||[];
-    if(!sched.length) return{pct:null,label:'—',color:'var(--tmu)'};
-    const days=[],now=new Date();
-    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
-    let total=0,done=0;
-    days.forEach(d=>{sched.forEach(m=>{m.times.forEach(t=>{total++;if(getMedLog(p,d,m.name,t))done++;});});});
-    if(total===0) return{pct:null,label:'—',color:'var(--tmu)'};
-    const pct=Math.round(done/total*100);
-    const cfg=DB.alertConfig;
-    if(pct>=cfg.adherence_mid) return{pct,label:'Boa',color:'var(--grn)'};
-    if(pct>=cfg.adherence_low) return{pct,label:'Moderada',color:'var(--yel)'};
-    return{pct,label:'Baixa',color:'var(--red)'};
-  },
-
-  // ── ASSESSMENT ENGINE ─────────────────────────────
-  _assessCtx:{},
-
-  openAssess(type){
-    document.getElementById('as-cancel').onclick=()=>go('s-dash');
-    const titles={morse:'🦯 Risco de queda — Morse',mna:'🥗 Avaliação nutricional — MNA',barthel:'🙋 Funcionalidade — Barthel',hydration:'💧 Hidratação diária',pain:'😣 Avaliação de dor'};
-    document.getElementById('as-title').textContent=titles[type]||'Avaliação';
-    A._assessCtx={type};
-    const c=document.getElementById('as-content');
-    if(type==='morse') c.innerHTML=A._morseFrm();
-    else if(type==='mna') c.innerHTML=A._mnaFrm();
-    else if(type==='barthel') c.innerHTML=A._barthelFrm();
-    else if(type==='hydration') c.innerHTML=A._hydrationFrm();
-    else if(type==='pain') c.innerHTML=A._painFrm();
-    // Wire radio options
-    c.querySelectorAll('.aopt,.dopt').forEach(el=>{
-      el.addEventListener('click',()=>{
-        const g=el.dataset.g;
-        c.querySelectorAll(`.aopt[data-g="${g}"],.dopt[data-g="${g}"]`).forEach(o=>{
-          o.classList.remove('sel','sel0','sel1','sel2');
-        });
-        if(el.classList.contains('aopt')){el.classList.add('sel');}
-        else{el.classList.add('sel'+el.dataset.v);}
-        A._updateAssessScore();
-      });
-    });
-    A._updateAssessScore();
-    c.querySelectorAll('input[type=range]').forEach(r=>r.addEventListener('input',A._updateAssessScore));
-    c.querySelectorAll('input[type=number]').forEach(r=>r.addEventListener('input',A._updateAssessScore));
-    go('s-assess');
-  },
-
-  _updateAssessScore(){
-    const c=document.getElementById('as-content');
-    const sb=document.getElementById('as-score-bar');
-    const sl=document.getElementById('as-score-label');
-    if(!sb||!sl) return;
-    const {type}=A._assessCtx;
-    if(type==='morse'){
-      // Morse: sum points from selected options
-      let score=0;
-      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
-      const risk=score<25?'Baixo':score<45?'Moderado':'Alto';
-      const pct=Math.min(100,Math.round(score/125*100));
-      sb.style.width=pct+'%';
-      sb.style.background=score<25?'var(--grn)':score<45?'var(--yel)':'var(--red)';
-      sl.textContent=`Pontuação: ${score} — Risco ${risk}`;
-      A._assessCtx.score=score; A._assessCtx.result=risk;
-    } else if(type==='mna'){
-      let score=0;
-      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
-      const risk=score>=12?'Baixo':score>=8?'Moderado':'Alto';
-      const pct=Math.round(score/14*100);
-      sb.style.width=pct+'%';
-      sb.style.background=score>=12?'var(--grn)':score>=8?'var(--yel)':'var(--red)';
-      sl.textContent=`Pontuação: ${score}/14 — ${score>=12?'Nutrição adequada':score>=8?'Risco moderado':'Alto risco nutricional'}`;
-      A._assessCtx.score=score; A._assessCtx.result=risk;
-    } else if(type==='barthel'){
-      let score=0;
-      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
-      const risk=score>=85?'Baixo':score>=60?'Moderado':'Alto';
-      const pct=Math.round(score/100*100);
-      sb.style.width=pct+'%';
-      sb.style.background=score>=85?'var(--grn)':score>=60?'var(--yel)':'var(--red)';
-      sl.textContent=`Barthel: ${score}/100 — ${score>=85?'Independente':score>=60?'Dependência moderada':'Dependência severa'}`;
-      A._assessCtx.score=score; A._assessCtx.result=risk;
-    } else if(type==='hydration'){
-      // 3 questions × max 2 pts each = 6 total
-      let score=0;
-      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
-      const risk=score>=5?'Baixo':score>=3?'Moderado':'Alto';
-      const pct=Math.round(score/6*100);
-      sb.style.width=pct+'%';
-      sb.style.background=score>=5?'var(--grn)':score>=3?'var(--yel)':'var(--red)';
-      sl.textContent=`Hidratação — ${score}/6 pts · Risco ${risk}`;
-      A._assessCtx.score=score; A._assessCtx.result=risk;
-    } else if(type==='pain'){
-      const v=parseInt(document.getElementById('pain-range')?.value||0);
-      const risk=v<=2?'Baixo':v<=5?'Moderado':'Alto';
-      const pct=v/10*100;
-      sb.style.width=pct+'%';
-      sb.style.background=v<=2?'var(--grn)':v<=5?'var(--yel)':'var(--red)';
-      sl.textContent=`Dor: ${v}/10 — ${v===0?'Sem dor':risk}`;
-      A._assessCtx.score=v; A._assessCtx.result=risk;
-    }
-  },
-
-  _scoreBox(){return`<div style="padding:12px 14px;background:var(--warm);border-radius:var(--rs);margin:16px 0">
-    <div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px">Pontuação atual</div>
-    <div style="background:var(--border);border-radius:10px;height:8px;overflow:hidden;margin-bottom:6px"><div id="as-score-bar" style="height:100%;border-radius:10px;width:0%;background:var(--grn);transition:all .35s"></div></div>
-    <div id="as-score-label" style="font-size:12px;color:var(--tm);font-weight:600">—</div>
-  </div>`;},
-
-  _saveAssess(){
+  renderTasks(){
     const p=DB.p;if(!p)return;
-    const {type,result,score}=A._assessCtx;
-    const labels={morse:'Risco de queda',mna:'Nutrição',barthel:'Funcional',hydration:'Hidratação',pain:'Dor'};
-    const keys={morse:'rF',mna:'rN',barthel:'rFunc',hydration:'rHyd',pain:'rPain'};
-    if(keys[type]) p[keys[type]]=result;
-    const scoreStr=score!==undefined?` (${score} pts)`:'';
-    p.events.unshift({id:Date.now(),date:today(),type:'Avaliação — '+labels[type],grav:'Leve',
-      desc:`${labels[type]}${scoreStr}: Risco ${result}. Avaliado por Ana Oliveira.`,author:'Ana Oliveira'});
-    saveDB();
-    toast(`✓ Avaliação salva — Risco ${result}`);
-    setTimeout(()=>{A.renderDash();go('s-dash');},900);
+    const el=document.getElementById('d-tasks');if(!el)return;
+    const todayStr=today();
+    if(!p.tasks)p.tasks={};
+    if(!p.tasks[todayStr])p.tasks[todayStr]=[];
+    if(!p.tasksDone)p.tasksDone={};
+    const status_=A.calcOverallStatus(p);
+    const allTasks=[];
+    // 1. Medicações
+    const pendMeds=(p.medSchedule||[]).flatMap(m=>m.times.filter(t=>!getMedLog(p,todayStr,m.name,t)).map(t=>({id:'med-'+m.id+t,title:`💊 ${m.name}`,sub:`${m.dose}${m.unit}`,time:t,auto:true,type:'med',sortKey:t})));
+    allTasks.push(...pendMeds);
+    // 2. Sinais vitais por status
+    const vsRequired=status_.level==='Alerta'?3:status_.level==='Atenção'?2:1;
+    const vsToday=(p.vitals||[]).filter(v=>v.date===todayStr).length;
+    const vsTimeMap={1:['08:00'],2:['08:00','20:00'],3:['08:00','14:00','20:00']};
+    const vsTimes=vsTimeMap[vsRequired];
+    for(let vi=0;vi<vsRequired;vi++){if(vi>=vsToday){allTasks.push({id:'vs-'+vi,title:'🩺 Sinais vitais',sub:vsTimes[vi]+' · '+(vsRequired>1?`${status_.level} · ${vsRequired}x/dia`:'1x/dia'),time:vsTimes[vi],auto:true,type:'vs',sortKey:vsTimes[vi]});}}
+    // 3. Como está hoje? — 2 turnos
+    const dailyEvals=(p.events||[]).filter(e=>e.type==='Avaliação diária'&&e.date===todayStr);
+    const hasMorning=dailyEvals.some(e=>parseInt((e.daily?.time||'00:00').split(':')[0])<12);
+    const hasEvening=dailyEvals.some(e=>parseInt((e.daily?.time||'00:00').split(':')[0])>=12);
+    if(!hasMorning)allTasks.push({id:'daily-manha',title:'☀️ Como está hoje?',sub:'Manhã — 1º turno',time:'08:30',auto:true,type:'daily',sortKey:'08:30'});
+    if(!hasEvening)allTasks.push({id:'daily-tarde',title:'🌙 Como está hoje?',sub:'Noite — 2º turno',time:'20:30',auto:true,type:'daily',sortKey:'20:30'});
+    // 4. Consultas hoje
+    (p.appointments||[]).filter(a=>a.date===todayStr).forEach(a=>{const t=a.time||'00:00';allTasks.push({id:'appt-'+a.id,title:`📅 ${a.type}${a.prof?' · '+a.prof:''}`,sub:t+(a.local?' · '+a.local:''),time:t,auto:true,type:'appt',sortKey:t});});
+    // 5. Tarefas manuais
+    (p.tasks[todayStr]||[]).forEach(t=>{allTasks.push({...t,sortKey:t.time||'99:99'});});
+    // Ordenar por horário
+    allTasks.sort((a,b)=>(a.sortKey||'99:99').localeCompare(b.sortKey||'99:99'));
+    const done=p.tasksDone;
+    if(!allTasks.length){el.innerHTML=`<div style="padding:14px;background:var(--warm);border-radius:var(--r);text-align:center;color:var(--tmu);font-size:13px"><div style="font-size:24px;margin-bottom:4px">✨</div>Nenhuma tarefa pendente hoje!</div>`;return;}
+    const periods=[{label:'🌅 Manhã',range:[0,11],tasks:[]},{label:'☀️ Tarde',range:[12,17],tasks:[]},{label:'🌙 Noite',range:[18,23],tasks:[]},{label:'📋 Sem horário',range:[-1,-1],tasks:[]}];
+    allTasks.forEach(t=>{const h=t.time?parseInt(t.time.split(':')[0]):-1;const period=periods.find(p=>h>=p.range[0]&&h<=p.range[1])||periods[3];period.tasks.push(t);});
+    const typeColor={med:'var(--sage)',vs:'var(--blu,#3A6EA5)',daily:'var(--amber)',appt:'var(--purple,#7B5EA7)',default:'var(--border)'};
+    let html='';
+    periods.forEach(period=>{
+      if(!period.tasks.length)return;
+      html+=`<div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.7px;margin:10px 0 6px;padding-left:2px">${period.label}</div>`;
+      period.tasks.forEach(t=>{
+        const isDone=!!done[todayStr+'§'+t.id];
+        const accent=typeColor[t.type]||typeColor.default;
+        html+=`<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--W);border:1px solid var(--border);border-left:5px solid ${isDone?'var(--border)':accent};border-radius:var(--rs);margin-bottom:5px;opacity:${isDone?'.45':'1'};transition:all .15s" data-task-id="${t.id}">
+          <button data-task-check="${t.id}" style="width:20px;height:20px;border-radius:50%;border:2px solid ${isDone?'var(--sage)':accent};background:${isDone?'var(--sage)':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;transition:all .15s;padding:0">${isDone?'✓':''}</button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:${isDone?'400':'600'};color:var(--text);text-decoration:${isDone?'line-through':'none'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
+            ${t.sub||t.time?`<div style="font-size:11px;color:var(--tmu);margin-top:1px">${t.time?`⏰ ${t.time}`:''}${t.sub?` · ${t.sub}`:''}</div>`:''}
+          </div>
+          ${!t.auto?`<button data-task-del="${t.id}" style="background:none;border:none;color:var(--tmu);font-size:15px;cursor:pointer;padding:2px;line-height:1;flex-shrink:0">✕</button>`:''}
+        </div>`;
+      });
+    });
+    el.innerHTML=html;
+    el.querySelectorAll('[data-task-check]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const tid=btn.dataset.taskCheck;
+        const key=todayStr+'§'+tid;
+        if(!p.tasksDone)p.tasksDone={};
+        p.tasksDone[key]=!p.tasksDone[key];
+        const task=allTasks.find(t=>t.id===tid);
+        if(task?.type==='vs'&&p.tasksDone[key])A.openNewVS();
+        if(task?.type==='daily'&&p.tasksDone[key])A.openDailyModal();
+        saveDB();A.renderTasks();
+      });
+    });
+    el.querySelectorAll('[data-task-del]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const tid=btn.dataset.taskDel;
+        p.tasks[todayStr]=(p.tasks[todayStr]||[]).filter(t=>t.id!==tid);
+        saveDB();A.renderTasks();
+      });
+    });
   },
 
-  // ── MORSE FORM ────────────────────────────────────
-  _morseFrm(){return`<div style="padding:14px 20px 20px">
-    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Escala de Morse — avaliação mensal ou após queda</div>
-    ${A._scoreBox()}
-    <div class="asec">1. Histórico de quedas</div>
-    <div class="aopt sel" data-g="m1" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m1" data-pts="25"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">25 pontos</div></div></div>
-    <div class="asec">2. Diagnóstico secundário</div>
-    <div class="aopt sel" data-g="m2" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m2" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">15 pontos</div></div></div>
-    <div class="asec">3. Auxílio para deambulação</div>
-    <div class="aopt sel" data-g="m3" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Nenhum / repouso no leito / cadeira de rodas</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m3" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Muleta, bengala ou andador</div><div class="aopt-sub">15 pontos</div></div></div>
-    <div class="aopt" data-g="m3" data-pts="30"><div class="aopt-dot"></div><div><div class="aopt-main">Apoia-se em móveis ou paredes</div><div class="aopt-sub">30 pontos</div></div></div>
-    <div class="asec">4. Acesso venoso / heparina</div>
-    <div class="aopt sel" data-g="m4" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m4" data-pts="20"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">20 pontos</div></div></div>
-    <div class="asec">5. Marcha / transferência</div>
-    <div class="aopt sel" data-g="m5" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Normal / acamado / imóvel</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m5" data-pts="10"><div class="aopt-dot"></div><div><div class="aopt-main">Fraca / lenta</div><div class="aopt-sub">10 pontos</div></div></div>
-    <div class="aopt" data-g="m5" data-pts="20"><div class="aopt-dot"></div><div><div class="aopt-main">Comprometida / irregular / cambaleante</div><div class="aopt-sub">20 pontos</div></div></div>
-    <div class="asec">6. Estado mental</div>
-    <div class="aopt sel" data-g="m6" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Orientado quanto às suas capacidades</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="m6" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Superestima capacidades / esquece limitações</div><div class="aopt-sub">15 pontos</div></div></div>
-    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
-  </div>`;},
+}; // end of A object
 
-  // ── MNA FORM ─────────────────────────────────────
-  _mnaFrm(){return`<div style="padding:14px 20px 20px">
-    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">MNA simplificado — 6 perguntas, recomendado diariamente</div>
-    ${A._scoreBox()}
-    <div class="asec">1. Apetite / ingestão alimentar</div>
-    <div class="aopt" data-g="n1" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Perda grave de apetite</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="n1" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Perda moderada de apetite</div><div class="aopt-sub">1 ponto</div></div></div>
-    <div class="aopt sel" data-g="n1" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sem perda de apetite</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="asec">2. Perda de peso recente (3 meses)</div>
-    <div class="aopt" data-g="n2" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Mais de 3 kg</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="n2" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Não sabe informar</div><div class="aopt-sub">1 ponto</div></div></div>
-    <div class="aopt" data-g="n2" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Entre 1 e 3 kg</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="aopt sel" data-g="n2" data-pts="3"><div class="aopt-dot"></div><div><div class="aopt-main">Sem perda de peso</div><div class="aopt-sub">3 pontos</div></div></div>
-    <div class="asec">3. Mobilidade</div>
-    <div class="aopt" data-g="n3" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Acamado ou na cadeira de rodas</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="n3" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Levanta, mas sai pouco de casa</div><div class="aopt-sub">1 ponto</div></div></div>
-    <div class="aopt sel" data-g="n3" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sai de casa normalmente</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="asec">4. Estresse psicológico ou doença aguda</div>
-    <div class="aopt" data-g="n4" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt sel" data-g="n4" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="asec">5. Problemas neuropsicológicos</div>
-    <div class="aopt" data-g="n5" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Demência grave ou depressão</div><div class="aopt-sub">0 pontos</div></div></div>
-    <div class="aopt" data-g="n5" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Demência leve</div><div class="aopt-sub">1 ponto</div></div></div>
-    <div class="aopt sel" data-g="n5" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sem problema neurológico</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="asec">6. IMC ou circunferência da panturrilha</div>
-    <div class="aopt" data-g="n6" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">IMC < 19 ou panturrilha < 31 cm</div><div class="aopt-sub">0 pontos — desnutrição</div></div></div>
-    <div class="aopt" data-g="n6" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">IMC 19–21</div><div class="aopt-sub">1 ponto</div></div></div>
-    <div class="aopt" data-g="n6" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">IMC 21–23</div><div class="aopt-sub">2 pontos</div></div></div>
-    <div class="aopt sel" data-g="n6" data-pts="3"><div class="aopt-dot"></div><div><div class="aopt-main">IMC ≥ 23</div><div class="aopt-sub">3 pontos</div></div></div>
-    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
-  </div>`;},
-
-  // ── BARTHEL FORM ─────────────────────────────────
-  _barthelFrm(){
-    const items=[
-      {g:'b1',label:'Alimentação',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Totalmente dependente',p:0}]},
-      {g:'b2',label:'Banho',opts:[{t:'Independente',p:5},{t:'Dependente',p:0}]},
-      {g:'b3',label:'Higiene pessoal',opts:[{t:'Independente',p:5},{t:'Precisa de ajuda',p:0}]},
-      {g:'b4',label:'Vestuário',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Dependente',p:0}]},
-      {g:'b5',label:'Controle intestinal',opts:[{t:'Continente',p:10},{t:'Incontinência ocasional',p:5},{t:'Incontinente',p:0}]},
-      {g:'b6',label:'Controle urinário',opts:[{t:'Continente',p:10},{t:'Incontinência ocasional',p:5},{t:'Incontinente',p:0}]},
-      {g:'b7',label:'Uso do banheiro',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Dependente',p:0}]},
-      {g:'b8',label:'Transferência cama/cadeira',opts:[{t:'Independente',p:15},{t:'Supervisão mínima',p:10},{t:'Grande ajuda',p:5},{t:'Dependente',p:0}]},
-      {g:'b9',label:'Deambulação',opts:[{t:'Independente ≥50m',p:15},{t:'Com auxílio ≥50m',p:10},{t:'Cadeira de rodas independente',p:5},{t:'Imóvel',p:0}]},
-      {g:'b10',label:'Escadas',opts:[{t:'Independente',p:10},{t:'Com ajuda',p:5},{t:'Incapaz',p:0}]},
-    ];
-    return`<div style="padding:14px 20px 20px">
-      <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Índice de Barthel — avaliação trimestral ou após evento</div>
-      ${A._scoreBox()}
-      ${items.map(item=>`
-        <div class="asec">${item.label}</div>
-        ${item.opts.map((o,i)=>`<div class="aopt ${i===0?'sel':''}" data-g="${item.g}" data-pts="${o.p}"><div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.p} pontos</div></div></div>`).join('')}
-      `).join('')}
-      <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
-    </div>`;
-  },
-
-  // ── HYDRATION FORM — 3 perguntas rápidas ─────────
-  _hydrationFrm(){return`<div style="padding:14px 20px 20px">
-    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Monitoramento diário — 3 perguntas rápidas</div>
-    <div style="background:var(--bl);border-radius:var(--rs);padding:11px 13px;margin-bottom:16px;font-size:12px;color:var(--blue);line-height:1.5">💡 Idosos devem ingerir ao menos <strong>1.500 ml</strong> por dia independente de sentir sede. Sinais de desidratação surgem antes da sede.</div>
-    ${A._scoreBox()}
-
-    <div class="asec">1. O paciente bebeu bem hoje?</div>
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="aopt" data-g="hq1" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">😟</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Pouco ou nada</div>
-        <div class="aopt-sub">Menos de 500 ml</div>
-      </div>
-      <div class="aopt" data-g="hq1" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">😐</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Parcialmente</div>
-        <div class="aopt-sub">500–1.000 ml</div>
-      </div>
-      <div class="aopt sel" data-g="hq1" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">😊</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Bem</div>
-        <div class="aopt-sub">Mais de 1.000 ml</div>
-      </div>
-    </div>
-
-    <div class="asec">2. A urina está com cor normal?</div>
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="aopt" data-g="hq2" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">🔴</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Escura ou ausente</div>
-        <div class="aopt-sub">Sinal de alerta</div>
-      </div>
-      <div class="aopt" data-g="hq2" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">🟡</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Amarela escura</div>
-        <div class="aopt-sub">Hidratação baixa</div>
-      </div>
-      <div class="aopt sel" data-g="hq2" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">🟢</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Clara / palha</div>
-        <div class="aopt-sub">Adequada</div>
-      </div>
-    </div>
-
-    <div class="asec">3. Lábios e mucosa estão úmidos?</div>
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="aopt" data-g="hq3" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">🌵</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Secos e rachados</div>
-        <div class="aopt-sub">Sinal visível</div>
-      </div>
-      <div class="aopt" data-g="hq3" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">😶</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Leve ressecamento</div>
-        <div class="aopt-sub">Observar</div>
-      </div>
-      <div class="aopt sel" data-g="hq3" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
-        <div style="font-size:26px;margin-bottom:4px">✅</div>
-        <div class="aopt-dot" style="margin:0 auto 4px"></div>
-        <div class="aopt-main">Úmidos, normais</div>
-        <div class="aopt-sub">Adequado</div>
-      </div>
-    </div>
-
-    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
-  </div>`;},
-
-  // ── PAIN FORM ─────────────────────────────────────
-  _painFrm(){return`<div style="padding:14px 20px 20px">
-    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Escala de dor — pode ser avaliada diariamente</div>
-    ${A._scoreBox()}
-    <div class="asec">Intensidade da dor agora</div>
-    <div style="text-align:center;margin:20px 0 8px">
-      <div id="pain-emoji" style="font-size:56px;margin-bottom:10px">😶</div>
-      <div id="pain-num" style="font-size:32px;font-weight:700;color:var(--text);font-family:'Lora',serif">0</div>
-      <div id="pain-desc" style="font-size:13px;color:var(--tmu);margin-top:4px">Sem dor</div>
-    </div>
-    <input type="range" id="pain-range" min="0" max="10" value="0" style="width:100%;accent-color:var(--sage);margin-bottom:8px"/>
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tmu);margin-bottom:18px"><span>Sem dor</span><span>Dor máxima</span></div>
-    <div class="asec">Localização (opcional)</div>
-    <div class="fg"><input class="fi" id="pain-loc" placeholder="Ex: joelho esquerdo, costas..."/></div>
-    <div class="asec">Característica (opcional)</div>
-    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
-      ${['Queimação','Pontada','Latejamento','Pressão','Formigamento','Câimbra'].map(t=>`<div class="fc off" style="cursor:pointer" onclick="this.classList.toggle('on')">${t}</div>`).join('')}
-    </div>
-    <div style="margin-top:8px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
-  </div>`;},
-
-  openNewEvent(){
-    const p=DB.p;if(!p)return;
-    document.getElementById('ne-pname').textContent=p.name;
-    document.getElementById('ne-date').value=today();
-    document.getElementById('ne-desc').value='';
-    document.getElementById('ne-social-note').value='';
-    // Reset photo
-    document.getElementById('ne-photo-preview').style.display='none';
-    document.getElementById('ne-photo-preview').src='';
-    document.getElementById('ne-photo-placeholder').style.display='flex';
-    document.getElementById('ne-photo-remove').style.display='none';
-    document.getElementById('ne-photo-input').value='';
-    DB._photoData=null;
-    DB.eGrav='Leve'; // default — gravity UI hidden
-    DB.eType='Momento especial';
-    document.querySelectorAll('.etbtn').forEach(b=>b.classList.remove('sel'));
-    const first=document.querySelector('.etbtn');
-    if(first) first.classList.add('sel');
-    go('s-new-ev');
-  },
-  refreshGravBtns(){
-    // Gravity buttons hidden — no-op
-  }
-};
-
-// ══════════════════════════════════════════════════════
-// WIRE UP
-// ══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════
-// MEU DOUTOR — render
-// ═══════════════════════════════════════════════════
-async function renderMeuDoutor(){
-  const p=DB.p; if(!p) return;
-  const status=A.calcOverallStatus(p);
-  const role=DB.currentUser?.role;
-  const adherence=A.calcAdherence(p);
-  const lv=p.vitals&&p.vitals[0];
-
-  // Generate/reuse QR token (24h expiry) — await save before showing QR
-  if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
-    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
-    p._qrExp=Date.now()+(24*60*60*1000);
-    // Show loading state while saving
-    document.getElementById('md-content').innerHTML=
-      '<div style="padding:40px 20px;text-align:center;color:var(--tmu)">'+
-      '<div style="font-size:32px;margin-bottom:10px">🔐</div>'+
-      '<div style="font-size:13px;font-weight:600">Gerando QR Code seguro...</div>'+
-      '<div style="font-size:11px;margin-top:4px">Salvando token no servidor</div></div>';
-    go('s-meu-doutor');
-    await saveDB();
-  }
-  const msLeft=p._qrExp-Date.now();
-  const hLeft=Math.floor(msLeft/3600000);
-  const mLeft=Math.floor((msLeft%3600000)/60000);
-  const qrUrl=`https://appampara.github.io/ampara/relatorio.html?report=${p._qrToken}`;
-
-  const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
-  const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
-
-  // Status explanation
-  const statusExplain={
-    Estável:`${p.name.split(' ')[0]} apresenta sinais vitais e parâmetros clínicos dentro dos limites esperados. Nenhum alerta crítico no momento.`,
-    Atenção:`Alguns parâmetros de ${p.name.split(' ')[0]} requerem observação. Verifique os alertas e mantenha o acompanhamento próximo.`,
-    Alerta:`${p.name.split(' ')[0]} apresenta um ou mais parâmetros críticos. Avaliação médica recomendada com brevidade.`
-  }[status.level]||'';
-
-  let html=`
-  <div style="background:linear-gradient(140deg,#162b20,#2D4A3E 50%,#4A7A60);padding:20px 20px 24px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;opacity:.8">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="22" height="22">
-        <defs><linearGradient id="mdl1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>
-        <linearGradient id="mdl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient></defs>
-        <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#mdl1)" opacity="0.9"/>
-        <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#mdl1)" opacity="0.55"/>
-        <circle cx="16" cy="15" r="5" fill="url(#mdl2)"/>
-      </svg>
-      <span style="font-family:'Lora',serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">ampara</span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:2px">· Meu Doutor</span>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px">
-      <div>
-        <div style="font-size:16px;font-family:'Lora',serif;font-weight:600;color:#fff;line-height:1.2">${p.name}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${p.age} anos · ${p.sex||'—'}</div>
-      </div>
-      ${p.code?`<div style="background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.22);border-radius:10px;padding:8px 13px;text-align:center;flex-shrink:0">
-        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:3px">ID do paciente</div>
-        <div style="font-size:17px;font-weight:700;color:#fff;font-family:monospace;letter-spacing:2px">${p.code}</div>
-      </div>`:''}
-    </div>
-    <div style="display:inline-flex;align-items:center;gap:8px;background:${sBg};padding:9px 16px;border-radius:24px;margin-bottom:10px">
-      <span style="font-size:18px">${status.icon}</span>
-      <span style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</span>
-    </div>
-    <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">${statusExplain}</div>
-  </div>`;
-
-  // Vitals summary
-  if(lv){
-    html+=`<div class="md-section">Últimos sinais vitais</div>
-    <div class="md-card">
-      ${lv.sis?`<div class="md-row"><span class="md-label">🫀 Pressão arterial</span><span class="md-value" style="color:${vsS('sis',lv.sis)==='alert'?'var(--red)':vsS('sis',lv.sis)==='warn'?'var(--yel)':'var(--text)'}">${lv.sis}/${lv.dia} mmHg</span></div>`:''}
-      ${lv.fc?`<div class="md-row"><span class="md-label">❤️ Freq. cardíaca</span><span class="md-value">${lv.fc} bpm</span></div>`:''}
-      ${lv.temp?`<div class="md-row"><span class="md-label">🌡️ Temperatura</span><span class="md-value" style="color:${vsS('temp',lv.temp)==='alert'?'var(--red)':'var(--text)'}">${lv.temp} °C</span></div>`:''}
-      ${lv.sat?`<div class="md-row"><span class="md-label">🫁 Saturação O₂</span><span class="md-value" style="color:${vsS('sat',lv.sat)==='alert'?'var(--red)':'var(--text)'}">${lv.sat} %</span></div>`:''}
-      ${lv.gli?`<div class="md-row"><span class="md-label">🩸 Glicemia</span><span class="md-value" style="color:${vsS('gli',lv.gli)==='alert'?'var(--red)':'var(--text)'}">${lv.gli} mg/dL</span></div>`:''}
-      <div style="font-size:11px;color:var(--tmu);margin-top:8px">${fmt(lv.date)} às ${lv.time} · ${lv.author}</div>
-    </div>`;
-  }
-
-  // Avaliações de risco
-  html+=`<div class="md-section">Avaliações de risco</div>
-  <div class="md-card">
-    <div class="md-row"><span class="md-label">🦯 Risco de queda</span><span class="md-value" style="color:${RC[p.rF]||'var(--tmu)'}">${p.rF||'Não avaliado'}</span></div>
-    <div class="md-row"><span class="md-label">🥗 Risco nutricional</span><span class="md-value" style="color:${RC[p.rN]||'var(--tmu)'}">${p.rN||'Não avaliado'}</span></div>
-    <div class="md-row"><span class="md-label">🙋 Funcionalidade</span><span class="md-value" style="color:${RC[p.rFunc]||'var(--tmu)'}">${p.rFunc||'Não avaliado'}</span></div>
-    <div class="md-row"><span class="md-label">💧 Hidratação</span><span class="md-value" style="color:${RC[p.rHyd]||'var(--tmu)'}">${p.rHyd||'Não avaliado'}</span></div>
-    <div class="md-row"><span class="md-label">💊 Aderência</span><span class="md-value" style="color:${adherence.color||'var(--tmu)'}">${adherence.label}${adherence.pct!=null?' ('+adherence.pct+'%)':''}</span></div>
-  </div>`;
-
-  // Medicações
-  const meds=p.medSchedule||[];
-  if(meds.length){
-    html+=`<div class="md-section">Medicações cadastradas</div><div class="md-card">`;
-    meds.forEach(m=>{html+=`<div class="md-row"><span class="md-label">💊 ${m.name}</span><span class="md-value">${m.dose} ${m.unit} · ${m.times.join(', ')}</span></div>`;});
-    html+=`</div>`;
-  }
-
-  // QR code para médico
-  html+=`<div class="md-section">Relatório para o médico</div>
-  <div class="qr-wrap">
-    <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:4px">QR Code do paciente</div>
-    <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">O médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
-    <div id="md-qr-canvas" style="background:#fff;padding:8px;border-radius:10px;display:inline-block"></div>
-    <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min · Gera novo a cada 24h</div>
-    <div style="display:flex;gap:8px;margin-top:4px;width:100%">
-      <button class="btn bs bsm" id="md-regen-qr" style="flex:1">🔄 Novo QR</button>
-      <button id="md-pdf-btn" style="flex:1.4;display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;background:linear-gradient(135deg,var(--dark),var(--sage));color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(45,74,62,.3)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar PDF
-      </button>
-    </div>
-  </div>`;
-
-  document.getElementById('md-content').innerHTML=html;
-
-  // Draw real QR Code using QRCode.js
-  setTimeout(()=>{
-    const el = document.getElementById('md-qr-canvas');
-    if(!el) return;
-    el.innerHTML = '';
-    new QRCode(el, {
-      text: qrUrl,
-      width: 180,
-      height: 180,
-      colorDark: '#1E2820',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  }, 50);
-
-  document.getElementById('md-regen-qr')?.addEventListener('click',async ()=>{
-    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
-    p._qrExp=Date.now()+(24*60*60*1000);
-    toast('⏳ Salvando novo QR Code...');
-    await saveDB();
-    await renderMeuDoutor();
-    toast('🔄 QR Code renovado e salvo!');
-  });
-
-  // ── PDF DOWNLOAD ──
-  document.getElementById('md-pdf-btn')?.addEventListener('click',()=>gerarPDFApp(p));
-}
-
-// ════════════════════════════════════════════════════
-// PDF GENERATION — inside the app
-// ════════════════════════════════════════════════════
-async function gerarPDFApp(p){
-  if(!window.jspdf||!window.html2canvas){
-    toast('⚠ Bibliotecas PDF ainda carregando, tente novamente.');
-    return;
-  }
-  const ov=document.getElementById('pdf-gen-ov');
-  const fill=document.getElementById('pdf-gen-fill');
-  const status=document.getElementById('pdf-gen-status');
-  const btn=document.getElementById('md-pdf-btn');
-
-  const prog=(pct,msg)=>{ fill.style.width=pct+'%'; status.textContent=msg; };
-
-  ov.classList.add('show');
-  if(btn) btn.disabled=true;
-
-  try{
-    prog(10,'Preparando relatório...');
-    await new Promise(r=>setTimeout(r,100));
-
-    // Build a temporary off-screen report div
-    const reportDiv=document.createElement('div');
-    reportDiv.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;font-family:DM Sans,sans-serif;font-size:13px;color:#1E2820;z-index:-1';
-    reportDiv.innerHTML=buildPDFReport(p);
-    document.body.appendChild(reportDiv);
-
-    prog(30,'Renderizando conteúdo...');
-    await new Promise(r=>setTimeout(r,200));
-
-    const canvas=await html2canvas(reportDiv,{
-      scale:2, useCORS:true, allowTaint:true,
-      backgroundColor:'#ffffff', logging:false,
-      width:800, scrollX:0, scrollY:0
-    });
-    document.body.removeChild(reportDiv);
-
-    prog(65,'Construindo PDF...');
-    await new Promise(r=>setTimeout(r,80));
-
-    const {jsPDF}=window.jspdf;
-    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-    const pageW=pdf.internal.pageSize.getWidth();
-    const pageH=pdf.internal.pageSize.getHeight();
-    const margin=10, imgW=pageW-margin*2;
-    const imgH=(canvas.height*imgW)/canvas.width;
-    const totalPages=Math.ceil(imgH/(pageH-margin*2));
-
-    for(let i=0;i<totalPages;i++){
-      if(i>0) pdf.addPage();
-      const sy=i*(pageH-margin*2)*(canvas.width/imgW);
-      const sh=Math.min((pageH-margin*2)*(canvas.width/imgW),canvas.height-sy);
-      const sc=document.createElement('canvas');
-      sc.width=canvas.width; sc.height=sh;
-      sc.getContext('2d').drawImage(canvas,0,sy,canvas.width,sh,0,0,canvas.width,sh);
-      const sliceH=(sh*imgW)/canvas.width;
-      pdf.addImage(sc.toDataURL('image/jpeg',.92),'JPEG',margin,margin,imgW,sliceH);
-    }
-
-    prog(90,'Salvando arquivo...');
-    await new Promise(r=>setTimeout(r,100));
-
-    const date=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-    const name=(p.name||'paciente').split(' ').slice(0,2).join('_')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z_]/g,'');
-    pdf.save('Ampara_'+name+'_'+date+'.pdf');
-
-    prog(100,'PDF salvo!');
-    await new Promise(r=>setTimeout(r,800));
-    toast('✅ PDF baixado com sucesso!');
-
-  }catch(e){
-    status.textContent='Erro: '+e.message;
-    await new Promise(r=>setTimeout(r,2500));
-    toast('⚠ Erro ao gerar PDF.');
-  }finally{
-    ov.classList.remove('show');
-    if(btn) btn.disabled=false;
-    fill.style.width='0';
-  }
-}
-
-// Build the HTML report for PDF capture
-function buildPDFReport(p){
-  const lv=p.vitals&&p.vitals[0];
-  const meds=p.medSchedule||[];
-  const events=(p.events||[]).slice(0,6);
-  const MON_F=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const fmtD=ds=>{if(!ds)return'—';try{const[y,m,d]=ds.split('-');return`${parseInt(d)} de ${MON_F[parseInt(m)-1]} de ${y}`;}catch{return ds;}};
-  const fmtS=ds=>{if(!ds)return'—';try{const[y,m,d]=ds.split('-');return`${d}/${m}/${y}`;}catch{return ds;}};
-  const now=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-
-  const vsStatus=(k,v)=>{
-    if(v==null||isNaN(parseFloat(v)))return'none';
-    v=parseFloat(v);
-    if(k==='sis'){if(v>=160)return'alert';if(v>=140)return'warn';return'ok';}
-    if(k==='sat'){if(v<91)return'alert';if(v<94)return'warn';return'ok';}
-    if(k==='temp'){if(v>=38.5)return'alert';if(v>=37.5)return'warn';return'ok';}
-    if(k==='gli'){if(v>=200)return'alert';if(v>=140)return'warn';return'ok';}
-    if(k==='fc'){if(v<49||v>100)return'warn';return'ok';}
-    return'ok';
-  };
-  const stColor=s=>s==='alert'?'#C0392B':s==='warn'?'#B7860B':'#1E2820';
-  const riskColor=v=>({Alto:'#C0392B',Alta:'#C0392B',Moderado:'#B7860B',Moderada:'#B7860B',Baixo:'#1E7E4A',Baixa:'#1E7E4A','Bem nutrido':'#1E7E4A',Independente:'#1E7E4A','Em risco':'#B7860B',Desnutrido:'#C0392B'}[v]||'#7A9288');
-
-  const ss=(l,bg='#f0f5f1')=>`<div style="font-size:10px;font-weight:700;color:#2D5A3D;text-transform:uppercase;letter-spacing:1px;margin:20px 0 8px;padding:6px 0;border-bottom:2px solid #2D5A3D">${l}</div>`;
-  const row=(l,v,vc='#1E2820')=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E8F2EC"><span style="font-size:12px;color:#7A9288">${l}</span><span style="font-size:12px;font-weight:600;color:${vc}">${v}</span></div>`;
-
-  let h=`<div style="background:linear-gradient(135deg,#162b20,#2D4A3E 50%,#4A7A60);padding:32px;color:#fff;margin-bottom:0">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;opacity:.75">
-      <span style="font-size:22px">🌿</span>
-      <span style="font-family:Georgia,serif;font-size:16px;font-weight:600;letter-spacing:.3px">ampara</span>
-      <span style="font-size:11px;opacity:.6;margin-left:4px">· Relatório Clínico</span>
-    </div>
-    <div style="display:flex;align-items:flex-end;justify-content:space-between">
-      <div>
-        <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;letter-spacing:-.5px">${p.name}</div>
-        <div style="font-size:13px;opacity:.75;margin-top:4px">${p.age} anos · ${p.sex||'—'} · ${(p.diag||'—').split('·')[0].trim()}</div>
-      </div>
-      ${p.code?`<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 14px;text-align:center">
-        <div style="font-size:9px;opacity:.55;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">ID</div>
-        <div style="font-size:16px;font-weight:700;font-family:monospace;letter-spacing:2px">${p.code}</div>
-      </div>`:''}
-    </div>
-    <div style="font-size:10px;opacity:.5;margin-top:16px">Gerado em ${now} · Documento confidencial</div>
-  </div>
-  <div style="padding:24px 32px">`;
-
-  // Identificação
-  h+=ss('Identificação do paciente');
-  h+=row('Nome completo',p.name);
-  h+=row('Idade',p.age+' anos');
-  h+=row('Sexo',p.sex||'—');
-  h+=row('Diagnóstico',(p.diag||'—').split('·')[0].trim());
-  if(p.como) h+=row('Comorbidades',p.como);
-  if(p.obs) h+=row('Observações',p.obs);
-
-  // Sinais vitais
-  if(lv){
-    h+=ss('Sinais vitais — '+fmtS(lv.date)+' às '+lv.time);
-    const vsItems=[
-      {k:'sis',l:'Pressão arterial',v:lv.sis?lv.sis+'/'+lv.dia:'—',u:'mmHg'},
-      {k:'fc',l:'Freq. cardíaca',v:lv.fc,u:'bpm'},
-      {k:'temp',l:'Temperatura',v:lv.temp,u:'°C'},
-      {k:'sat',l:'Saturação O₂',v:lv.sat,u:'%'},
-      {k:'gli',l:'Glicemia',v:lv.gli,u:'mg/dL'},
-      {k:'fr',l:'Freq. resp.',v:lv.fr,u:'irpm'},
-      {k:'peso',l:'Peso',v:lv.peso,u:'kg'},
-    ].filter(i=>i.v&&i.v!=='—'&&i.v!=='null/null');
-    vsItems.forEach(i=>h+=row(i.l,i.v+' '+i.u,stColor(vsStatus(i.k,parseFloat(String(i.v).split('/')[0])))));
-    h+=row('Registrado por',lv.author||'—');
-  }
-
-  // Riscos
-  const risks=[
-    {l:'Risco de queda (Morse)',v:p.rF},
-    {l:'Nutricional (MNA)',v:p.rN},
-    {l:'Funcional (Barthel)',v:p.rFunc},
-    {l:'Hidratação',v:p.rHyd},
-  ].filter(r=>r.v&&r.v!=='—');
-  if(risks.length){
-    h+=ss('Avaliações de risco');
-    risks.forEach(r=>h+=row(r.l,r.v,riskColor(r.v)));
-  }
-
-  // Medicações
-  if(meds.length){
-    h+=ss('Medicações em uso ('+meds.length+')');
-    h+=`<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">
-      <tr style="background:#E8F2EC"><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase;letter-spacing:.6px">Medicamento</th><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase">Dose</th><th style="padding:8px;text-align:left;color:#2D5A3D;font-size:10px;text-transform:uppercase">Horários</th></tr>
-      ${meds.map((m,i)=>`<tr style="background:${i%2===0?'#fff':'#fafcfa'}"><td style="padding:8px;font-weight:600">💊 ${m.name}</td><td style="padding:8px">${m.dose} ${m.unit}</td><td style="padding:8px">${(m.times||[]).join(', ')}</td></tr>`).join('')}
-    </table>`;
-  }
-
-  // Eventos
-  if(events.length){
-    h+=ss('Eventos recentes');
-    events.forEach(e=>{
-      h+=`<div style="padding:8px 0;border-bottom:1px solid #E8F2EC">
-        <div style="font-size:12px;font-weight:600;color:#1E2820">${e.type} <span style="font-weight:400;color:#7A9288">· ${fmtS(e.date)}</span></div>
-        ${e.desc?`<div style="font-size:12px;color:#4A5E52;margin-top:2px">${(e.desc||'').slice(0,200)}</div>`:''}
-        <div style="font-size:10px;color:#7A9288;margin-top:2px">Por: ${e.author||'—'} · Gravidade: ${e.grav||'—'}</div>
-      </div>`;
-    });
-  }
-
-  // Contato
-  const en=p.emergName||p.emerg_name;
-  if(en){
-    h+=ss('Contato de referência');
-    h+=row('Nome',en);
-    if(p.emergRel||p.emerg_rel) h+=row('Parentesco',p.emergRel||p.emerg_rel);
-    if(p.emergTel||p.emerg_tel) h+=row('Telefone',p.emergTel||p.emerg_tel);
-  }
-
-  h+=`</div>
-  <div style="background:#E8F2EC;padding:14px 32px;font-size:10px;color:#7A9288;line-height:1.6;text-align:center">
-    🌿 Ampara · appampara.github.io/ampara · Gerado em ${now}<br/>
-    <strong>⚠ CONFIDENCIAL</strong> · Uso exclusivo do profissional de saúde responsável
-  </div>`;
-
-  return h;
-}
-
-// QR Code rendered by QRCode.js library (loaded via CDN)
-
-// ═══════════════════════════════════════════════════
-// INFOGRÁFICO DO PAINEL (substitui sinais vitais/riscos)
-// ═══════════════════════════════════════════════════
 function renderInfographic(p){
   if(!document.getElementById('d-infographic'))return;
   const status=A.calcOverallStatus(p);
   const adherence=A.calcAdherence(p);
   const lv=p.vitals&&p.vitals[0];
-  const pend=pendingCount(p);
 
   const statusColors={
     Estável:['var(--gl)','var(--grn)','#3D7A58'],
@@ -3871,48 +3043,71 @@ function renderInfographic(p){
   };
   const [sBg,sFg,sBorder]=statusColors[status.level]||statusColors['Estável'];
 
-  const shortExplain={
-    Estável:'Tudo dentro do esperado.',
-    Atenção:'Alguns pontos merecem atenção.',
-    Alerta:'Avaliação médica recomendada.'
-  }[status.level]||'';
+  // ── BOX 1: STATUS GERAL ───────────────────────────
+  const box1=`<div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${status.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</div>
+        <div style="font-size:11px;color:var(--tm);margin-top:1px">${status.headline}</div>
+      </div>
+      <button style="background:var(--amber);border:none;color:#fff;padding:7px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(212,136,92,.35);flex-shrink:0" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
+    </div>
+  </div>`;
 
-  // Mini risk icons
+  // ── BOX 2: SINAIS VITAIS RESUMO ───────────────────
+  const vsItems=lv?[
+    {icon:'🫀',label:'Pressão',val:lv.sis&&lv.dia?`${lv.sis}/${lv.dia}`:'—',unit:'mmHg',st:vsS('sis',lv.sis)},
+    {icon:'❤️',label:'FC',val:lv.fc||'—',unit:'bpm',st:vsS('fc',lv.fc)},
+    {icon:'🌡️',label:'Temp.',val:lv.temp||'—',unit:'°C',st:vsS('temp',lv.temp)},
+    {icon:'🫁',label:'SpO₂',val:lv.sat||'—',unit:'%',st:vsS('sat',lv.sat)},
+    {icon:'🩸',label:'Glicemia',val:lv.gli||'—',unit:'mg/dL',st:vsS('gli',lv.gli)},
+    {icon:'⚖️',label:'Peso',val:lv.peso||'—',unit:'kg',st:'none'},
+  ]:[];
+  const vsDate=lv?`Último: ${fmt(lv.date)} às ${lv.time}`:'Nenhum registro';
+  const box2=`<div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--text)">🩺 Sinais vitais</div>
+      <div style="font-size:10px;color:var(--tmu)">${vsDate}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      ${vsItems.map(v=>{
+        const c2=v.st==='alert'?'var(--red)':v.st==='warn'?'var(--yel)':'var(--text)';
+        return`<div style="background:var(--cream);border-radius:var(--rs);padding:8px 6px;text-align:center;border:1px solid ${v.st==='alert'?'var(--red)':v.st==='warn'?'var(--yel)':'var(--border)'}">
+          <div style="font-size:14px;margin-bottom:2px">${v.icon}</div>
+          <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px">${v.label}</div>
+          <div style="font-size:13px;font-weight:700;color:${c2};margin-top:2px">${v.val}</div>
+          <div style="font-size:9px;color:var(--tmu)">${v.unit}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // ── BOX 3: RISCOS E ADERÊNCIA ─────────────────────
+  const RC={Alto:'var(--red)',Alta:'var(--red)',Moderado:'var(--yel)',Moderada:'var(--yel)',Baixo:'var(--grn)',Baixa:'var(--grn)','Boa':'var(--grn)','Regular':'var(--yel)','Baixa ':'var(--red)'};
   const risks=[
     {icon:'🦯',val:p.rF||'—',label:'Queda'},
     {icon:'🥗',val:p.rN||'—',label:'Nutrição'},
     {icon:'💊',val:adherence.label,label:'Aderência'},
     {icon:'💧',val:p.rHyd||'—',label:'Hidratação'},
   ];
-
-  document.getElementById('d-infographic').innerHTML=`
-  <div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-      <div style="width:48px;height:48px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${status.icon}</div>
-      <div>
-        <div style="font-size:16px;font-weight:700;color:${sFg}">${status.level}</div>
-        <div style="font-size:12px;color:var(--tm);margin-top:1px">${shortExplain}</div>
-      </div>
-      <button style="margin-left:auto;background:var(--amber);border:none;color:#fff;padding:6px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(212,136,92,.35)" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
-      ${risks.map(r=>`<div style="text-align:center;background:var(--cream);border-radius:8px;padding:7px 4px">
-        <div style="font-size:16px">${r.icon}</div>
-        <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${r.label}</div>
-        <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'};margin-top:2px">${r.val}</div>
+  const box3=`<div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">⚡ Indicadores de risco</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+      ${risks.map(r=>`<div style="background:var(--cream);border-radius:var(--rs);padding:8px 4px;text-align:center">
+        <div style="font-size:16px;margin-bottom:2px">${r.icon}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px">${r.label}</div>
+        <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'}">${r.val}</div>
       </div>`).join('')}
     </div>
-    ${pend>0?`<div style="margin-top:10px;background:var(--bl);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--blue);font-weight:600">💊 ${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div>`:''}
   </div>`;
+
+  document.getElementById('d-infographic').innerHTML=box1+box2+box3;
 
   document.getElementById('dash-meu-doutor-btn')?.addEventListener('click',()=>{
     renderMeuDoutor().then(()=>go('s-meu-doutor'));
   });
-}
-
-// ═══════════════════════════════════════════════════
-// SINAIS VITAIS — clique abre detalhe com últimas 10 + gráfico
-// ═══════════════════════════════════════════════════
+};
 function openVSDetail(vsDef, vitals){
   const modal=document.getElementById('vs-detail-modal');
   const content=document.getElementById('vs-detail-content');
@@ -3973,149 +3168,6 @@ function openVSDetail(vsDef, vitals){
 }
 
 
-// ════════════════════════════════════════════════════
-// PHOTO CROP ENGINE — shared by profile + new patient
-// ════════════════════════════════════════════════════
-const CropTool = {
-  _cb: null,       // callback(base64) after crop
-  _scale: 1,       // current zoom scale
-  _ox: 0, _oy: 0,  // image offset (px within stage)
-  _dragging: false,
-  _lastX: 0, _lastY: 0,
-  _natW: 0, _natH: 0,  // natural image size
-  _stageW: 280, _stageH: 280,
-
-  open(file, callback){
-    if(!file) return;
-    this._cb = callback;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.getElementById('crop-img');
-      img.onload = () => {
-        this._natW = img.naturalWidth;
-        this._natH = img.naturalHeight;
-        this._scale = 1;
-        this._ox = 0;
-        this._oy = 0;
-        document.getElementById('crop-zoom').value = 100;
-        document.getElementById('crop-zoom-val').textContent = '1×';
-        this._applyTransform();
-        document.getElementById('crop-overlay').classList.add('show');
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  },
-
-  _applyTransform(){
-    const img = document.getElementById('crop-img');
-    const zoom = parseInt(document.getElementById('crop-zoom').value) / 100;
-    this._scale = zoom;
-    // Fit image so smallest side fills stage at zoom=1
-    const fitScale = Math.max(this._stageW / this._natW, this._stageH / this._natH);
-    const s = fitScale * zoom;
-    const w = this._natW * s;
-    const h = this._natH * s;
-    // Clamp offset so image always covers stage
-    this._ox = Math.min(0, Math.max(this._ox, this._stageW - w));
-    this._oy = Math.min(0, Math.max(this._oy, this._stageH - h));
-    img.style.width = w + 'px';
-    img.style.height = h + 'px';
-    img.style.transform = `translate(${this._ox}px,${this._oy}px)`;
-  },
-
-  crop(){
-    const img = document.getElementById('crop-img');
-    const zoom = parseInt(document.getElementById('crop-zoom').value) / 100;
-    const fitScale = Math.max(this._stageW / this._natW, this._stageH / this._natH);
-    const s = fitScale * zoom;
-    // Source rect in natural image coords
-    const srcX = -this._ox / s;
-    const srcY = -this._oy / s;
-    const srcW = this._stageW / s;
-    const srcH = this._stageH / s;
-    const canvas = document.createElement('canvas');
-    canvas.width = 400; canvas.height = 400;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 400, 400);
-    return canvas.toDataURL('image/jpeg', 0.88);
-  },
-
-  close(){
-    document.getElementById('crop-overlay').classList.remove('show');
-    this._cb = null;
-  }
-};
-
-// Init crop tool drag & zoom interactions
-(function initCrop(){
-  const stage = document.getElementById('crop-stage');
-  const zoomEl = document.getElementById('crop-zoom');
-  if(!stage) return;
-
-  // Drag (mouse)
-  stage.addEventListener('mousedown', e => {
-    CropTool._dragging = true;
-    CropTool._lastX = e.clientX;
-    CropTool._lastY = e.clientY;
-    stage.style.cursor = 'grabbing';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', e => {
-    if(!CropTool._dragging) return;
-    CropTool._ox += e.clientX - CropTool._lastX;
-    CropTool._oy += e.clientY - CropTool._lastY;
-    CropTool._lastX = e.clientX;
-    CropTool._lastY = e.clientY;
-    CropTool._applyTransform();
-  });
-  document.addEventListener('mouseup', () => {
-    CropTool._dragging = false;
-    stage.style.cursor = 'move';
-  });
-
-  // Drag (touch)
-  stage.addEventListener('touchstart', e => {
-    if(e.touches.length === 1){
-      CropTool._dragging = true;
-      CropTool._lastX = e.touches[0].clientX;
-      CropTool._lastY = e.touches[0].clientY;
-    }
-    e.preventDefault();
-  }, {passive:false});
-  stage.addEventListener('touchmove', e => {
-    if(!CropTool._dragging || e.touches.length !== 1) return;
-    CropTool._ox += e.touches[0].clientX - CropTool._lastX;
-    CropTool._oy += e.touches[0].clientY - CropTool._lastY;
-    CropTool._lastX = e.touches[0].clientX;
-    CropTool._lastY = e.touches[0].clientY;
-    CropTool._applyTransform();
-    e.preventDefault();
-  }, {passive:false});
-  stage.addEventListener('touchend', () => { CropTool._dragging = false; });
-
-  // Zoom slider
-  zoomEl.addEventListener('input', () => {
-    const v = parseInt(zoomEl.value);
-    document.getElementById('crop-zoom-val').textContent = (v/100).toFixed(1) + '×';
-    CropTool._applyTransform();
-  });
-
-  // Cancel
-  document.getElementById('crop-cancel').addEventListener('click', () => CropTool.close());
-  document.getElementById('crop-overlay').addEventListener('click', e => {
-    if(e.target === document.getElementById('crop-overlay')) CropTool.close();
-  });
-
-  // Save
-  document.getElementById('crop-save').addEventListener('click', () => {
-    const base64 = CropTool.crop();
-    const cb = CropTool._cb;
-    CropTool.close();
-    if(cb) cb(base64);
-  });
-})();
-
 window.addEventListener('DOMContentLoaded',()=>{
 
   // ── Defensive helper — silently skips if element doesn't exist ──
@@ -4127,8 +3179,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   // ── PRÉ-CARREGA DADOS DO SUPABASE mas sempre exige login ──
   showLoading('Conectando ao Ampara...');
   loadDB().then(() => {
-    // Start background sync after load
-    setTimeout(()=>{ syncNow(true).then(()=>startSync()); }, 2000);
     hideLoading();
     // Sempre mostra o login — nunca pula a autenticação
     // DB.currentUser é limpo para garantir que o login seja sempre feito
@@ -4151,18 +3201,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // ── NAVEGAR PARA CADASTRO ──
   wire('lnk-reg','click',()=>go('s-register'));
-
-  // ── ACESSO RÁPIDO — Ana Oliveira ──
-  wire('btn-quick-ana','click',()=>{
-    document.getElementById('li-email').value='ana@familia.com';
-    document.getElementById('li-pass').value='12345';
-    document.getElementById('li-error').style.display='none';
-    // Pequeno delay visual para mostrar o preenchimento
-    const btn=document.getElementById('btn-quick-ana');
-    btn.style.borderColor='var(--sage)';
-    btn.style.background='var(--sl)';
-    setTimeout(()=>document.getElementById('btn-login').click(), 350);
-  });
   wire('reg-back','click',()=>go('s-login'));
   wire('lnk-login','click',()=>go('s-login'));
 
@@ -4203,6 +3241,17 @@ window.addEventListener('DOMContentLoaded',()=>{
     btn.textContent='Solicitar acesso';btn.disabled=false;
   });
 
+  // ACESSO RÁPIDO — Ana
+  wire('btn-quick-ana','click',()=>{
+    document.getElementById('li-email').value='ana@familia.com';
+    document.getElementById('li-pass').value='12345';
+    document.getElementById('li-error').style.display='none';
+    const btn=document.getElementById('btn-quick-ana');
+    btn.style.borderColor='var(--sage)';
+    btn.style.background='var(--sl)';
+    setTimeout(()=>document.getElementById('btn-login').click(), 350);
+  });
+
   // LOGIN
   wire('btn-login','click',()=>{
     const email=document.getElementById('li-email').value.trim().toLowerCase();
@@ -4216,12 +3265,15 @@ window.addEventListener('DOMContentLoaded',()=>{
       A.renderAdmin();go('s-admin');
     } else {
       // Filter patients by user access
-      const accessible=user.patientIds==='all'?DB.patients:DB.patients.filter(p=>(user.patientIds||[]).includes(p.id));
+      const ids=user.patientIds;
+      const accessible=ids==='all'||!ids||!Array.isArray(ids)||ids.length===0
+        ? DB.patients
+        : DB.patients.filter(p=>ids.map(Number).includes(Number(p.id)));
       A.renderPatList(accessible);go('s-patients');
     }
   });
   // ADMIN MASTER
-  wire('admin-logout','click',()=>{DB.currentUser=null;stopSync();saveDB();go('s-login');});
+  wire('admin-logout','click',()=>{DB.currentUser=null;saveDB();go('s-login');});
   wire('adm-patients','click',()=>{A.renderPatList();go('s-patients');});
   wire('adm-users','click',()=>{A.renderAdminUsers();go('s-admin-users');});
   wire('adm-requests','click',()=>{A.renderAdminRequests();go('s-admin-requests');});
@@ -4370,198 +3422,13 @@ window.addEventListener('DOMContentLoaded',()=>{
   wire('bn-tl-prof','click',()=>{A.renderProf();go('s-prof');});
   wire('bn-vs-prof','click',()=>{A.renderProf();go('s-prof');});
   wire('bn-meds-prof','click',()=>{A.renderProf();go('s-prof');});
-
-  // ── DOCUMENTOS ──────────────────────────────────
-  wire('docs-back','click',()=>{A.renderProf();go('s-prof');});
-  wire('docs-add-btn','click',()=>{
-    // Reset add-doc modal
-    document.getElementById('doc-photo-preview').style.display='none';
-    document.getElementById('doc-photo-ph').style.display='flex';
-    document.getElementById('doc-photo-input').value='';
-    document.getElementById('doc-title-input').value='';
-    document.getElementById('doc-desc-input').value='';
-    DB._docPhoto=null;
-    document.getElementById('add-doc-modal').classList.add('show');
-  });
-  wire('doc-cancel-btn','click',()=>document.getElementById('add-doc-modal').classList.remove('show'));
-  wire('add-doc-modal','click',e=>{if(e.target===document.getElementById('add-doc-modal'))document.getElementById('add-doc-modal').classList.remove('show');});
-  wire('doc-photo-input','change',function(){
-    const file=this.files[0]; if(!file) return;
-    this.value='';
-    const reader=new FileReader();
-    reader.onload=e=>{
-      DB._docPhoto=e.target.result;
-      document.getElementById('doc-photo-preview').src=e.target.result;
-      document.getElementById('doc-photo-preview').style.display='block';
-      document.getElementById('doc-photo-ph').style.display='none';
-    };
-    reader.readAsDataURL(file);
-  });
-  wire('doc-save-btn','click',()=>{
-    const p=DB.p; if(!p) return;
-    const title=document.getElementById('doc-title-input').value.trim();
-    if(!title){toast('⚠ Informe um título para o documento.');return;}
-    if(!p.docs) p.docs=[];
-    p.docs.unshift({
-      id:Date.now(),
-      title,
-      desc:document.getElementById('doc-desc-input').value.trim(),
-      photo:DB._docPhoto||null,
-      date:new Date().toLocaleDateString('pt-BR')
-    });
-    DB._docPhoto=null;
-    saveDB();
-    document.getElementById('add-doc-modal').classList.remove('show');
-    A.renderDocs();
-    // Update badge in profile if open
-    const badge=document.getElementById('docs-count-badge');
-    if(badge) badge.textContent=`${p.docs.length} arquivo(s)`;
-    toast('✓ Documento salvo!');
-  });
-
-  // ── PRESCRIPTION AI ──────────────────────────────
-  wire('rx-photo-input','change',function(){
-    const file=this.files[0]; if(!file) return;
-    this.value='';
-    const reader=new FileReader();
-    reader.onload=e=>{
-      DB._rxPhotoBase64=e.target.result.split(',')[1];
-      document.getElementById('rx-photo-preview').src=e.target.result;
-      document.getElementById('rx-photo-preview').style.display='block';
-      document.getElementById('rx-photo-ph').style.display='none';
-      const btn=document.getElementById('rx-analyze-btn');
-      btn.disabled=false; btn.style.opacity='1'; btn.style.pointerEvents='auto';
-    };
-    reader.readAsDataURL(file);
-  });
-  wire('rx-cancel-1','click',()=>document.getElementById('rx-modal').classList.remove('show'));
-  wire('rx-modal','click',e=>{if(e.target===document.getElementById('rx-modal'))document.getElementById('rx-modal').classList.remove('show');});
-  wire('rx-retry-btn','click',()=>{
-    document.querySelectorAll('.rx-step').forEach(s=>s.classList.remove('active'));
-    document.getElementById('rx-step-1').classList.add('active');
-  });
-  wire('rx-cancel-3','click',()=>document.getElementById('rx-modal').classList.remove('show'));
-  wire('rx-analyze-btn','click',async()=>{
-    if(!DB._rxPhotoBase64){toast('⚠ Selecione uma foto primeiro.');return;}
-    // Show loading
-    document.querySelectorAll('.rx-step').forEach(s=>s.classList.remove('active'));
-    document.getElementById('rx-step-2').classList.add('active');
-    const bar=document.getElementById('rx-loading-bar');
-    const msg=document.getElementById('rx-loading-msg');
-    const msgs=['Identificando medicamentos...','Lendo doses e horários...','Organizando informações...'];
-    let mi=0;
-    const barInterval=setInterval(()=>{
-      const cur=parseInt(bar.style.width)||8;
-      if(cur<85) bar.style.width=(cur+Math.random()*12)+'%';
-      msg.textContent=msgs[mi%msgs.length]; mi++;
-    },1200);
-    try{
-      if(!ANTHROPIC_KEY||ANTHROPIC_KEY==='SUA_CHAVE_AQUI'){
-        throw new Error('Chave da API não configurada. Adicione sua chave Anthropic no arquivo index.html (constante ANTHROPIC_KEY).');
-      }
-      const res=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:1000,
-          messages:[{
-            role:'user',
-            content:[
-              {type:'image',source:{type:'base64',media_type:'image/jpeg',data:DB._rxPhotoBase64}},
-              {type:'text',text:`Analise esta prescrição médica e extraia SOMENTE os medicamentos prescritos. 
-Responda APENAS com JSON válido, sem texto adicional, no formato:
-{"medicamentos":[{"nome":"Nome do medicamento","dose":"valor","unidade":"mg|ml|cp|gts","frequencia":"texto","horarios":["HH:MM"],"observacao":""}]}
-Regras:
-- Se não conseguir ler, retorne {"erro":"motivo"}
-- Horários: distribua ao longo do dia conforme a frequência (1x=08:00, 2x=08:00,20:00, 3x=08:00,14:00,20:00, etc)
-- Unidade deve ser uma de: mg, ml, cp, gts, UI, mcg, g
-- Não inclua informações que não estejam na imagem`}
-            ]
-          }]
-        })
-      });
-      clearInterval(barInterval);
-      bar.style.width='95%';
-      if(!res.ok) throw new Error('Erro na API: '+res.status);
-      const data=await res.json();
-      const text=data.content?.find(c=>c.type==='text')?.text||'';
-      const clean=text.replace(/```json|```/g,'').trim();
-      const parsed=JSON.parse(clean);
-      if(parsed.erro) throw new Error(parsed.erro);
-      const meds=parsed.medicamentos||[];
-      if(!meds.length) throw new Error('Nenhum medicamento encontrado na imagem.');
-      bar.style.width='100%';
-      // Build results UI
-      const UNITS=['mg','ml','cp','gts','UI','mcg','g'];
-      document.getElementById('rx-results-list').innerHTML=meds.map((m,i)=>`
-        <div style="background:var(--sl);border:1.5px solid var(--sm);border-radius:var(--rs);padding:13px 14px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <input type="checkbox" id="rx-chk-${i}" checked style="width:18px;height:18px;accent-color:var(--sage);cursor:pointer;flex-shrink:0"/>
-            <label for="rx-chk-${i}" style="font-size:14px;font-weight:700;color:var(--text);cursor:pointer;flex:1">💊 ${m.nome}</label>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:6px">
-            <div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Dose</label>
-              <input class="fi" style="font-size:13px;padding:8px 10px" id="rx-dose-${i}" value="${m.dose}" placeholder="ex: 50"/></div>
-            <div style="width:90px"><label style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Unidade</label>
-              <select class="fsel" style="font-size:13px;padding:8px 10px" id="rx-unit-${i}">
-                ${UNITS.map(u=>`<option ${u===m.unidade?'selected':''}>${u}</option>`).join('')}
-              </select></div>
-          </div>
-          <div><label style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Horários</label>
-            <input class="fi" style="font-size:13px;padding:8px 10px" id="rx-times-${i}" value="${(m.horarios||[]).join(', ')}" placeholder="08:00, 20:00"/>
-          </div>
-          ${m.observacao?`<div style="font-size:11px;color:var(--tmu);margin-top:6px;font-style:italic">ℹ ${m.observacao}</div>`:''}
-        </div>`).join('');
-      document.getElementById('rx-results-list').dataset.count=meds.length;
-      document.querySelectorAll('.rx-step').forEach(s=>s.classList.remove('active'));
-      document.getElementById('rx-step-3').classList.add('active');
-    }catch(e){
-      clearInterval(barInterval);
-      document.getElementById('rx-error-msg').textContent=e.message||'Erro inesperado. Tente novamente.';
-      document.querySelectorAll('.rx-step').forEach(s=>s.classList.remove('active'));
-      document.getElementById('rx-step-4').classList.add('active');
-    }
-  });
-  wire('rx-confirm-all','click',()=>{
-    const p=DB.p; if(!p) return;
-    if(!p.medSchedule) p.medSchedule=[];
-    const count=parseInt(document.getElementById('rx-results-list').dataset.count||0);
-    let added=0;
-    for(let i=0;i<count;i++){
-      const chk=document.getElementById(`rx-chk-${i}`);
-      if(!chk||!chk.checked) continue;
-      const nome=chk.parentElement.querySelector('label').textContent.replace('💊 ','').trim();
-      const dose=document.getElementById(`rx-dose-${i}`).value.trim();
-      const unit=document.getElementById(`rx-unit-${i}`).value;
-      const timesRaw=document.getElementById(`rx-times-${i}`).value;
-      const times=timesRaw.split(',').map(t=>t.trim()).filter(t=>/\d{2}:\d{2}/.test(t));
-      if(!dose||!times.length) continue;
-      // Avoid duplicates
-      if(p.medSchedule.find(m=>m.name.toLowerCase()===nome.toLowerCase())) continue;
-      p.medSchedule.push({id:'m'+Date.now()+i,name:nome,dose,unit,times});
-      p.events.unshift({id:Date.now()+i,date:today(),type:'Medicação adicionada',grav:'Leve',
-        desc:`${nome} ${dose} ${unit} adicionado via leitura de prescrição por IA. Horários: ${times.join(', ')}.`,author:DB.currentUser?.name||'Cuidador'});
-      added++;
-    }
-    if(!added){toast('⚠ Nenhum medicamento selecionado.');return;}
-    saveDB();
-    document.getElementById('rx-modal').classList.remove('show');
-    A.renderMeds(); A.renderDash();
-    toast(`✓ ${added} medicamento${added>1?'s':''} adicionado${added>1?'s':''}!`);
-  });
   // dq-* buttons removed from dash; kept as safe no-ops
   // wire('dq-ev'...) — removed from UI
   // wire('d-vs-all'...) — removed from UI
 
   // TIMELINE NAV
   wire('tb-back','click',()=>go('s-dash'));
-  wire('tl-fab-add','click',()=>{if(!canWrite())return;A.openNewEvent();});
+  wire('tb-add','click',()=>A.openNewEvent());
   wire('bn-tl-dash','click',()=>go('s-dash'));
   wire('bn-tl-vs','click',()=>{A.renderVS();go('s-vs');});
   wire('bn-tl-meds','click',()=>{A.renderMeds();go('s-meds');});
@@ -4589,30 +3456,6 @@ Regras:
   wire('dm-confirm','click',()=>{if(!canWrite())return;A.confirmDose('dose-modal');});
   wire('dm-cancel','click',()=>A.closeDoseModal('dose-modal'));
   wire('dose-modal','click',e=>{if(e.target===document.getElementById('dose-modal'))A.closeDoseModal('dose-modal');});
-  // dm-remove: show inline confirm panel
-  wire('dm-remove-btn','click',()=>{
-    const ctx=A._dCtx; if(!ctx) return;
-    document.getElementById('dm-remove-name').textContent=ctx.med.name;
-    document.getElementById('dm-actions-main').style.display='none';
-    document.getElementById('dm-confirm-remove').style.display='block';
-  });
-  wire('dm-remove-no','click',()=>{
-    document.getElementById('dm-confirm-remove').style.display='none';
-    document.getElementById('dm-actions-main').style.display='flex';
-  });
-  wire('dm-remove-yes','click',()=>{
-    const ctx=A._dCtx; if(!ctx) return;
-    const medName=ctx.med.name;
-    const p=DB.p; if(!p) return;
-    p.medSchedule=(p.medSchedule||[]).filter(m=>m.name!==medName);
-    A.closeDoseModal('dose-modal');
-    document.getElementById('dm-confirm-remove').style.display='none';
-    document.getElementById('dm-actions-main').style.display='flex';
-    saveDB();
-    A.renderMeds();
-    A.renderDash();
-    toast('✓ "'+medName+'" removida das medicações.');
-  });
 
   // DOSE MODAL (meds screen)
   wire('dm2-val','input',function(){
@@ -4635,30 +3478,6 @@ Regras:
   });
   wire('dm2-confirm','click',()=>{if(!canWrite())return;A.confirmDose('dose-modal-meds');});
   wire('dm2-cancel','click',()=>A.closeDoseModal('dose-modal-meds'));
-  // dm2-remove: show inline confirm panel
-  wire('dm2-remove-btn','click',()=>{
-    const ctx=A._dCtx; if(!ctx) return;
-    document.getElementById('dm2-remove-name').textContent=ctx.med.name;
-    document.getElementById('dm2-actions-main').style.display='none';
-    document.getElementById('dm2-confirm-remove').style.display='block';
-  });
-  wire('dm2-remove-no','click',()=>{
-    document.getElementById('dm2-confirm-remove').style.display='none';
-    document.getElementById('dm2-actions-main').style.display='flex';
-  });
-  wire('dm2-remove-yes','click',()=>{
-    const ctx=A._dCtx; if(!ctx) return;
-    const medName=ctx.med.name;
-    const p=DB.p; if(!p) return;
-    p.medSchedule=(p.medSchedule||[]).filter(m=>m.name!==medName);
-    A.closeDoseModal('dose-modal-meds');
-    document.getElementById('dm2-confirm-remove').style.display='none';
-    document.getElementById('dm2-actions-main').style.display='flex';
-    saveDB();
-    A.renderMeds();
-    A.renderDash();
-    toast('✓ "'+medName+'" removida das medicações.');
-  });
   wire('dose-modal-meds','click',e=>{if(e.target===document.getElementById('dose-modal-meds'))A.closeDoseModal('dose-modal-meds');});
 
   // VS NAV
@@ -4759,18 +3578,15 @@ Regras:
   // NEW EVENT — photo input
   wire('ne-photo-input','change',function(){
     const file=this.files[0];if(!file)return;
-    this.value='';
-    CropTool.open(file,(base64)=>{
-      DB._photoData=base64;
-      const prev=document.getElementById('ne-photo-preview');
-      prev.src=base64;
-      prev.style.display='block';
-      prev.style.width='100%';
-      prev.style.height='100%';
-      prev.style.objectFit='cover';
+    const reader=new FileReader();
+    reader.onload=e=>{
+      DB._photoData=e.target.result;
+      document.getElementById('ne-photo-preview').src=e.target.result;
+      document.getElementById('ne-photo-preview').style.display='block';
       document.getElementById('ne-photo-placeholder').style.display='none';
       document.getElementById('ne-photo-remove').style.display='flex';
-    });
+    };
+    reader.readAsDataURL(file);
   });
   wire('ne-photo-remove','click',e=>{
     e.stopPropagation();
@@ -4785,7 +3601,9 @@ Regras:
   document.querySelectorAll('.etbtn').forEach(btn=>{
     btn.addEventListener('click',()=>{document.querySelectorAll('.etbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');DB.eType=btn.dataset.type;});
   });
-  // gravity buttons hidden
+  wire('g-leve','click',()=>{DB.eGrav='Leve';A.refreshGravBtns();});
+  wire('g-mod','click',()=>{DB.eGrav='Moderada';A.refreshGravBtns();});
+  wire('g-alta','click',()=>{DB.eGrav='Alta';A.refreshGravBtns();});
   wire('btn-sev','click',()=>{
     if(!canWrite())return;
     const p=DB.p;if(!p)return;
@@ -4805,15 +3623,16 @@ Regras:
     setTimeout(()=>{A.renderDash();DB.tlFilter='Todos';A.renderTL();go('s-tl');},900);
   });
 
-  // Photo upload in new patient — with CropTool
+  // Photo upload in new patient
   wire('np-photo-input','change',function(){
     const file=this.files[0];if(!file)return;
-    this.value='';
-    CropTool.open(file, (base64)=>{
-      DB._newPatPhoto=base64;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      DB._newPatPhoto=e.target.result;
       const disp=document.getElementById('np-photo-display');
-      disp.innerHTML=`<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
-    });
+      disp.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"/>`;
+    };
+    reader.readAsDataURL(file);
   });
 
   // Phone mask for emergency contact
