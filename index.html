@@ -2542,8 +2542,11 @@ const A = {
     el.querySelectorAll('.pc').forEach(el=>{
       el.addEventListener('click',()=>{
         DB.pid=parseInt(el.dataset.pid);
+        console.log('AMPARA DEBUG: pid set to', DB.pid, 'type:', typeof DB.pid);
+        console.log('AMPARA DEBUG: DB.patients count:', DB.patients.length);
+        console.log('AMPARA DEBUG: DB.patients IDs:', DB.patients.map(x=>x.id));
         const p=DB.p;
-        if(!p) return;
+        if(!p){ console.error('AMPARA ERROR: patient not found! pid='+DB.pid); return; }
         // Avaliação inicial apenas se: nunca feita E paciente sem dados (recém cadastrado)
         // Pacientes existentes com vitais ou eventos NÃO abrem a avaliação
         const hasData = (p.vitals&&p.vitals.length>0)||(p.events&&p.events.length>0)||(p.medSchedule&&p.medSchedule.length>0);
@@ -2915,6 +2918,21 @@ const A = {
     document.getElementById('shift-modal').classList.add('show');
   },
 
+  calcAdherence(p){
+    const sched=p.medSchedule||[];
+    if(!sched.length) return{pct:null,label:'—',color:'var(--tmu)'};
+    const days=[],now=new Date();
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+    let total=0,done=0;
+    days.forEach(d=>{sched.forEach(m=>{m.times.forEach(t=>{total++;if(getMedLog(p,d,m.name,t))done++;});});});
+    if(total===0) return{pct:null,label:'—',color:'var(--tmu)'};
+    const pct=Math.round(done/total*100);
+    const cfg=DB.alertConfig;
+    if(pct>=cfg.adherence_mid) return{pct,label:'Boa',color:'var(--grn,#4CAF50)'};
+    if(pct>=cfg.adherence_low) return{pct,label:'Regular',color:'var(--yel)'};
+    return{pct,label:'Baixa',color:'var(--red)'};
+  },
+
   calcAdherenceDetail(p){
     const sched=p.medSchedule||[];
     if(!sched.length)return{pct:null,missed:[],label:'—'};
@@ -3260,6 +3278,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('li-error').style.display='none';
     if(!user){document.getElementById('li-error').style.display='block';return;}
     DB.currentUser=user;
+    console.log('AMPARA DEBUG: login OK, user:', user.name, 'patientIds:', user.patientIds);
+    console.log('AMPARA DEBUG: DB.patients count after login:', DB.patients.length);
     saveDB();
     if(user.role==='master'){
       A.renderAdmin();go('s-admin');
