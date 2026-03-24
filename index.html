@@ -240,9 +240,9 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* LOGIN */
-.lbg{background:linear-gradient(155deg,#162b20 0%,#2D4A3E 45%,#5C7E6A 80%,#7FA893 100%);padding:52px 28px 44px;display:flex;flex-direction:column;align-items:center;position:relative}
+.lbg{background:linear-gradient(155deg,#162b20 0%,#2D4A3E 45%,#5C7E6A 80%,#7FA893 100%);padding:32px 28px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
 .llogo{font-family:'Lora',serif;font-size:38px;font-weight:600;color:#fff;letter-spacing:-.5px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.lsub{font-size:13px;color:rgba(255,255,255,.72);margin-top:4px}
+.lsub{font-size:13px;color:rgba(255,255,255,.72);margin-top:4px;letter-spacing:.2px}
 
 /* DASH HEADER */
 .dh{background:linear-gradient(140deg,#162b20,#2D4A3E 50%,#4A7A60);padding:18px 20px 22px;color:#fff}
@@ -375,19 +375,18 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 
 <!-- ══ LOGIN ══════════════════════════════════════════ -->
 <div class="screen active" id="s-login">
-  <div class="lbg"><div class="llogo" style="display:flex;flex-direction:column;align-items:center;gap:10px">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="64" height="64">
+  <div class="lbg"><div class="llogo" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="100" height="100" style="filter:drop-shadow(0 4px 16px rgba(0,0,0,0.28));transform:translateY(8px)">
     <defs>
       <linearGradient id="ll1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>
       <linearGradient id="ll2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>
-      <filter id="llf"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/></filter>
     </defs>
     <path d="M36,36 C36,18 26,6 12,0 C17,12 18,24 22,33 C26,42 31,48 36,49 Z" fill="url(#ll1)" opacity="0.95"/>
     <path d="M36,36 C36,18 46,6 60,0 C55,12 54,24 50,33 C46,42 41,48 36,49 Z" fill="url(#ll1)" opacity="0.58"/>
-    <circle cx="36" cy="34" r="10" fill="url(#ll2)" filter="url(#llf)"/>
+    <circle cx="36" cy="34" r="10" fill="url(#ll2)"/>
     <circle cx="33" cy="31" r="3.2" fill="#FAF8F4" opacity="0.55"/>
   </svg>
-  <span style="font-family:'Lora',serif;font-size:36px;font-weight:600;letter-spacing:-.5px">ampara</span>
+  <span style="font-family:'Lora',serif;font-size:44px;font-weight:600;letter-spacing:-.8px;color:#fff">ampara</span>
 </div>
 <div class="lsub">Cuidado em família, com carinho</div></div>
   <div class="scroll" style="padding:22px 20px 30px">
@@ -2273,80 +2272,157 @@ function spark(canvas,vals,color){
 // ══════════════════════════════════════════════════════
 const A = {
   _DRUG_DB:[
-    // ── COMBINAÇÕES GRAVES ──────────────────────────────────────────────
-    {drugs:['anticolinérgico','biperideno','prometazina','oxibutinina','escopolamina'],
-     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','lorazepam','midazolam'],
-     effect:'Risco elevado de delirium, confusão mental e queda. Efeito anticolinérgico somado ao sedativo pode comprometer gravemente a cognição em idosos.',severity:'grave',symptomLinks:['confusão','esquecimento','delirium','queda','agitação']},
+    // ══ COMBINAÇÕES GRAVES (Beers 2023 + STOPP + CBMPI) ═══════════════════════
+    {drugs:['anticolinérgico','biperideno','prometazina','oxibutinina','escopolamina','difenidramina','clorfeniramina','hidroxizina','maprotilina'],
+     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','lorazepam','bromazepam','midazolam','zolpidem','zopiclona'],
+     effect:'Risco elevado de delirium, confusão mental e queda. Efeito anticolinérgico somado ao sedativo pode comprometer gravemente idosos.',
+     severity:'grave',symptomLinks:['confusão','delirium','queda','agitação']},
 
-    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno','indometacina'],
-     pair:['corticoide','prednisona','dexametasona','prednisolona','hidrocortisona'],
-     effect:'Risco grave de sangramento gastrointestinal. A combinação de AINE com corticoide multiplica o risco de úlcera e hemorragia digestiva.',severity:'grave',symptomLinks:['dor abdominal','vômito','sangramento']},
+    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno','indometacina','piroxicam','etoricoxibe','celecoxibe'],
+     pair:['corticoide','prednisona','prednisolona','dexametasona','betametasona','hidrocortisona','metilprednisolona'],
+     effect:'Risco grave de sangramento gastrointestinal. A combinação multiplica o risco de úlcera e hemorragia digestiva alta.',
+     severity:'grave',symptomLinks:['dor abdominal','náusea','vômito','sangue','fezes escuras']},
 
-    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno'],
-     pair:['losartana','enalapril','captopril','ramipril','lisinopril','valsartana','irbesartana'],
-     effect:'Risco de deterioração da função renal e redução do efeito anti-hipertensivo. AINEs bloqueiam prostaglandinas renais vasodilatadoras, agravando a pressão e sobrecarregando os rins.',severity:'grave',symptomLinks:['inchaço','pressão','tontura','redução urinária']},
+    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno','indometacina','piroxicam'],
+     pair:['anticoagulante','varfarina','rivaroxabana','apixabana','dabigatrana','edoxabana','clopidogrel','ticagrelor','enoxaparina'],
+     effect:'Risco muito alto de sangramento grave. AINEs inibem plaquetas e lesam mucosa gástrica, potencializando anticoagulantes.',
+     severity:'grave',symptomLinks:['sangramento','hematoma','sangue nas fezes','equimose']},
 
-    {drugs:['varfarina','warfarin'],
-     pair:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','aas','aspirina'],
-     effect:'Risco grave de sangramento. A combinação aumenta significativamente o efeito anticoagulante e o risco de hemorragia interna.',severity:'grave',symptomLinks:['sangramento','hematoma','dor abdominal']},
-
-    {drugs:['digoxina','digitálico'],
-     pair:['furosemida','hidroclorotiazida','espironolactona','amilorida'],
-     effect:'Diuréticos podem causar hipocalemia (queda de potássio), que aumenta o risco de toxicidade pela digoxina — arritmias, náuseas e visão borrada.',severity:'grave',symptomLinks:['tontura','palpitação','náusea','visão borrada','arritmia']},
-
-    {drugs:['metformina','glibenclamida','glicazida','insulina','glipizida'],
-     pair:['enalapril','captopril','lisinopril','ramipril'],
-     effect:'IECA podem potencializar o efeito hipoglicemiante. Risco aumentado de hipoglicemia, especialmente em idosos que não reconhecem os sintomas precocemente.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor','fraqueza']},
-
-    {drugs:['relaxante muscular','ciclobenzaprina','carisoprodol','metaxalona'],
-     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','opioides','codeína','tramadol','morfina'],
-     effect:'Combinação de depressores do sistema nervoso central. Risco elevado de sedação excessiva, queda e depressão respiratória em idosos.',severity:'grave',symptomLinks:['queda','sonolência','confusão','fraqueza']},
-
-    // ── COMBINAÇÕES MODERADAS ───────────────────────────────────────────
-    {drugs:['furosemida','hidroclorotiazida','clortalidona'],
-     pair:['losartana','enalapril','captopril','ramipril','valsartana'],
-     effect:'Combinação pode causar hipotensão, tontura e quedas, especialmente ao levantar. Monitorar pressão arterial e sinais de desidratação.',severity:'moderada',symptomLinks:['tontura','queda','fraqueza','hipotensão']},
-
-    {drugs:['furosemida','hidroclorotiazida'],
-     pair:['furosemida','hidroclorotiazida','espironolactona'],
-     effect:'Uso de dois diuréticos simultaneamente aumenta o risco de desidratação, desequilíbrio de eletrólitos e hipotensão.',severity:'moderada',symptomLinks:['tontura','câimbra','fraqueza','confusão']},
-
-    {drugs:['betabloqueador','atenolol','propranolol','metoprolol','carvedilol'],
-     pair:['diltiazem','verapamil'],
-     effect:'Risco de bradicardia e bloqueio cardíaco. A combinação pode reduzir excessivamente a frequência cardíaca.',severity:'moderada',symptomLinks:['palpitação','tontura','fadiga','desmaio']},
-
-    {drugs:['inibidor de bomba','omeprazol','pantoprazol','lansoprazol','esomeprazol'],
-     pair:['clopidogrel'],
-     effect:'Omeprazol e pantoprazol reduzem a ativação do clopidogrel, diminuindo sua eficácia como antiagregante plaquetário.',severity:'moderada',symptomLinks:[]},
-
-    {drugs:['estatina','sinvastatina','atorvastatina','rosuvastatina','lovastatina'],
-     pair:['diltiazem','verapamil','amiodarona','fluconazol','cetoconazol'],
-     effect:'Inibidores do citocromo P450 aumentam os níveis plasmáticos das estatinas, elevando o risco de miopatia e rabdomiólise.',severity:'moderada',symptomLinks:['dor muscular','fraqueza','câimbra']},
-
-    {drugs:['lítio'],
-     pair:['aine','ibuprofeno','naproxeno','furosemida','hidroclorotiazida','enalapril'],
-     effect:'AINEs e diuréticos elevam os níveis de lítio no sangue, podendo causar toxicidade — tremor, confusão e disfunção renal.',severity:'grave',symptomLinks:['tremor','confusão','náusea']},
-
-    {drugs:['ssri','sertralina','fluoxetina','paroxetina','escitalopram','citalopram'],
-     pair:['tramadol','linezolida','triptano'],
-     effect:'Risco de síndrome serotoninérgica — agitação, tremor, febre alta e confusão. Pode ser grave e requerer atenção médica imediata.',severity:'grave',symptomLinks:['agitação','tremor','confusão','febre']},
+    {drugs:['varfarina','acenocumarol'],
+     pair:['amiodarona','fluconazol','metronidazol','ciprofloxacino','levofloxacino','claritromicina','eritromicina'],
+     effect:'Inibição do metabolismo da varfarina — risco de hemorragia grave. INR pode triplicar em dias.',
+     severity:'grave',symptomLinks:['sangramento','hematoma','sangue']},
 
     {drugs:['amiodarona'],
-     pair:['varfarina','warfarin'],
-     effect:'Amiodarona inibe o metabolismo da varfarina, aumentando muito o efeito anticoagulante e o risco de sangramento.',severity:'grave',symptomLinks:['sangramento','hematoma']},
+     pair:['digoxina','digitálico'],
+     effect:'Amiodarona eleva os níveis de digoxina, aumentando risco de intoxicação digitálica (arritmia, náuseas, visão turva).',
+     severity:'grave',symptomLinks:['náusea','vômito','visão','palpitação','bradicardia']},
 
-    // ── MEDICAMENTO ISOLADO DE RISCO EM IDOSOS ──────────────────────────
-    {drugs:['glibenclamida'],
-     pair:[],
-     effect:'Glibenclamida tem meia-vida prolongada em idosos e causa hipoglicemia grave e prolongada. Critérios de Beers e CBMPI recomendam evitar em idosos — preferir glicazida ou glipizida.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor']},
+    {drugs:['amiodarona'],
+     pair:['sotalol','verapamil','diltiazem','betabloqueador','atenolol','metoprolol','carvedilol','propranolol','bisoprolol'],
+     effect:'Risco de bradicardia grave e bloqueio atrioventricular. Combinação pode levar a parada cardíaca.',
+     severity:'grave',symptomLinks:['bradicardia','tontura','síncope','desmaio']},
 
-    {drugs:['prometazina','difenidramina','hidroxizina'],
-     pair:[],
-     effect:'Antihistamínicos de 1ª geração têm efeito anticolinérgico pronunciado em idosos: causam confusão, sedação excessiva e hipotensão ortostática. Devem ser evitados.',severity:'grave',symptomLinks:['confusão','tontura','sonolência','queda']},
+    {drugs:['inibidor da mao','selegilina','rasagilina'],
+     pair:['antidepressivo','fluoxetina','sertralina','paroxetina','venlafaxina','duloxetina','amitriptilina','tramadol','meperidina'],
+     effect:'Síndrome serotoninérgica grave — febre, rigidez muscular, convulsões. Potencialmente fatal.',
+     severity:'grave',symptomLinks:['febre','rigidez','tremor','agitação','confusão']},
 
-    {drugs:['nitrofurantoína'],
+    {drugs:['lítio'],
+     pair:['aine','ibuprofeno','naproxeno','diclofenaco','meloxicam'],
+     effect:'AINEs reduzem excreção renal de lítio — risco de intoxicação por lítio (tremor, confusão, insuficiência renal).',
+     severity:'grave',symptomLinks:['tremor','confusão','tontura']},
+
+    {drugs:['lítio'],
+     pair:['diurético','furosemida','hidroclorotiazida','indapamida','clortalidona'],
+     effect:'Diuréticos aumentam reabsorção renal de lítio — risco elevado de intoxicação por lítio.',
+     severity:'grave',symptomLinks:['tremor','confusão','sede excessiva']},
+
+    {drugs:['metformina'],
+     pair:['contraste iodado'],
+     effect:'Risco de acidose lática grave — suspender metformina 48h antes e após uso de contraste iodado.',
+     severity:'grave',symptomLinks:['fraqueza','vômito','dor muscular']},
+
+    {drugs:['digoxina'],
+     pair:['hipocalemia','furosemida','tiazídico','hidroclorotiazida','anfotericina'],
+     effect:'Hipocalemia potencializa toxicidade da digoxina — arritmias graves, mesmo com dose terapêutica.',
+     severity:'grave',symptomLinks:['náusea','vômito','arritmia','palpitação','visão amarelada']},
+
+    {drugs:['fluoroquinolona','ciprofloxacino','levofloxacino','moxifloxacino'],
+     pair:['antiarrítmico','amiodarona','sotalol','azitromicina','haloperidol','quetiapina','olanzapina'],
+     effect:'Prolongamento do QT com risco de arritmia ventricular grave (Torsades de Pointes).',
+     severity:'grave',symptomLinks:['palpitação','tontura','síncope','desmaio']},
+
+    {drugs:['inibidor eca','enalapril','captopril','ramipril','lisinopril','perindopril'],
+     pair:['ara2','losartana','valsartana','olmesartana','irbesartana','telmisartana','aliscireno'],
+     effect:'Duplo bloqueio do SRAA — risco de hipercalemia grave, insuficiência renal aguda e hipotensão.',
+     severity:'grave',symptomLinks:['fraqueza','palpitação','hipotensão','edema']},
+
+    {drugs:['estatina','atorvastatina','sinvastatina','rosuvastatina','lovastatina'],
+     pair:['fibratos','bezafibrato','fenofibrato','genfibrozila'],
+     effect:'Risco de rabdomiólise (destruição muscular grave) com insuficiência renal aguda.',
+     severity:'grave',symptomLinks:['dor muscular','fraqueza','urina escura']},
+
+    {drugs:['sildenafila','tadalafila','vardenafila'],
+     pair:['nitrato','nitroglicerina','isossorbida'],
+     effect:'Hipotensão grave e potencialmente fatal. Contraindicação absoluta — pode causar colapso cardiovascular.',
+     severity:'grave',symptomLinks:['hipotensão','tontura','síncope','desmaio']},
+
+    // ══ COMBINAÇÕES MODERADAS ═══════════════════════════════════════════════════
+    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco'],
+     pair:['anti-hipertensivo','enalapril','losartana','atenolol','amlodipina'],
+     effect:'AINEs reduzem efeito anti-hipertensivo e aumentam risco de insuficiência renal, especialmente em idosos.',
+     severity:'moderada',symptomLinks:['pressão alta','edema','diminuição da urina']},
+
+    {drugs:['ssri','fluoxetina','sertralina','paroxetina','escitalopram','citalopram','venlafaxina','duloxetina'],
+     pair:['aine','ibuprofeno','naproxeno','diclofenaco','meloxicam','aspirina','aas'],
+     effect:'Combinação aumenta risco de sangramento gastrointestinal (SSRIs inibem função plaquetária).',
+     severity:'moderada',symptomLinks:['sangramento','dor abdominal','fezes escuras']},
+
+    {drugs:['metformina'],
+     pair:['álcool','uso abusivo'],
+     effect:'Álcool aumenta risco de acidose lática com metformina, especialmente com função renal reduzida.',
+     severity:'moderada',symptomLinks:['fraqueza','vômito','dor muscular']},
+
+    {drugs:['benzodiazepínico','clonazepam','diazepam','alprazolam','lorazepam','zolpidem','zopiclona'],
+     pair:['opioide','tramadol','codeína','morfina','oxicodona'],
+     effect:'Depressão respiratória grave — risco de overdose e morte, especialmente em idosos.',
+     severity:'grave',symptomLinks:['sonolência excessiva','confusão','dificuldade respiratória']},
+
+    {drugs:['benzodiazepínico','clonazepam','diazepam','alprazolam','zolpidem'],
      pair:[],
-     effect:'Em idosos com função renal reduzida, nitrofurantoína pode se acumular e causar toxicidade pulmonar e neurológica. Deve ser usada com cautela e monitoramento.',severity:'moderada',symptomLinks:['falta de ar','fraqueza']},
+     effect:'Critérios de Beers: benzodiazepínicos em idosos aumentam risco de queda, delirium e comprometimento cognitivo.',
+     severity:'moderada',symptomLinks:['queda','confusão','tontura','sonolência']},
+
+    {drugs:['anticolinérgico','oxibutinina','solifenacina','tolterodina','biperideno','prometazina'],
+     pair:[],
+     effect:'Critérios de Beers/STOPP: anticolinérgicos em idosos — risco de retenção urinária, constipação, confusão e queda.',
+     severity:'moderada',symptomLinks:['confusão','retenção urinária','constipação','queda']},
+
+    {drugs:['antipsicótico','haloperidol','risperidona','quetiapina','olanzapina','clozapina'],
+     pair:[],
+     effect:'STOPP: antipsicóticos em idosos aumentam risco de AVC, quedas e mortalidade em demência.',
+     severity:'moderada',symptomLinks:['queda','rigidez','confusão','AVC']},
+
+    {drugs:['digoxina'],
+     pair:[],
+     effect:'Critérios de Beers: digoxina >0,125mg/dia deve ser evitada em idosos — janela terapêutica estreita, toxicidade frequente.',
+     severity:'moderada',symptomLinks:['náusea','vômito','palpitação','visão turva']},
+
+    {drugs:['antidepressivo tricíclico','amitriptilina','nortriptilina','imipramina','clomipramina'],
+     pair:[],
+     effect:'Critérios de Beers: tricíclicos em idosos — efeitos anticolinérgicos, hipotensão ortostática, sedação e risco de queda.',
+     severity:'moderada',symptomLinks:['tontura','queda','confusão','constipação','retenção urinária']},
+
+    {drugs:['inibidor eca','enalapril','captopril','ramipril','lisinopril'],
+     pair:['suplemento de potássio','cloreto de potássio','espironolactona','amilorida'],
+     effect:'Hipercalemia — inibidores da ECA retêm potássio; combinação com suplemento ou diurético poupador aumenta risco.',
+     severity:'moderada',symptomLinks:['fraqueza muscular','palpitação','câimbra']},
+
+    {drugs:['estatina','atorvastatina','sinvastatina','rosuvastatina'],
+     pair:['macrolídeo','claritromicina','eritromicina','azitromicina'],
+     effect:'Macrolídeos inibem metabolismo das estatinas — risco de miopatia e rabdomiólise.',
+     severity:'moderada',symptomLinks:['dor muscular','fraqueza']},
+
+    {drugs:['levodopa','levodopa/carbidopa','levodopa/benserazida'],
+     pair:['antipsicótico','haloperidol','risperidona','olanzapina'],
+     effect:'Antipsicóticos antagonizam efeito da levodopa — piora do Parkinson e risco de síndrome neuroléptica maligna.',
+     severity:'grave',symptomLinks:['rigidez','tremor','piora motora','febre']},
+
+    {drugs:['clopidogrel','ticagrelor'],
+     pair:['omeprazol','esomeprazol'],
+     effect:'Omeprazol/esomeprazol reduzem ativação do clopidogrel por inibição do CYP2C19, diminuindo efeito antiagregante.',
+     severity:'moderada',symptomLinks:['evento cardiovascular']},
+
+    {drugs:['metoclopramida','bromoprida'],
+     pair:[],
+     effect:'STOPP: metoclopramida em idosos — risco de sintomas extrapiramidais e discinesia tardia, especialmente com uso prolongado.',
+     severity:'moderada',symptomLinks:['rigidez','tremor','inquietação']},
+
+    {drugs:['hipnótico','zolpidem','zopiclona'],
+     pair:[],
+     effect:'Critérios de Beers: hipnóticos Z em idosos aumentam risco de queda, acidentes e deterioração cognitiva.',
+     severity:'moderada',symptomLinks:['queda','tontura','confusão','sonambulismo']},
   ],
 
   // ── ADMIN ─────────────────────────────────────────
@@ -4008,6 +4084,35 @@ const A = {
 
 }; // end of A object
 
+
+function generateReportHTML(p){
+  const pJSON=JSON.stringify(p);
+  const title='Ampara \u00B7 Relat\u00F3rio \u2014 '+p.name;
+  const parts=[];
+  parts.push('<!DOCTYPE html><html lang="pt-BR"><head>');
+  parts.push('<meta charset="UTF-8"/>');
+  parts.push('<meta name="viewport" content="width=device-width,initial-scale=1"/>');
+  parts.push('<title>'+title+'</title>');
+  parts.push('<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>');
+  parts.push('<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>');
+  parts.push('<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>');
+  parts.push("<style>\\n*{box-sizing:border-box;margin:0;padding:0}\\n:root{\\n  --green:#2D5A3D;--green-mid:#4A7C5C;--green-light:#E8F2EC;--green-border:#C5DFD0;\\n  --text:#1A2B22;--sub:#4A5E52;--muted:#7A9288;\\n  --red:#C0392B;--red-bg:#FDEAEA;--yel:#B7860B;--yel-bg:#FEF9E7;\\n  --grn:#1E7E4A;--grn-bg:#E9F7EF;\\n  --border:#D8E8DF;--bg:#F4F8F5;--white:#FFF;\\n  --shadow:0 2px 12px rgba(45,90,61,.08);\\n}\\nbody{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);font-size:13px}\\n.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px}\\n.spinner{width:40px;height:40px;border:3px solid var(--green-border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}\\n@keyframes spin{to{transform:rotate(360deg)}}\\n.loading-text{color:var(--sub);font-size:14px;font-weight:500}\\n.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;text-align:center}\\n.error-icon{font-size:72px;margin-bottom:20px}\\n.error-title{font-size:24px;font-weight:700;color:var(--text);margin-bottom:10px}\\n.error-sub{font-size:14px;color:var(--sub);line-height:1.7;max-width:400px}\\n#page-wrapper{max-width:820px;margin:0 auto;padding:24px 16px 60px;display:none}\\n.action-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}\\n.brand-wrap{display:flex;align-items:center;gap:8px}\\n.brand-name{font-size:15px;font-weight:700;color:var(--text)}\\n.brand-sub{font-size:11px;color:var(--muted)}\\n.action-btns{display:flex;gap:8px}\\n.btn-secondary{display:flex;align-items:center;gap:6px;padding:9px 16px;background:var(--white);color:var(--sub);border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}\\n.btn-secondary:hover{border-color:var(--green-mid);color:var(--green)}\\n.btn-primary{display:flex;align-items:center;gap:7px;padding:10px 20px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(45,90,61,.22)}\\n.btn-primary:hover{background:#244d33;transform:translateY(-1px)}\\n.btn-primary:active{transform:translateY(0)}\\n.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}\\nsvg.ic{width:14px;height:14px}\\n\\n/* REPORT */\\n#report-content{background:var(--white);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}\\n\\n/* HEADER */\\n.rep-header{background:linear-gradient(135deg,#162b20 0%,#2D5A3D 55%,#3d7a55 100%);padding:32px 36px;position:relative;overflow:hidden}\\n.rep-header::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}\\n.rep-header::after{content:'';position:absolute;bottom:-80px;left:55%;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.03)}\\n.rep-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;position:relative;z-index:1}\\n.rep-brand-row{display:flex;align-items:center;gap:10px}\\n.rep-brand-icon{width:38px;height:38px;background:rgba(255,255,255,.14);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;border:1px solid rgba(255,255,255,.15)}\\n.rep-brand-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px}\\n.rep-brand-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}\\n.rep-header-meta{text-align:right}\\n.rep-meta-label{font-size:9px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.9px;font-weight:600}\\n.rep-meta-val{font-size:12px;color:rgba(255,255,255,.78);margin-top:2px;margin-bottom:8px}\\n.rep-patient-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;position:relative;z-index:1}\\n.rep-patient-name{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.6px;line-height:1.1;margin-bottom:5px}\\n.rep-patient-meta{font-size:13px;color:rgba(255,255,255,.72);line-height:1.6}\\n.rep-status-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:22px;font-size:13px;font-weight:700;margin-top:10px}\\n.rep-code-box{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:12px 16px;text-align:center;flex-shrink:0}\\n.rep-code-label{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.9px;font-weight:600}\\n.rep-code-val{font-size:17px;font-weight:700;color:#fff;font-family:monospace;letter-spacing:2px;margin-top:4px}\\n\\n/* VALIDITY */\\n.validity-strip{background:var(--green-light);border-bottom:1px solid var(--green-border);padding:9px 36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:11px}\\n.validity-left{display:flex;align-items:center;gap:7px;color:var(--green);font-weight:600}\\n.validity-right{color:var(--muted)}\\n\\n/* BODY */\\n.rep-body{padding:28px 36px}\\n.sec{margin-bottom:26px}\\n.sec-title{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:11px;display:flex;align-items:center;gap:8px}\\n.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}\\n\\n/* DATA GRID */\\n.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:9px;overflow:hidden;border:1px solid var(--border)}\\n.data-grid.cols-3{grid-template-columns:1fr 1fr 1fr}\\n.data-grid.cols-1{grid-template-columns:1fr}\\n.data-cell{background:var(--white);padding:10px 14px}\\n.data-cell.full{grid-column:1/-1}\\n.data-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}\\n.data-value{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}\\n.data-value.v-alert{color:var(--red);font-weight:700}\\n.data-value.v-warn{color:var(--yel);font-weight:700}\\n.data-value.v-ok{color:var(--grn);font-weight:600}\\n\\n/* VITALS */\\n.vitals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}\\n.vital-card{border:1.5px solid var(--border);border-radius:9px;padding:13px 10px;text-align:center;background:var(--white)}\\n.vital-card.vc-alert{border-color:var(--red);background:var(--red-bg)}\\n.vital-card.vc-warn{border-color:#edc940;background:var(--yel-bg)}\\n.vital-card.vc-ok{border-color:var(--green-border);background:var(--green-light)}\\n.vital-icon{font-size:18px;margin-bottom:3px}\\n.vital-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;line-height:1.3}\\n.vital-value{font-size:17px;font-weight:700;color:var(--text);line-height:1}\\n.vc-alert .vital-value{color:var(--red)}\\n.vc-warn .vital-value{color:var(--yel)}\\n.vc-ok .vital-value{color:var(--grn)}\\n.vital-unit{font-size:10px;color:var(--muted);margin-top:2px}\\n.vital-stlbl{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:5px;display:inline-block}\\n.vc-alert .vital-stlbl{background:rgba(192,57,43,.12);color:var(--red)}\\n.vc-warn .vital-stlbl{background:rgba(183,134,11,.12);color:var(--yel)}\\n.vc-ok .vital-stlbl{background:rgba(30,126,74,.12);color:var(--grn)}\\n.vital-rec{font-size:10px;color:var(--muted);margin-top:6px;text-align:right}\\n\\n/* RISKS */\\n.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}\\n.risk-card{border:1.5px solid var(--border);border-radius:9px;padding:13px 10px;text-align:center;background:var(--white)}\\n.risk-icon{font-size:22px;margin-bottom:4px}\\n.risk-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;line-height:1.3}\\n.risk-sub{font-size:8px;color:var(--muted);margin-bottom:8px;font-style:italic}\\n.risk-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:7px;display:inline-block}\\n.rb-alto{background:var(--red-bg);color:var(--red)}\\n.rb-moderado{background:var(--yel-bg);color:var(--yel)}\\n.rb-baixo{background:var(--grn-bg);color:var(--grn)}\\n.rb-na{background:#f0f2f0;color:var(--muted)}\\n\\n/* MEDS TABLE */\\n.meds-tbl{width:100%;border-collapse:collapse;border-radius:9px;overflow:hidden;border:1px solid var(--border)}\\n.meds-tbl th{background:var(--green-light);color:var(--green);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:9px 13px;text-align:left;border-bottom:1px solid var(--green-border)}\\n.meds-tbl td{padding:9px 13px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text);vertical-align:middle}\\n.meds-tbl tr:last-child td{border-bottom:none}\\n.meds-tbl tr:nth-child(even) td{background:#fafcfa}\\n.time-chips{display:flex;gap:4px;flex-wrap:wrap}\\n.time-chip{background:var(--green-light);color:var(--green);font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;border:1px solid var(--green-border)}\\n\\n/* EVENTS */\\n.events-wrap{border:1px solid var(--border);border-radius:9px;overflow:hidden;background:var(--white)}\\n.event-row{display:flex;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border)}\\n.event-row:last-child{border-bottom:none}\\n.event-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}\\n.dot-leve{background:#4db080}\\n.dot-moderada{background:var(--yel)}\\n.dot-alta{background:var(--red)}\\n.event-type{font-size:12px;font-weight:600;color:var(--text)}\\n.event-date{font-weight:400;color:var(--muted)}\\n.event-desc{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5}\\n.event-meta{font-size:10px;color:var(--muted);margin-top:3px}\\n\\n/* ALERT BOXES */\\n.alert-box{border-radius:8px;padding:11px 14px;font-size:12px;line-height:1.6;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}\\n.ab-icon{flex-shrink:0;font-size:15px;margin-top:1px}\\n.ab-red{background:var(--red-bg);border-left:3px solid var(--red);color:#7a1a1a}\\n.ab-yel{background:var(--yel-bg);border-left:3px solid #edc940;color:#7a5a00}\\n.ab-grn{background:var(--grn-bg);border-left:3px solid var(--grn);color:#0a5a28}\\n\\n/* FOOTER */\\n.rep-footer{background:var(--green-light);border-top:1px solid var(--green-border);padding:16px 36px}\\n.rep-footer-main{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:10px}\\n.rep-footer-brand{font-size:13px;font-weight:700;color:var(--green)}\\n.rep-footer-url{font-size:10px;color:var(--muted);margin-top:2px}\\n.rep-footer-meta{font-size:10px;color:var(--muted);line-height:1.6;text-align:right}\\n.rep-footer-conf{font-size:9px;color:var(--muted);text-align:center;padding-top:10px;border-top:1px solid var(--green-border);line-height:1.6}\\n\\n/* PDF overlay */\\n.gen-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px)}\\n.gen-box{background:#fff;border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3);min-width:280px}\\n.gen-emoji{font-size:40px;margin-bottom:14px}\\n.gen-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}\\n.gen-status{font-size:13px;color:var(--sub);margin-bottom:18px}\\n.gen-bar{width:100%;height:5px;background:var(--border);border-radius:10px;overflow:hidden}\\n.gen-fill{height:100%;background:var(--green);border-radius:10px;width:0;transition:width .4s ease}\\n\\n@media print{\\n  body{background:#fff}\\n  .action-bar,.validity-strip{display:none!important}\\n  #page-wrapper{padding:0;max-width:100%}\\n  #report-content{box-shadow:none;border:none;border-radius:0}\\n  .rep-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}\\n}\\n</style>");
+  parts.push('</head><body>');
+  parts.push('<div class="loading-screen" id="loading-screen">\n  <div class="spinner"></div>\n  <div class="loading-text">Carregando relatório clínico...</div>\n</div>\n\n<div id="error-screen" style="display:none"></div>\n\n<div id="page-wrapper">\n  <div class="action-bar">\n    <div class="brand-wrap">\n      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" style="flex-shrink:0">\n  <defs>\n    <linearGradient id="rl1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#2D4A3E"/><stop offset="100%" stop-color="#5C7E6A"/></linearGradient>\n    <linearGradient id="rl2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>\n  </defs>\n  <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#rl1)" opacity="0.95"/>\n  <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#rl1)" opacity="0.6"/>\n  <circle cx="16" cy="15" r="5" fill="url(#rl2)"/>\n</svg>\n      <div>\n        <div class="brand-name" style="font-family:\'Lora\',Georgia,serif;font-weight:600;letter-spacing:-.3px">ampara</div>\n        <div class="brand-sub">Relatório Clínico Confidencial</div>\n      </div>\n    </div>\n    <div class="action-btns">\n      <button class="btn-secondary" onclick="window.print()">\n        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>\n        Imprimir\n      </button>\n      <button class="btn-primary" id="btn-pdf" onclick="gerarPDF()">\n        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>\n        Baixar PDF\n      </button>\n    </div>\n  </div>\n  <div id="report-content"></div>\n</div>\n\n<div class="gen-overlay" id="gen-overlay" style="display:none">\n  <div class="gen-box">\n    <div class="gen-emoji">📄</div>\n    <div class="gen-title">Gerando PDF...</div>\n    <div class="gen-status" id="gen-status">Preparando relatório</div>\n    <div class="gen-bar"><div class="gen-fill" id="gen-fill"></div></div>\n  </div>\n</div>');
+  parts.push('<script>');
+  parts.push('const _p='+pJSON+';');
+  parts.push('window._pd=_p;');
+  parts.push("const _MON=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];\nconst _fmt=ds=>{if(!ds)return'\\u2014';try{const[y,m,d]=ds.split('-');return parseInt(d)+' de '+_MON[parseInt(m)-1]+' de '+y;}catch(e){return ds;}};\nconst _fmtS=ds=>{if(!ds)return'\\u2014';try{const[y,m,d]=ds.split('-');return d+'/'+m+'/'+y;}catch(e){return ds;}};\nconst _nowStr=()=>new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});\nfunction _vsS(k,v){if(v==null||isNaN(parseFloat(v)))return'none';v=parseFloat(v);if(k==='sis'){if(v>=160)return'alert';if(v>=140)return'warn';return'ok';}if(k==='sat'){if(v<91)return'alert';if(v<94)return'warn';return'ok';}if(k==='temp'){if(v>=38.5)return'alert';if(v>=37.5)return'warn';return'ok';}if(k==='gli'){if(v>=200)return'alert';if(v>=140)return'warn';return'ok';}if(k==='fc'){if(v<49)return'alert';if(v>100)return'warn';return'ok';}return'ok';}\nfunction _riskCls(v){var hi=['Alto','Alta','Desnutrido','Dependência grave','Dependência total','Alerta'];var mid=['Moderado','Moderada','Em risco','Dependência leve','Dependência moderada','Atenção'];var lo=['Baixo','Baixa','Bem nutrido','Independente','Estável','Normal'];if(hi.includes(v))return'alto';if(mid.includes(v))return'moderado';if(lo.includes(v))return'baixo';return'na';}\nfunction _overallStatus(p){var lv=p.vitals&&p.vitals[0];if(lv){var ks=['sis','sat','gli','temp'];if(ks.some(function(k){return _vsS(k,lv[k])==='alert';}))return{level:'Alerta',icon:'\\u26A0\\uFE0F',bg:'rgba(192,57,43,.18)',fg:'#C0392B',desc:'Um ou mais parâmetros vitais requerem avaliação médica imediata.'};if(ks.some(function(k){return _vsS(k,lv[k])==='warn';}))return{level:'Atenção',icon:'\\u26A1',bg:'rgba(183,134,11,.18)',fg:'#B7860B',desc:'Alguns parâmetros estão fora do intervalo ideal.'};} return{level:'Estável',icon:'\\u2705',bg:'rgba(30,126,74,.18)',fg:'#1E7E4A',desc:'Parâmetros clínicos dentro dos limites esperados.'};}");
+  parts.push('function renderReport(p){\nconst lv=p.vitals&&p.vitals[0];\n  const meds=p.medSchedule||[];\n  const events=(p.events||[]).slice(0,8);\n  const st=_overallStatus(p);\n  const msLeft=(p._qrExp||0)-Date.now();\n  const hL=Math.floor(msLeft/3600000),mL=Math.floor((msLeft%3600000)/60000);\n\n  const vsItems=lv?[\n    {k:\'sis\',icon:\'🫀\',label:\'Pressão Arterial\',val:lv.sis?lv.sis+\'/\'+lv.dia:\'—\',unit:\'mmHg\',s:_vsS(\'sis\',lv.sis)},\n    {k:\'fc\',icon:\'❤️\',label:\'Freq. Cardíaca\',val:lv.fc||\'—\',unit:\'bpm\',s:_vsS(\'fc\',lv.fc)},\n    {k:\'temp\',icon:\'🌡️\',label:\'Temperatura\',val:lv.temp||\'—\',unit:\'°C\',s:_vsS(\'temp\',lv.temp)},\n    {k:\'sat\',icon:\'🫁\',label:\'Saturação O₂\',val:lv.sat||\'—\',unit:\'%\',s:_vsS(\'sat\',lv.sat)},\n    {k:\'gli\',icon:\'🩸\',label:\'Glicemia\',val:lv.gli||\'—\',unit:\'mg/dL\',s:_vsS(\'gli\',lv.gli)},\n    {k:\'fr\',icon:\'🫧\',label:\'Freq. Resp.\',val:lv.fr||\'—\',unit:\'irpm\',s:\'ok\'},\n    {k:\'peso\',icon:\'⚖️\',label:\'Peso\',val:lv.peso||\'—\',unit:\'kg\',s:\'ok\'},\n  ].filter(v=>String(v.val)!==\'—\'):[];\n\n  const vcClass=s=>s===\'alert\'?\'vc-alert\':s===\'warn\'?\'vc-warn\':s===\'ok\'?\'vc-ok\':\'\';\n  const stLabel=s=>s===\'alert\'?\'⚠ ALERTA\':s===\'warn\'?\'⚡ ATENÇÃO\':s===\'ok\'?\'✓ Normal\':\'\';\n\n  const crits=vsItems.filter(v=>v.s===\'alert\');\n  const warns=vsItems.filter(v=>v.s===\'warn\');\n\n  const risks=[\n    {icon:\'🦯\',title:\'Risco de Queda\',sub:\'Escala de Morse\',val:p.rF},\n    {icon:\'🥗\',title:\'Estado Nutricional\',sub:\'Escala MNA\',val:p.rN},\n    {icon:\'🙋\',title:\'Funcionalidade\',sub:\'Índice de Barthel\',val:p.rFunc},\n    {icon:\'💧\',title:\'Hidratação\',sub:\'Avaliação clínica\',val:p.rHyd},\n  ].filter(r=>r.val&&r.val!==\'—\');\n\n  let h=`\n  <div class="rep-header">\n    <div class="rep-header-top">\n      <div class="rep-brand-row">\n        <div class="rep-brand-icon" style="padding:0;overflow:hidden">\n          <svg xmlns="http://www.w3.org/2000/svg" viewBox="3 -1 30 31" width="38" height="38">\n            <defs>\n              <linearGradient id="rh1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#A8C4B0"/><stop offset="100%" stop-color="#C8DDD5"/></linearGradient>\n              <linearGradient id="rh2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>\n            </defs>\n            <path d="M19,22 C19,10 12,3 4,0 C7,7 8,14 11,19 C14,24 17,27 19,28 Z" fill="url(#rh1)" opacity="0.95"/>\n            <path d="M19,22 C19,10 26,3 34,0 C31,7 30,14 27,19 C24,24 21,27 19,28 Z" fill="url(#rh1)" opacity="0.6"/>\n            <circle cx="19" cy="21" r="6.5" fill="url(#rh2)"/>\n            <circle cx="17" cy="19" r="2" fill="rgba(255,255,255,0.55)"/>\n          </svg>\n        </div>\n        <div>\n          <div class="rep-brand-name" style="font-family:\'Lora\',Georgia,serif;font-weight:600;letter-spacing:-.4px">ampara</div>\n          <div class="rep-brand-sub">Plataforma de cuidado domiciliar para idosos</div>\n        </div>\n      </div>\n      <div class="rep-header-meta">\n        <div class="rep-meta-label">Gerado em</div>\n        <div class="rep-meta-val">${_nowStr()}</div>\n        <div class="rep-meta-label">Documento</div>\n        <div class="rep-meta-val">Relatório Clínico Completo</div>\n      </div>\n    </div>\n    <div class="rep-patient-row">\n      <div>\n        <div class="rep-patient-name">${p.name}</div>\n        <div class="rep-patient-meta">${p.age} anos · ${p.sex||\'—\'} · ${(p.diag||\'—\').split(\'·\')[0].split(\',\')[0].trim()}</div>\n        <div class="rep-status-badge" style="background:${st.bg};color:${st.fg}"><span style="font-size:16px">${st.icon}</span> ${st.level}</div>\n      </div>\n      ${p.code?`<div class="rep-code-box"><div class="rep-code-label">Código do paciente</div><div class="rep-code-val">${p.code}</div></div>`:\'\'}\n    </div>\n  </div>\n  <div class="validity-strip">\n    <div class="validity-left">\n      <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>\n      Válido por mais ${hL}h ${mL}min · Token: …${(p._qrToken||\'\').slice(-10)}\n    </div>\n    <div class="validity-right">Documento confidencial · Uso exclusivo do profissional de saúde</div>\n  </div>\n  <div class="rep-body">`;\n\n  // Alertas críticos\n  if(crits.length){\n    h+=`<div class="sec"><div class="sec-title">Alertas críticos</div>`;\n    crits.forEach(v=>{h+=`<div class="alert-box ab-red"><span class="ab-icon">🚨</span><div><strong>${v.icon} ${v.label}:</strong> ${v.val} ${v.unit} — Valor acima do limiar de alerta clínico. Avaliação médica recomendada com urgência.</div></div>`;});\n    h+=`</div>`;\n  } else if(warns.length){\n    h+=`<div class="sec"><div class="sec-title">Pontos de atenção</div>`;\n    warns.forEach(v=>{h+=`<div class="alert-box ab-yel"><span class="ab-icon">⚡</span><div><strong>${v.icon} ${v.label}:</strong> ${v.val} ${v.unit} — Dentro da zona de atenção. Monitorar evolução.</div></div>`;});\n    h+=`</div>`;\n  } else if(lv){\n    h+=`<div class="sec"><div class="sec-title">Status geral</div><div class="alert-box ab-grn"><span class="ab-icon">✅</span><div>${st.desc}</div></div></div>`;\n  }\n\n  // Identificação\n  h+=`<div class="sec"><div class="sec-title">Identificação do paciente</div>\n  <div class="data-grid cols-3">\n    <div class="data-cell"><div class="data-label">Nome completo</div><div class="data-value">${p.name}</div></div>\n    <div class="data-cell"><div class="data-label">Idade</div><div class="data-value">${p.age} anos</div></div>\n    <div class="data-cell"><div class="data-label">Sexo</div><div class="data-value">${p.sex||\'—\'}</div></div>\n    <div class="data-cell full"><div class="data-label">Diagnóstico principal</div><div class="data-value">${p.diag||\'—\'}</div></div>\n    ${p.como?`<div class="data-cell full"><div class="data-label">Comorbidades</div><div class="data-value">${p.como}</div></div>`:\'\'}\n    ${p.obs?`<div class="data-cell full"><div class="data-label">Observações clínicas</div><div class="data-value">${p.obs}</div></div>`:\'\'}\n  </div></div>`;\n\n  // Sinais vitais\n  if(vsItems.length){\n    h+=`<div class="sec"><div class="sec-title">Sinais vitais${lv?` — ${fmtS(lv.date)} às ${lv.time}`:\'\'}</div>\n    <div class="vitals-grid">`;\n    vsItems.forEach(v=>{\n      h+=`<div class="vital-card ${vcClass(v.s)}">\n        <div class="vital-icon">${v.icon}</div>\n        <div class="vital-label">${v.label}</div>\n        <div class="vital-value">${v.val}</div>\n        <div class="vital-unit">${v.unit}</div>\n        ${v.s!==\'none\'&&stLabel(v.s)?`<div class="vital-stlbl">${stLabel(v.s)}</div>`:\'\'}\n      </div>`;\n    });\n    h+=`</div>`;\n    if(lv?.author)h+=`<div class="vital-rec">Aferido por: ${lv.author}${lv.obs?` · ${lv.obs}`:\'\'}</div>`;\n    h+=`</div>`;\n  }\n\n  // Avaliações de risco\n  if(risks.length){\n    h+=`<div class="sec"><div class="sec-title">Avaliações de risco clínico</div>\n    <div class="risk-grid">`;\n    risks.forEach(r=>{\n      const cls=_riskCls(r.val);\n      h+=`<div class="risk-card">\n        <div class="risk-icon">${r.icon}</div>\n        <div class="risk-title">${r.title}</div>\n        <div class="risk-sub">${r.sub}</div>\n        <div class="risk-badge rb-${cls}">${r.val}</div>\n      </div>`;\n    });\n    h+=`</div></div>`;\n  }\n\n  // Medicações\n  if(meds.length){\n    h+=`<div class="sec"><div class="sec-title">Medicações em uso (${meds.length})</div>\n    <table class="meds-tbl">\n      <thead><tr><th>Medicamento</th><th>Dose</th><th>Via / Unidade</th><th>Horários</th></tr></thead>\n      <tbody>`;\n    meds.forEach(m=>{\n      h+=`<tr>\n        <td style="font-weight:600">💊 ${m.name}</td>\n        <td>${m.dose}</td>\n        <td>${m.unit}</td>\n        <td><div class="time-chips">${(m.times||[]).map(t=>`<span class="time-chip">${t}</span>`).join(\'\')}</div></td>\n      </tr>`;\n    });\n    h+=`</tbody></table></div>`;\n  }\n\n  // Eventos recentes\n  if(events.length){\n    h+=`<div class="sec"><div class="sec-title">Eventos clínicos recentes</div>\n    <div class="events-wrap">`;\n    events.forEach(e=>{\n      const dotCls=\'dot-\'+(e.grav||\'leve\').toLowerCase().replace(/\\s/g,\'\');\n      h+=`<div class="event-row">\n        <div class="event-dot ${dotCls}"></div>\n        <div>\n          <div class="event-type">${e.type} <span class="event-date">· ${fmtS(e.date)}</span></div>\n          ${e.desc?`<div class="event-desc">${(e.desc||\'\').slice(0,280)}${(e.desc||\'\').length>280?\'…\':\'\'}</div>`:\'\'}\n          <div class="event-meta">Por: ${e.author||\'—\'} · Gravidade: ${e.grav||\'—\'}</div>\n        </div>\n      </div>`;\n    });\n    h+=`</div></div>`;\n  }\n\n  // Consultas agendadas\n  const apptsFut=(p.appointments||[]).filter(a=>a.date>=new Date().toISOString().split(\'T\')[0]).sort((a,b)=>a.date.localeCompare(b.date));\n  if(apptsFut.length){\n    h+=`<div class="sec"><div class="sec-title">Consultas agendadas (${apptsFut.length})</div>\n    <table class="meds-tbl">\n      <thead><tr><th>Data</th><th>Profissional</th><th>Local</th></tr></thead>\n      <tbody>\n        ${apptsFut.map(a=>`<tr>\n          <td style="font-weight:600">${fmtS(a.date)}${a.time?\' · \'+a.time:\'\'}</td>\n          <td>${a.icon||\'🏥\'} ${a.type}${a.prof?\' · <span style="font-weight:400">\'+a.prof+\'</span>\':\'\'}</td>\n          <td style="color:var(--muted)">${a.local||\'—\'}</td>\n        </tr>`).join(\'\')}\n      </tbody>\n    </table></div>`;\n  }\n\n  // Contato de referência\n  const emergNome=p.emergName||p.emerg_name;\n  const emergRel=p.emergRel||p.emerg_rel;\n  const emergTel=p.emergTel||p.emerg_tel;\n  if(emergNome){\n    h+=`<div class="sec"><div class="sec-title">Contato de referência / emergência</div>\n    <div class="data-grid cols-3">\n      <div class="data-cell"><div class="data-label">Nome</div><div class="data-value">${emergNome}</div></div>\n      <div class="data-cell"><div class="data-label">Parentesco</div><div class="data-value">${emergRel||\'—\'}</div></div>\n      <div class="data-cell"><div class="data-label">Telefone</div><div class="data-value">${emergTel||\'—\'}</div></div>\n    </div></div>`;\n  }\n\n  h+=`</div>\n  <div class="rep-footer">\n    <div class="rep-footer-main">\n      <div>\n        <div class="rep-footer-brand" style="display:flex;align-items:center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" style="vertical-align:middle;margin-right:4px">\n  <defs>\n    <linearGradient id="rf1" x1="0%" y1="0%" x2="100%" y2="110%"><stop offset="0%" stop-color="#2D4A3E"/><stop offset="100%" stop-color="#5C7E6A"/></linearGradient>\n    <linearGradient id="rf2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4885C"/><stop offset="100%" stop-color="#E8A47A"/></linearGradient>\n  </defs>\n  <path d="M16,16 C16,8 11,2 5,0 C7,5 8,11 10,15 C12,19 14,22 16,22 Z" fill="url(#rf1)" opacity="0.95"/>\n  <path d="M16,16 C16,8 21,2 27,0 C25,5 24,11 22,15 C20,19 18,22 16,22 Z" fill="url(#rf1)" opacity="0.6"/>\n  <circle cx="16" cy="15" r="5" fill="url(#rf2)"/>\n</svg> <span style="font-family:\'Lora\',Georgia,serif;font-weight:600;letter-spacing:-.3px">ampara</span><span style="font-weight:400;margin-left:4px"> · Cuidado em família, com carinho</span></div>\n        <div class="rep-footer-url">appampara.github.io/ampara</div>\n      </div>\n      <div class="rep-footer-meta">\n        Relatório gerado em ${_nowStr()}<br/>\n        Paciente: ${p.name} · ${p.age} anos<br/>\n        Token: ${(p._qrToken||\'\').slice(0,22)}…\n      </div>\n    </div>\n    <div class="rep-footer-conf">\n      ⚠ Este documento é <strong>CONFIDENCIAL</strong> e de uso exclusivo do profissional de saúde responsável.\n      Não compartilhe, reproduza ou distribua sem autorização expressa do responsável pelo paciente.\n      Ampara não se responsabiliza pelo uso indevido deste documento.\n    </div>\n  </div>`;\n\n  document.getElementById(\'report-content\').innerHTML=h;\n\n}');
+  parts.push("async function gerarPDF(){\n  const p=window._pd;\n  if(!p)return;\n  const overlay=document.getElementById('gen-overlay');\n  const fill=document.getElementById('gen-fill');\n  const statusEl=document.getElementById('gen-status');\n  const btn=document.getElementById('btn-pdf');\n  overlay.style.display='flex';btn.disabled=true;\n  const prog=(pct,msg)=>{fill.style.width=pct+'%';statusEl.textContent=msg;};\n  try{\n    prog(10,'Capturando layout...');\n    await new Promise(r=>setTimeout(r,120));\n    const el=document.getElementById('report-content');\n    prog(30,'Renderizando elementos...');\n    await new Promise(r=>setTimeout(r,100));\n    const canvas=await html2canvas(el,{\n      scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',\n      logging:false,scrollX:0,scrollY:0,\n    });\n    prog(65,'Construindo PDF...');\n    await new Promise(r=>setTimeout(r,100));\n    const {jsPDF}=window.jspdf;\n    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});\n    const pageW=pdf.internal.pageSize.getWidth();\n    const pageH=pdf.internal.pageSize.getHeight();\n    const margin=10,imgW=pageW-margin*2;\n    const imgH=(canvas.height*imgW)/canvas.width;\n    const totalPages=Math.ceil(imgH/(pageH-margin*2));\n    for(let i=0;i<totalPages;i++){\n      if(i>0)pdf.addPage();\n      const sy=i*(pageH-margin*2)*(canvas.width/imgW);\n      const sh=Math.min((pageH-margin*2)*(canvas.width/imgW),canvas.height-sy);\n      const sc=document.createElement('canvas');\n      sc.width=canvas.width;sc.height=sh;\n      sc.getContext('2d').drawImage(canvas,0,sy,canvas.width,sh,0,0,canvas.width,sh);\n      const sliceH=(sh*imgW)/canvas.width;\n      pdf.addImage(sc.toDataURL('image/jpeg',.93),'JPEG',margin,margin,imgW,sliceH);\n    }\n    prog(90,'Finalizando...');\n    await new Promise(r=>setTimeout(r,200));\n    const date=new Date().toLocaleDateString('pt-BR').replace(/\\//g,'-');\n    const name=p.name.split(' ').slice(0,2).join('_').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-zA-Z_]/g,'');\n    pdf.save(`Ampara_Relatorio_${name}_${date}.pdf`);\n    prog(100,'PDF salvo com sucesso!');\n    await new Promise(r=>setTimeout(r,900));\n  }catch(e){\n    statusEl.textContent='Erro: '+e.message;\n    await new Promise(r=>setTimeout(r,2500));\n  }finally{\n    overlay.style.display='none';btn.disabled=false;fill.style.width='0';\n  }\n}");
+  parts.push('document.getElementById("loading-screen").style.display="none";');
+  parts.push('document.getElementById("page-wrapper").style.display="block";');
+  parts.push('renderReport(_p);');
+  parts.push('document.getElementById("btn-pdf").onclick=gerarPDF;');
+  parts.push('<\/script></body></html>');
+  return parts.join('\n');
+}
+
 function renderMeuDoutor(){
   const p=DB.p; if(!p) return;
   const status=A.calcOverallStatus(p);
@@ -4123,48 +4228,24 @@ function renderMeuDoutor(){
     toast('🔄 QR Code renovado por 24h!');
   });
 
-  // Download PDF
-  document.getElementById('md-download-pdf')?.addEventListener('click',async()=>{
+  // Download PDF — abre relatório completo (template relatorio_1.html) numa nova aba
+  document.getElementById('md-download-pdf')?.addEventListener('click',()=>{
     const btn=document.getElementById('md-download-pdf');
     btn.textContent='⏳ Gerando...'; btn.disabled=true;
     try{
-      const reportEl=document.getElementById('md-report-area');
-      const canvas=await html2canvas(reportEl,{scale:2,useCORS:true,backgroundColor:'#FAF8F4'});
-      const imgData=canvas.toDataURL('image/png');
-      const {jsPDF}=window.jspdf;
-      const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-      const pageW=pdf.internal.pageSize.getWidth();
-      const pageH=pdf.internal.pageSize.getHeight();
-      const imgW=pageW-20;
-      const imgH=(canvas.height*imgW)/canvas.width;
-      let y=10;
-      if(imgH<=pageH-20){
-        pdf.addImage(imgData,'PNG',10,y,imgW,imgH);
-      } else {
-        // Multi-page
-        let srcY=0;
-        const pageImgH=pageH-20;
-        const srcHPerPage=(pageImgH/imgH)*canvas.height;
-        while(srcY<canvas.height){
-          const pageCanvas=document.createElement('canvas');
-          pageCanvas.width=canvas.width;
-          pageCanvas.height=Math.min(srcHPerPage,canvas.height-srcY);
-          const ctx=pageCanvas.getContext('2d');
-          ctx.drawImage(canvas,0,srcY,canvas.width,pageCanvas.height,0,0,canvas.width,pageCanvas.height);
-          const pageImg=pageCanvas.toDataURL('image/png');
-          const h=(pageCanvas.height/canvas.height)*imgH;
-          if(srcY>0) pdf.addPage();
-          pdf.addImage(pageImg,'PNG',10,10,imgW,h);
-          srcY+=srcHPerPage;
-        }
-      }
-      const fname=`relatorio_${p.name.replace(/\s+/g,'_')}_${today()}.pdf`;
-      pdf.save(fname);
-      toast('✅ PDF baixado!');
-    } catch(e){
-      toast('⚠️ Erro ao gerar PDF: '+e.message);
-    } finally {
-      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x1="12" y1="3"/></svg> Baixar PDF';
+      const html=generateReportHTML(p);
+      const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download='Ampara_Relatorio_'+p.name.replace(/\s+/g,'_').normalize('NFD').replace(/[\u0300-\u036f]/g,'')+'_'+today()+'.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('✅ Relatório baixado! Abra o arquivo para ver e gerar PDF.');
+    }catch(e){
+      toast('⚠️ Erro: '+e.message);
+    }finally{
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar Relatório';
       btn.disabled=false;
     }
   });
@@ -5425,40 +5506,145 @@ window.addEventListener('DOMContentLoaded',()=>{
   // 100 MEDICAMENTOS MAIS USADOS NO BRASIL
   // ═══════════════════════════════════════════════════
   const MEDS_BR=[
-    {n:'Amoxicilina',c:'Antibiótico'},{n:'Azitromicina',c:'Antibiótico'},{n:'Metformina',c:'Diabetes'},
-    {n:'Atorvastatina',c:'Colesterol'},{n:'Losartana',c:'Hipertensão'},{n:'Enalapril',c:'Hipertensão'},
-    {n:'Omeprazol',c:'Gastro'},{n:'Pantoprazol',c:'Gastro'},{n:'Dipirona',c:'Analgésico'},
-    {n:'Paracetamol',c:'Analgésico'},{n:'Ibuprofeno',c:'Anti-inflamatório'},{n:'AAS',c:'Antiagregante'},
-    {n:'Sinvastatina',c:'Colesterol'},{n:'Clonazepam',c:'Ansiolítico'},{n:'Alprazolam',c:'Ansiolítico'},
-    {n:'Fluoxetina',c:'Antidepressivo'},{n:'Sertralina',c:'Antidepressivo'},{n:'Amitriptilina',c:'Antidepressivo'},
-    {n:'Levotiroxina',c:'Tireoide'},{n:'Furosemida',c:'Diurético'},{n:'Hidroclorotiazida',c:'Diurético'},
-    {n:'Espironolactona',c:'Diurético'},{n:'Atenolol',c:'Betabloqueador'},{n:'Propranolol',c:'Betabloqueador'},
-    {n:'Metoprolol',c:'Betabloqueador'},{n:'Carvedilol',c:'Betabloqueador'},{n:'Amlodipina',c:'Hipertensão'},
-    {n:'Nifedipina',c:'Hipertensão'},{n:'Valsartana',c:'Hipertensão'},{n:'Captopril',c:'Hipertensão'},
-    {n:'Ramipril',c:'Hipertensão'},{n:'Insulina NPH',c:'Diabetes'},{n:'Insulina Regular',c:'Diabetes'},
-    {n:'Glibenclamida',c:'Diabetes'},{n:'Glicazida',c:'Diabetes'},{n:'Pioglitazona',c:'Diabetes'},
-    {n:'Prednisona',c:'Corticoide'},{n:'Dexametasona',c:'Corticoide'},{n:'Betametasona',c:'Corticoide'},
-    {n:'Diazepam',c:'Ansiolítico'},{n:'Lorazepam',c:'Ansiolítico'},{n:'Bromazepam',c:'Ansiolítico'},
-    {n:'Clopidogrel',c:'Anticoagulante'},{n:'Varfarina',c:'Anticoagulante'},{n:'Rivaroxabana',c:'Anticoagulante'},
-    {n:'Apixabana',c:'Anticoagulante'},{n:'Digoxina',c:'Cardiológico'},{n:'Amiodarona',c:'Cardiológico'},
-    {n:'Diltiazem',c:'Cardiológico'},{n:'Verapamil',c:'Cardiológico'},{n:'Nitroglicerina',c:'Cardiológico'},
-    {n:'Isossorbida',c:'Cardiológico'},{n:'Rosuvastatina',c:'Colesterol'},{n:'Ezetimiba',c:'Colesterol'},
-    {n:'Esomeprazol',c:'Gastro'},{n:'Lansoprazol',c:'Gastro'},{n:'Ranitidina',c:'Gastro'},
-    {n:'Metoclopramida',c:'Gastro'},{n:'Domperidona',c:'Gastro'},{n:'Ondansetrona',c:'Antiemético'},
-    {n:'Tramadol',c:'Analgésico'},{n:'Codeína',c:'Analgésico'},{n:'Morfina',c:'Analgésico'},
-    {n:'Gabapentina',c:'Neurológico'},{n:'Pregabalina',c:'Neurológico'},{n:'Carbamazepina',c:'Neurológico'},
-    {n:'Fenitoína',c:'Neurológico'},{n:'Valproato',c:'Neurológico'},{n:'Levodopa',c:'Parkinson'},
-    {n:'Donepezila',c:'Demência'},{n:'Rivastigmina',c:'Demência'},{n:'Memantina',c:'Demência'},
-    {n:'Haloperidol',c:'Antipsicótico'},{n:'Risperidona',c:'Antipsicótico'},{n:'Quetiapina',c:'Antipsicótico'},
-    {n:'Olanzapina',c:'Antipsicótico'},{n:'Ciprofloxacino',c:'Antibiótico'},{n:'Levofloxacino',c:'Antibiótico'},
-    {n:'Claritromicina',c:'Antibiótico'},{n:'Doxiciclina',c:'Antibiótico'},{n:'Cefalexina',c:'Antibiótico'},
-    {n:'Sulfametoxazol+Trimetoprim',c:'Antibiótico'},{n:'Nitrofurantoína',c:'Antibiótico'},
-    {n:'Salbutamol',c:'Broncodilatador'},{n:'Budesonida',c:'Broncodilatador'},{n:'Beclometasona',c:'Broncodilatador'},
-    {n:'Brometo de ipratrópio',c:'Broncodilatador'},{n:'Montelucaste',c:'Alergia'},{n:'Loratadina',c:'Alergia'},
-    {n:'Cetirizina',c:'Alergia'},{n:'Fexofenadina',c:'Alergia'},{n:'Vitamina D',c:'Suplemento'},
-    {n:'Carbonato de cálcio',c:'Suplemento'},{n:'Sulfato ferroso',c:'Suplemento'},{n:'Vitamina B12',c:'Suplemento'},
-    {n:'Ácido fólico',c:'Suplemento'},{n:'Magnésio',c:'Suplemento'}
-  ];
+  /* Hipertensão / Cardiovascular */
+  {n:'Losartana',c:'Hipertensão'},{n:'Valsartana',c:'Hipertensão'},{n:'Olmesartana',c:'Hipertensão'},
+  {n:'Irbesartana',c:'Hipertensão'},{n:'Telmisartana',c:'Hipertensão'},{n:'Candesartana',c:'Hipertensão'},
+  {n:'Enalapril',c:'Hipertensão'},{n:'Captopril',c:'Hipertensão'},{n:'Ramipril',c:'Hipertensão'},
+  {n:'Lisinopril',c:'Hipertensão'},{n:'Perindopril',c:'Hipertensão'},{n:'Fosinopril',c:'Hipertensão'},
+  {n:'Amlodipina',c:'Hipertensão'},{n:'Nifedipina',c:'Hipertensão'},{n:'Felodipina',c:'Hipertensão'},
+  {n:'Diltiazem',c:'Cardiológico'},{n:'Verapamil',c:'Cardiológico'},{n:'Atenolol',c:'Betabloqueador'},
+  {n:'Metoprolol',c:'Betabloqueador'},{n:'Carvedilol',c:'Betabloqueador'},{n:'Propranolol',c:'Betabloqueador'},
+  {n:'Bisoprolol',c:'Betabloqueador'},{n:'Nebivolol',c:'Betabloqueador'},{n:'Clonidina',c:'Hipertensão'},
+  {n:'Hidralazina',c:'Hipertensão'},{n:'Moxonidina',c:'Hipertensão'},{n:'Prazosina',c:'Hipertensão'},
+  {n:'Espironolactona',c:'Diurético'},{n:'Furosemida',c:'Diurético'},{n:'Hidroclorotiazida',c:'Diurético'},
+  {n:'Indapamida',c:'Diurético'},{n:'Clortalidona',c:'Diurético'},{n:'Amilorida',c:'Diurético'},
+  {n:'Torasemida',c:'Diurético'},{n:'Bumetanida',c:'Diurético'},
+  /* Cardiológico */
+  {n:'Digoxina',c:'Cardiológico'},{n:'Amiodarona',c:'Cardiológico'},{n:'Sotalol',c:'Cardiológico'},
+  {n:'Dronedarona',c:'Cardiológico'},{n:'Nitroglicerina',c:'Cardiológico'},{n:'Isossorbida',c:'Cardiológico'},
+  {n:'Ivabradina',c:'Cardiológico'},{n:'Sacubitril+Valsartana',c:'Cardiológico'},
+  {n:'Dapagliflozina',c:'Cardiológico / Diabetes'},{n:'Empagliflozina',c:'Cardiológico / Diabetes'},
+  /* Anticoagulantes / Antiagregantes */
+  {n:'AAS',c:'Antiagregante'},{n:'Clopidogrel',c:'Antiagregante'},{n:'Ticagrelor',c:'Antiagregante'},
+  {n:'Varfarina',c:'Anticoagulante'},{n:'Rivaroxabana',c:'Anticoagulante'},{n:'Apixabana',c:'Anticoagulante'},
+  {n:'Dabigatrana',c:'Anticoagulante'},{n:'Edoxabana',c:'Anticoagulante'},{n:'Enoxaparina',c:'Anticoagulante'},
+  /* Colesterol */
+  {n:'Atorvastatina',c:'Colesterol'},{n:'Sinvastatina',c:'Colesterol'},{n:'Rosuvastatina',c:'Colesterol'},
+  {n:'Pravastatina',c:'Colesterol'},{n:'Fluvastatina',c:'Colesterol'},{n:'Pitavastatina',c:'Colesterol'},
+  {n:'Ezetimiba',c:'Colesterol'},{n:'Bezafibrato',c:'Colesterol'},{n:'Fenofibrato',c:'Colesterol'},
+  {n:'Colestiramina',c:'Colesterol'},
+  /* Diabetes */
+  {n:'Metformina',c:'Diabetes'},{n:'Glibenclamida',c:'Diabetes'},{n:'Glicazida',c:'Diabetes'},
+  {n:'Glipizida',c:'Diabetes'},{n:'Glimepirida',c:'Diabetes'},{n:'Pioglitazona',c:'Diabetes'},
+  {n:'Sitagliptina',c:'Diabetes'},{n:'Saxagliptina',c:'Diabetes'},{n:'Vildagliptina',c:'Diabetes'},
+  {n:'Alogliptina',c:'Diabetes'},{n:'Linagliptina',c:'Diabetes'},{n:'Liraglutida',c:'Diabetes'},
+  {n:'Semaglutida',c:'Diabetes'},{n:'Insulina NPH',c:'Diabetes'},{n:'Insulina Regular',c:'Diabetes'},
+  {n:'Insulina Glargina',c:'Diabetes'},{n:'Insulina Detemir',c:'Diabetes'},{n:'Insulina Degludeca',c:'Diabetes'},
+  {n:'Insulina Asparte',c:'Diabetes'},{n:'Insulina Lispro',c:'Diabetes'},{n:'Insulina Glulisina',c:'Diabetes'},
+  {n:'Canagliflozina',c:'Diabetes'},{n:'Ertugliflozina',c:'Diabetes'},{n:'Acarbose',c:'Diabetes'},
+  /* Neurológico / Parkinson / Demência */
+  {n:'Levodopa/Carbidopa',c:'Parkinson'},{n:'Levodopa/Benserazida',c:'Parkinson'},
+  {n:'Pramipexol',c:'Parkinson'},{n:'Ropinirol',c:'Parkinson'},{n:'Rotigotina',c:'Parkinson'},
+  {n:'Selegilina',c:'Parkinson'},{n:'Rasagilina',c:'Parkinson'},{n:'Entacapona',c:'Parkinson'},
+  {n:'Amantadina',c:'Parkinson'},{n:'Biperideno',c:'Parkinson'},
+  {n:'Donepezila',c:'Demência'},{n:'Rivastigmina',c:'Demência'},{n:'Galantamina',c:'Demência'},
+  {n:'Memantina',c:'Demência'},
+  /* Psiquiatria */
+  {n:'Fluoxetina',c:'Antidepressivo'},{n:'Sertralina',c:'Antidepressivo'},{n:'Paroxetina',c:'Antidepressivo'},
+  {n:'Escitalopram',c:'Antidepressivo'},{n:'Citalopram',c:'Antidepressivo'},{n:'Fluvoxamina',c:'Antidepressivo'},
+  {n:'Venlafaxina',c:'Antidepressivo'},{n:'Duloxetina',c:'Antidepressivo'},{n:'Desvenlafaxina',c:'Antidepressivo'},
+  {n:'Amitriptilina',c:'Antidepressivo'},{n:'Nortriptilina',c:'Antidepressivo'},{n:'Imipramina',c:'Antidepressivo'},
+  {n:'Bupropiona',c:'Antidepressivo'},{n:'Mirtazapina',c:'Antidepressivo'},{n:'Trazodona',c:'Antidepressivo'},
+  {n:'Vortioxetina',c:'Antidepressivo'},{n:'Agomelatina',c:'Antidepressivo'},
+  {n:'Haloperidol',c:'Antipsicótico'},{n:'Risperidona',c:'Antipsicótico'},{n:'Quetiapina',c:'Antipsicótico'},
+  {n:'Olanzapina',c:'Antipsicótico'},{n:'Clozapina',c:'Antipsicótico'},{n:'Aripiprazol',c:'Antipsicótico'},
+  {n:'Ziprasidona',c:'Antipsicótico'},{n:'Amisulprida',c:'Antipsicótico'},{n:'Paliperidona',c:'Antipsicótico'},
+  {n:'Clonazepam',c:'Ansiolítico / Anticonvulsivante'},{n:'Diazepam',c:'Ansiolítico'},
+  {n:'Alprazolam',c:'Ansiolítico'},{n:'Lorazepam',c:'Ansiolítico'},{n:'Bromazepam',c:'Ansiolítico'},
+  {n:'Midazolam',c:'Sedativo'},{n:'Zolpidem',c:'Hipnótico'},{n:'Zopiclona',c:'Hipnótico'},
+  {n:'Buspirona',c:'Ansiolítico'},{n:'Hidroxizina',c:'Ansiolítico / Alergia'},
+  /* Neurológico */
+  {n:'Gabapentina',c:'Neurológico'},{n:'Pregabalina',c:'Neurológico'},{n:'Carbamazepina',c:'Anticonvulsivante'},
+  {n:'Oxcarbazepina',c:'Anticonvulsivante'},{n:'Fenitoína',c:'Anticonvulsivante'},{n:'Valproato',c:'Anticonvulsivante'},
+  {n:'Lamotrigina',c:'Anticonvulsivante'},{n:'Levetiracetam',c:'Anticonvulsivante'},{n:'Topiramato',c:'Anticonvulsivante'},
+  {n:'Fenobarbital',c:'Anticonvulsivante'},{n:'Clonazepam',c:'Anticonvulsivante'},
+  {n:'Sumatriptano',c:'Enxaqueca'},{n:'Propranolol',c:'Enxaqueca / Betabloqueador'},
+  {n:'Topiramato',c:'Enxaqueca'},{n:'Flunarizina',c:'Enxaqueca / Tontura'},{n:'Betaistina',c:'Tontura'},
+  /* Analgésicos / Anti-inflamatórios */
+  {n:'Paracetamol',c:'Analgésico'},{n:'Dipirona',c:'Analgésico'},{n:'Ibuprofeno',c:'Anti-inflamatório'},
+  {n:'Naproxeno',c:'Anti-inflamatório'},{n:'Diclofenaco',c:'Anti-inflamatório'},{n:'Meloxicam',c:'Anti-inflamatório'},
+  {n:'Celecoxibe',c:'Anti-inflamatório'},{n:'Etoricoxibe',c:'Anti-inflamatório'},{n:'Indometacina',c:'Anti-inflamatório'},
+  {n:'Cetoprofeno',c:'Anti-inflamatório'},{n:'Piroxicam',c:'Anti-inflamatório'},
+  {n:'Tramadol',c:'Analgésico Opioide'},{n:'Codeína',c:'Analgésico Opioide'},{n:'Morfina',c:'Analgésico Opioide'},
+  {n:'Oxicodona',c:'Analgésico Opioide'},{n:'Buprenorfina',c:'Analgésico Opioide'},{n:'Fentanila',c:'Analgésico Opioide'},
+  /* Tireoide */
+  {n:'Levotiroxina',c:'Tireoide'},{n:'Propiltiouracil',c:'Tireoide'},{n:'Metimazol',c:'Tireoide'},
+  /* Gastroenterologia */
+  {n:'Omeprazol',c:'Gastroprotetor'},{n:'Pantoprazol',c:'Gastroprotetor'},{n:'Lansoprazol',c:'Gastroprotetor'},
+  {n:'Esomeprazol',c:'Gastroprotetor'},{n:'Rabeprazol',c:'Gastroprotetor'},{n:'Dexlansoprazol',c:'Gastroprotetor'},
+  {n:'Ranitidina',c:'Gastro'},{n:'Famotidina',c:'Gastro'},{n:'Hidróxido de alumínio',c:'Antiácido'},
+  {n:'Metoclopramida',c:'Gastro'},{n:'Domperidona',c:'Gastro'},{n:'Bromoprida',c:'Gastro'},
+  {n:'Ondansetrona',c:'Antiemético'},{n:'Granisetrona',c:'Antiemético'},
+  {n:'Lactulose',c:'Laxante'},{n:'Polietilenoglicol',c:'Laxante'},{n:'Bisacodil',c:'Laxante'},
+  {n:'Sene',c:'Laxante'},{n:'Macrogol',c:'Laxante'},{n:'Metilcelulose',c:'Laxante'},
+  {n:'Mesalazina',c:'Gastro'},{n:'Sulfassalazina',c:'Gastro'},{n:'Loperamida',c:'Antidiarreico'},
+  /* Antibióticos */
+  {n:'Amoxicilina',c:'Antibiótico'},{n:'Amoxicilina+Clavulanato',c:'Antibiótico'},{n:'Ampicilina',c:'Antibiótico'},
+  {n:'Azitromicina',c:'Antibiótico'},{n:'Claritromicina',c:'Antibiótico'},{n:'Eritromicina',c:'Antibiótico'},
+  {n:'Cefalexina',c:'Antibiótico'},{n:'Cefazolina',c:'Antibiótico'},{n:'Cefuroxima',c:'Antibiótico'},
+  {n:'Ceftriaxona',c:'Antibiótico'},{n:'Ciprofloxacino',c:'Antibiótico'},{n:'Levofloxacino',c:'Antibiótico'},
+  {n:'Moxifloxacino',c:'Antibiótico'},{n:'Doxiciclina',c:'Antibiótico'},{n:'Minociclina',c:'Antibiótico'},
+  {n:'Sulfametoxazol+Trimetoprim',c:'Antibiótico'},{n:'Nitrofurantoína',c:'Antibiótico'},
+  {n:'Metronidazol',c:'Antibiótico'},{n:'Clindamicina',c:'Antibiótico'},{n:'Vancomicina',c:'Antibiótico'},
+  /* Respiratório */
+  {n:'Salbutamol',c:'Broncodilatador'},{n:'Fenoterol',c:'Broncodilatador'},{n:'Formoterol',c:'Broncodilatador'},
+  {n:'Salmeterol',c:'Broncodilatador'},{n:'Indacaterol',c:'Broncodilatador'},{n:'Brometo de ipratrópio',c:'Broncodilatador'},
+  {n:'Tiotrópio',c:'Broncodilatador'},{n:'Umeclidínio',c:'Broncodilatador'},{n:'Budesonida',c:'Corticoide Inalatório'},
+  {n:'Beclometasona',c:'Corticoide Inalatório'},{n:'Fluticasona',c:'Corticoide Inalatório'},
+  {n:'Montelucaste',c:'Alergia / Respiratório'},{n:'Teofilina',c:'Broncodilatador'},
+  {n:'Acetilcisteína',c:'Mucolítico'},{n:'Ambroxol',c:'Mucolítico'},{n:'Carbocisteína',c:'Mucolítico'},
+  /* Alergia */
+  {n:'Loratadina',c:'Anti-histamínico'},{n:'Cetirizina',c:'Anti-histamínico'},{n:'Fexofenadina',c:'Anti-histamínico'},
+  {n:'Desloratadina',c:'Anti-histamínico'},{n:'Levocetirizina',c:'Anti-histamínico'},{n:'Difenidramina',c:'Anti-histamínico'},
+  {n:'Prometazina',c:'Anti-histamínico'},{n:'Clorfeniramina',c:'Anti-histamínico'},
+  /* Corticoides Sistêmicos */
+  {n:'Prednisona',c:'Corticoide'},{n:'Prednisolona',c:'Corticoide'},{n:'Dexametasona',c:'Corticoide'},
+  {n:'Betametasona',c:'Corticoide'},{n:'Hidrocortisona',c:'Corticoide'},{n:'Metilprednisolona',c:'Corticoide'},
+  /* Osteoporose / Musculoesquelético */
+  {n:'Alendronato',c:'Osteoporose'},{n:'Risedronato',c:'Osteoporose'},{n:'Ibandronato',c:'Osteoporose'},
+  {n:'Zoledronato',c:'Osteoporose'},{n:'Denosumabe',c:'Osteoporose'},{n:'Ranelato de estrôncio',c:'Osteoporose'},
+  {n:'Teriparatida',c:'Osteoporose'},{n:'Raloxifeno',c:'Osteoporose'},
+  {n:'Colchicina',c:'Gota'},{n:'Alopurinol',c:'Gota'},{n:'Febuxostate',c:'Gota'},{n:'Probenecida',c:'Gota'},
+  {n:'Ciclobenzaprina',c:'Miorrelaxante'},{n:'Carisoprodol',c:'Miorrelaxante'},{n:'Baclofeno',c:'Miorrelaxante'},
+  {n:'Orfenadrina',c:'Miorrelaxante'},{n:'Tizanidina',c:'Miorrelaxante'},
+  /* Suplementos / Vitaminas */
+  {n:'Vitamina D',c:'Suplemento'},{n:'Vitamina D3',c:'Suplemento'},{n:'Calcitriol',c:'Suplemento'},
+  {n:'Carbonato de cálcio',c:'Suplemento'},{n:'Citrato de cálcio',c:'Suplemento'},
+  {n:'Sulfato ferroso',c:'Suplemento'},{n:'Gluconato ferroso',c:'Suplemento'},
+  {n:'Vitamina B12',c:'Suplemento'},{n:'Cianocobalamina',c:'Suplemento'},{n:'Ácido fólico',c:'Suplemento'},
+  {n:'Magnésio',c:'Suplemento'},{n:'Cloreto de magnésio',c:'Suplemento'},
+  {n:'Vitamina C',c:'Suplemento'},{n:'Complexo B',c:'Suplemento'},{n:'Zinco',c:'Suplemento'},
+  {n:'Ômega-3',c:'Suplemento'},{n:'Coenzima Q10',c:'Suplemento'},
+  /* Urologia */
+  {n:'Tansulosina',c:'Próstata / Urológico'},{n:'Anlodipina',c:'Urológico'},{n:'Finasterida',c:'Próstata'},
+  {n:'Dutasterida',c:'Próstata'},{n:'Sildenafila',c:'Urológico'},{n:'Tadalafila',c:'Urológico'},
+  {n:'Oxibutinina',c:'Bexiga Hiperativa'},{n:'Solifenacina',c:'Bexiga Hiperativa'},
+  {n:'Tolterodina',c:'Bexiga Hiperativa'},{n:'Mirabegrona',c:'Bexiga Hiperativa'},
+  /* Oftalmológico */
+  {n:'Dorzolamida',c:'Oftalmológico'},{n:'Timolol oftálmico',c:'Oftalmológico'},
+  {n:'Latanoprosta',c:'Oftalmológico'},{n:'Bimatoprosta',c:'Oftalmológico'},
+  /* Antifúngico / Antiviral */
+  {n:'Fluconazol',c:'Antifúngico'},{n:'Itraconazol',c:'Antifúngico'},{n:'Nistatina',c:'Antifúngico'},
+  {n:'Aciclovir',c:'Antiviral'},{n:'Valaciclovir',c:'Antiviral'},{n:'Oseltamivir',c:'Antiviral'},
+  /* Outros frequentes em geriatria */
+  {n:'Melatonina',c:'Sono'},{n:'Naltrexona',c:'Dependência'},{n:'Buprenorfina+Naloxona',c:'Dependência'},
+  {n:'Ácido ursodesoxicólico',c:'Hepático'},{n:'Silimarina',c:'Hepático'},
+  {n:'Levomepromazina',c:'Antipsicótico / Sedativo'},{n:'Tioridazina',c:'Antipsicótico'},
+  {n:'Escopolamina',c:'Anticolinérgico'},{n:'Biperideno',c:'Anticolinérgico'},
+  {n:'Clomipramina',c:'Antidepressivo'},{n:'Maprotilina',c:'Antidepressivo'},
+  {n:'Clorpromazina',c:'Antipsicótico'},{n:'Pimozida',c:'Antipsicótico'},
+  {n:'Pentoxifilina',c:'Circulatório'},{n:'Cilostazol',c:'Circulatório'},
+];
 
   // ═══════════════════════════════════════════════════
   // ADD MED FAB MODAL logic
