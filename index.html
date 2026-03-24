@@ -359,6 +359,15 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
 .crop-actions{display:flex;gap:10px;width:100%}
 .crop-btn-cancel{flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
 .crop-btn-save{flex:1.5;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#C0704A,#D4885C);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 12px rgba(212,136,92,.4)}
+
+.md-status-badge{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:24px;font-size:14px;font-weight:700}
+.md-section{font-size:11px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.9px;margin:20px 20px 9px}
+.md-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.md-label{font-size:12px;color:var(--tmu)}
+.md-value{font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%}
+.md-card{background:var(--W);border-radius:var(--r);padding:14px 16px;border:1px solid var(--border);box-shadow:var(--sh);margin:0 20px 10px}
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);margin:0 20px 16px}
+.qr-timer{font-size:12px;color:var(--tmu);text-align:center;margin-top:4px}
 </style>
 </head>
 <body>
@@ -578,7 +587,7 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   <div class="scroll" style="padding-bottom:100px">
     <div class="dh" id="dh"></div>
     <div id="d-role-bar"></div>
-    <div style="padding:13px 20px 0" id="d-alerts"></div>
+    <div style="display:none" id="d-alerts"></div>
 
   <!-- STATUS MODAL — bottom sheet inside dash -->
   <div class="modal-ov" id="status-modal">
@@ -590,9 +599,8 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     <div style="padding:14px 20px 0" id="d-infographic"></div>
     <!-- Tarefas do dia -->
     <div style="padding:0 20px 8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.6px">✅ Tarefas de hoje</div>
-        <button id="task-add-btn" style="font-size:11px;font-weight:700;color:var(--sage);background:var(--sl);border:1px solid var(--sm);border-radius:10px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">+ Adicionar</button>
+      <div style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:.3px">✅ Tarefas de hoje</div>
       </div>
       <div id="d-tasks"></div>
     </div>
@@ -2264,6 +2272,83 @@ function spark(canvas,vals,color){
 // RENDERS
 // ══════════════════════════════════════════════════════
 const A = {
+  _DRUG_DB:[
+    // ── COMBINAÇÕES GRAVES ──────────────────────────────────────────────
+    {drugs:['anticolinérgico','biperideno','prometazina','oxibutinina','escopolamina'],
+     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','lorazepam','midazolam'],
+     effect:'Risco elevado de delirium, confusão mental e queda. Efeito anticolinérgico somado ao sedativo pode comprometer gravemente a cognição em idosos.',severity:'grave',symptomLinks:['confusão','esquecimento','delirium','queda','agitação']},
+
+    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno','indometacina'],
+     pair:['corticoide','prednisona','dexametasona','prednisolona','hidrocortisona'],
+     effect:'Risco grave de sangramento gastrointestinal. A combinação de AINE com corticoide multiplica o risco de úlcera e hemorragia digestiva.',severity:'grave',symptomLinks:['dor abdominal','vômito','sangramento']},
+
+    {drugs:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','cetoprofeno'],
+     pair:['losartana','enalapril','captopril','ramipril','lisinopril','valsartana','irbesartana'],
+     effect:'Risco de deterioração da função renal e redução do efeito anti-hipertensivo. AINEs bloqueiam prostaglandinas renais vasodilatadoras, agravando a pressão e sobrecarregando os rins.',severity:'grave',symptomLinks:['inchaço','pressão','tontura','redução urinária']},
+
+    {drugs:['varfarina','warfarin'],
+     pair:['aine','ibuprofeno','naproxeno','meloxicam','diclofenaco','aas','aspirina'],
+     effect:'Risco grave de sangramento. A combinação aumenta significativamente o efeito anticoagulante e o risco de hemorragia interna.',severity:'grave',symptomLinks:['sangramento','hematoma','dor abdominal']},
+
+    {drugs:['digoxina','digitálico'],
+     pair:['furosemida','hidroclorotiazida','espironolactona','amilorida'],
+     effect:'Diuréticos podem causar hipocalemia (queda de potássio), que aumenta o risco de toxicidade pela digoxina — arritmias, náuseas e visão borrada.',severity:'grave',symptomLinks:['tontura','palpitação','náusea','visão borrada','arritmia']},
+
+    {drugs:['metformina','glibenclamida','glicazida','insulina','glipizida'],
+     pair:['enalapril','captopril','lisinopril','ramipril'],
+     effect:'IECA podem potencializar o efeito hipoglicemiante. Risco aumentado de hipoglicemia, especialmente em idosos que não reconhecem os sintomas precocemente.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor','fraqueza']},
+
+    {drugs:['relaxante muscular','ciclobenzaprina','carisoprodol','metaxalona'],
+     pair:['benzodiazepínico','clonazepam','diazepam','alprazolam','opioides','codeína','tramadol','morfina'],
+     effect:'Combinação de depressores do sistema nervoso central. Risco elevado de sedação excessiva, queda e depressão respiratória em idosos.',severity:'grave',symptomLinks:['queda','sonolência','confusão','fraqueza']},
+
+    // ── COMBINAÇÕES MODERADAS ───────────────────────────────────────────
+    {drugs:['furosemida','hidroclorotiazida','clortalidona'],
+     pair:['losartana','enalapril','captopril','ramipril','valsartana'],
+     effect:'Combinação pode causar hipotensão, tontura e quedas, especialmente ao levantar. Monitorar pressão arterial e sinais de desidratação.',severity:'moderada',symptomLinks:['tontura','queda','fraqueza','hipotensão']},
+
+    {drugs:['furosemida','hidroclorotiazida'],
+     pair:['furosemida','hidroclorotiazida','espironolactona'],
+     effect:'Uso de dois diuréticos simultaneamente aumenta o risco de desidratação, desequilíbrio de eletrólitos e hipotensão.',severity:'moderada',symptomLinks:['tontura','câimbra','fraqueza','confusão']},
+
+    {drugs:['betabloqueador','atenolol','propranolol','metoprolol','carvedilol'],
+     pair:['diltiazem','verapamil'],
+     effect:'Risco de bradicardia e bloqueio cardíaco. A combinação pode reduzir excessivamente a frequência cardíaca.',severity:'moderada',symptomLinks:['palpitação','tontura','fadiga','desmaio']},
+
+    {drugs:['inibidor de bomba','omeprazol','pantoprazol','lansoprazol','esomeprazol'],
+     pair:['clopidogrel'],
+     effect:'Omeprazol e pantoprazol reduzem a ativação do clopidogrel, diminuindo sua eficácia como antiagregante plaquetário.',severity:'moderada',symptomLinks:[]},
+
+    {drugs:['estatina','sinvastatina','atorvastatina','rosuvastatina','lovastatina'],
+     pair:['diltiazem','verapamil','amiodarona','fluconazol','cetoconazol'],
+     effect:'Inibidores do citocromo P450 aumentam os níveis plasmáticos das estatinas, elevando o risco de miopatia e rabdomiólise.',severity:'moderada',symptomLinks:['dor muscular','fraqueza','câimbra']},
+
+    {drugs:['lítio'],
+     pair:['aine','ibuprofeno','naproxeno','furosemida','hidroclorotiazida','enalapril'],
+     effect:'AINEs e diuréticos elevam os níveis de lítio no sangue, podendo causar toxicidade — tremor, confusão e disfunção renal.',severity:'grave',symptomLinks:['tremor','confusão','náusea']},
+
+    {drugs:['ssri','sertralina','fluoxetina','paroxetina','escitalopram','citalopram'],
+     pair:['tramadol','linezolida','triptano'],
+     effect:'Risco de síndrome serotoninérgica — agitação, tremor, febre alta e confusão. Pode ser grave e requerer atenção médica imediata.',severity:'grave',symptomLinks:['agitação','tremor','confusão','febre']},
+
+    {drugs:['amiodarona'],
+     pair:['varfarina','warfarin'],
+     effect:'Amiodarona inibe o metabolismo da varfarina, aumentando muito o efeito anticoagulante e o risco de sangramento.',severity:'grave',symptomLinks:['sangramento','hematoma']},
+
+    // ── MEDICAMENTO ISOLADO DE RISCO EM IDOSOS ──────────────────────────
+    {drugs:['glibenclamida'],
+     pair:[],
+     effect:'Glibenclamida tem meia-vida prolongada em idosos e causa hipoglicemia grave e prolongada. Critérios de Beers e CBMPI recomendam evitar em idosos — preferir glicazida ou glipizida.',severity:'grave',symptomLinks:['tontura','suor','confusão','tremor']},
+
+    {drugs:['prometazina','difenidramina','hidroxizina'],
+     pair:[],
+     effect:'Antihistamínicos de 1ª geração têm efeito anticolinérgico pronunciado em idosos: causam confusão, sedação excessiva e hipotensão ortostática. Devem ser evitados.',severity:'grave',symptomLinks:['confusão','tontura','sonolência','queda']},
+
+    {drugs:['nitrofurantoína'],
+     pair:[],
+     effect:'Em idosos com função renal reduzida, nitrofurantoína pode se acumular e causar toxicidade pulmonar e neurológica. Deve ser usada com cautela e monitoramento.',severity:'moderada',symptomLinks:['falta de ar','fraqueza']},
+  ],
+
   // ── ADMIN ─────────────────────────────────────────
   renderAdmin(){
     // Stats
@@ -2743,13 +2828,9 @@ const A = {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>Pacientes
         </button>
         <div style="display:flex;align-items:center;gap:8px">
-          <button style="background:var(--amber);border:none;color:#fff;padding:7px 13px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(212,136,92,.4)" id="dh-meu-doutor">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="13" height="13">
-              <defs><linearGradient id="dhml" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.9)"/><stop offset="100%" stop-color="rgba(255,255,255,0.6)"/></linearGradient></defs>
-              <path d="M10,10 C10,4 6,1 2,0 C4,3 4,7 6,9.5 C8,12 9,13.5 10,14 Z" fill="url(#dhml)"/>
-              <path d="M10,10 C10,4 14,1 18,0 C16,3 16,7 14,9.5 C12,12 11,13.5 10,14 Z" fill="rgba(255,255,255,0.55)"/>
-              <circle cx="10" cy="9.5" r="3.2" fill="rgba(255,255,255,0.9)"/>
-            </svg>Meu Doutor
+          
+          <button style="background:var(--amber);border:none;color:#fff;padding:7px 12px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(212,136,92,.4)" id="dh-meu-doutor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Meu Doutor
           </button>
           <button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 11px;border-radius:16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;display:flex;align-items:center;gap:5px" id="dh-perfil-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil
@@ -2772,7 +2853,7 @@ const A = {
         </div>
       </div>`;
     document.getElementById('dh-back').addEventListener('click',()=>go('s-patients'));
-    document.getElementById('dh-meu-doutor').addEventListener('click',()=>{renderMeuDoutor().then(()=>go('s-meu-doutor'));});
+    document.getElementById('dh-meu-doutor')?.addEventListener('click',()=>{renderMeuDoutor();go('s-meu-doutor');});
     document.getElementById('dh-perfil-btn').addEventListener('click',()=>{A.renderProf();go('s-prof');});
     document.getElementById('dh-status-btn').addEventListener('click',()=>A.openStatusModal(status,p));
 
@@ -2805,7 +2886,7 @@ const A = {
       ah+=`<div class="alrt aar"><span style="font-size:17px">${TE[e.type]||'⚠️'}</span><div><div style="font-size:12px;font-weight:600;color:var(--red)">${e.type}</div><div style="font-size:11px;color:var(--tm)">${fmt(e.date)} · ${e.desc.slice(0,55)}…</div></div></div>`;
     });
     if(!ah) ah=`<div class="alrt aag"><span style="font-size:17px">✅</span><div><div style="font-size:12px;font-weight:600;color:var(--grn)">Sem alertas</div><div style="font-size:11px;color:var(--tm)">Nenhum evento ou sinal crítico</div></div></div>`;
-    document.getElementById('d-alerts').innerHTML=ah;
+    document.getElementById('d-alerts').innerHTML='';
     document.getElementById('d-meds-alert')?.addEventListener('click',()=>{A.renderTL();go('s-tl');});
 
     // Render infographic (replaces VS strip + risk grid + ações rápidas)
@@ -3046,13 +3127,1057 @@ const A = {
     });
   },
 
+
+  _scoreBox(){return`<div style="padding:12px 14px;background:var(--warm);border-radius:var(--rs);margin:16px 0">
+    <div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px">Pontuação atual</div>
+    <div style="background:var(--border);border-radius:10px;height:8px;overflow:hidden;margin-bottom:6px"><div id="as-score-bar" style="height:100%;border-radius:10px;width:0%;background:var(--grn);transition:all .35s"></div></div>
+    <div id="as-score-label" style="font-size:12px;color:var(--tm);font-weight:600">—</div>
+  </div>`;},
+
+  _saveAssess(){
+    const p=DB.p;if(!p)return;
+    const {type,result,score}=A._assessCtx;
+    const labels={morse:'Risco de queda',mna:'Nutrição',barthel:'Funcional',hydration:'Hidratação',pain:'Dor'};
+    const keys={morse:'rF',mna:'rN',barthel:'rFunc',hydration:'rHyd',pain:'rPain'};
+    if(keys[type]) p[keys[type]]=result;
+    const scoreStr=score!==undefined?` (${score} pts)`:'';
+    p.events.unshift({id:Date.now(),date:today(),type:'Avaliação — '+labels[type],grav:'Leve',
+      desc:`${labels[type]}${scoreStr}: Risco ${result}. Avaliado por Ana Oliveira.`,author:'Ana Oliveira'});
+    saveDB();
+    toast(`✓ Avaliação salva — Risco ${result}`);
+    setTimeout(()=>{A.renderDash();go('s-dash');},900);
+  },
+
+  _morseFrm(){return`<div style="padding:14px 20px 20px">
+    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Escala de Morse — avaliação mensal ou após queda</div>
+    ${A._scoreBox()}
+    <div class="asec">1. Histórico de quedas</div>
+    <div class="aopt sel" data-g="m1" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m1" data-pts="25"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">25 pontos</div></div></div>
+    <div class="asec">2. Diagnóstico secundário</div>
+    <div class="aopt sel" data-g="m2" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m2" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">15 pontos</div></div></div>
+    <div class="asec">3. Auxílio para deambulação</div>
+    <div class="aopt sel" data-g="m3" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Nenhum / repouso no leito / cadeira de rodas</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m3" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Muleta, bengala ou andador</div><div class="aopt-sub">15 pontos</div></div></div>
+    <div class="aopt" data-g="m3" data-pts="30"><div class="aopt-dot"></div><div><div class="aopt-main">Apoia-se em móveis ou paredes</div><div class="aopt-sub">30 pontos</div></div></div>
+    <div class="asec">4. Acesso venoso / heparina</div>
+    <div class="aopt sel" data-g="m4" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m4" data-pts="20"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">20 pontos</div></div></div>
+    <div class="asec">5. Marcha / transferência</div>
+    <div class="aopt sel" data-g="m5" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Normal / acamado / imóvel</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m5" data-pts="10"><div class="aopt-dot"></div><div><div class="aopt-main">Fraca / lenta</div><div class="aopt-sub">10 pontos</div></div></div>
+    <div class="aopt" data-g="m5" data-pts="20"><div class="aopt-dot"></div><div><div class="aopt-main">Comprometida / irregular / cambaleante</div><div class="aopt-sub">20 pontos</div></div></div>
+    <div class="asec">6. Estado mental</div>
+    <div class="aopt sel" data-g="m6" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Orientado quanto às suas capacidades</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="m6" data-pts="15"><div class="aopt-dot"></div><div><div class="aopt-main">Superestima capacidades / esquece limitações</div><div class="aopt-sub">15 pontos</div></div></div>
+    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
+  </div>`;},
+
+  _mnaFrm(){return`<div style="padding:14px 20px 20px">
+    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">MNA simplificado — 6 perguntas, recomendado diariamente</div>
+    ${A._scoreBox()}
+    <div class="asec">1. Apetite / ingestão alimentar</div>
+    <div class="aopt" data-g="n1" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Perda grave de apetite</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="n1" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Perda moderada de apetite</div><div class="aopt-sub">1 ponto</div></div></div>
+    <div class="aopt sel" data-g="n1" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sem perda de apetite</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="asec">2. Perda de peso recente (3 meses)</div>
+    <div class="aopt" data-g="n2" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Mais de 3 kg</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="n2" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Não sabe informar</div><div class="aopt-sub">1 ponto</div></div></div>
+    <div class="aopt" data-g="n2" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Entre 1 e 3 kg</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="aopt sel" data-g="n2" data-pts="3"><div class="aopt-dot"></div><div><div class="aopt-main">Sem perda de peso</div><div class="aopt-sub">3 pontos</div></div></div>
+    <div class="asec">3. Mobilidade</div>
+    <div class="aopt" data-g="n3" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Acamado ou na cadeira de rodas</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="n3" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Levanta, mas sai pouco de casa</div><div class="aopt-sub">1 ponto</div></div></div>
+    <div class="aopt sel" data-g="n3" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sai de casa normalmente</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="asec">4. Estresse psicológico ou doença aguda</div>
+    <div class="aopt" data-g="n4" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Sim</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt sel" data-g="n4" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Não</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="asec">5. Problemas neuropsicológicos</div>
+    <div class="aopt" data-g="n5" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">Demência grave ou depressão</div><div class="aopt-sub">0 pontos</div></div></div>
+    <div class="aopt" data-g="n5" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">Demência leve</div><div class="aopt-sub">1 ponto</div></div></div>
+    <div class="aopt sel" data-g="n5" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">Sem problema neurológico</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="asec">6. IMC ou circunferência da panturrilha</div>
+    <div class="aopt" data-g="n6" data-pts="0"><div class="aopt-dot"></div><div><div class="aopt-main">IMC < 19 ou panturrilha < 31 cm</div><div class="aopt-sub">0 pontos — desnutrição</div></div></div>
+    <div class="aopt" data-g="n6" data-pts="1"><div class="aopt-dot"></div><div><div class="aopt-main">IMC 19–21</div><div class="aopt-sub">1 ponto</div></div></div>
+    <div class="aopt" data-g="n6" data-pts="2"><div class="aopt-dot"></div><div><div class="aopt-main">IMC 21–23</div><div class="aopt-sub">2 pontos</div></div></div>
+    <div class="aopt sel" data-g="n6" data-pts="3"><div class="aopt-dot"></div><div><div class="aopt-main">IMC ≥ 23</div><div class="aopt-sub">3 pontos</div></div></div>
+    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
+  </div>`;},
+
+  _barthelFrm(){
+    const items=[
+      {g:'b1',label:'Alimentação',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Totalmente dependente',p:0}]},
+      {g:'b2',label:'Banho',opts:[{t:'Independente',p:5},{t:'Dependente',p:0}]},
+      {g:'b3',label:'Higiene pessoal',opts:[{t:'Independente',p:5},{t:'Precisa de ajuda',p:0}]},
+      {g:'b4',label:'Vestuário',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Dependente',p:0}]},
+      {g:'b5',label:'Controle intestinal',opts:[{t:'Continente',p:10},{t:'Incontinência ocasional',p:5},{t:'Incontinente',p:0}]},
+      {g:'b6',label:'Controle urinário',opts:[{t:'Continente',p:10},{t:'Incontinência ocasional',p:5},{t:'Incontinente',p:0}]},
+      {g:'b7',label:'Uso do banheiro',opts:[{t:'Independente',p:10},{t:'Precisa de ajuda',p:5},{t:'Dependente',p:0}]},
+      {g:'b8',label:'Transferência cama/cadeira',opts:[{t:'Independente',p:15},{t:'Supervisão mínima',p:10},{t:'Grande ajuda',p:5},{t:'Dependente',p:0}]},
+      {g:'b9',label:'Deambulação',opts:[{t:'Independente ≥50m',p:15},{t:'Com auxílio ≥50m',p:10},{t:'Cadeira de rodas independente',p:5},{t:'Imóvel',p:0}]},
+      {g:'b10',label:'Escadas',opts:[{t:'Independente',p:10},{t:'Com ajuda',p:5},{t:'Incapaz',p:0}]},
+    ];
+    return`<div style="padding:14px 20px 20px">
+      <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Índice de Barthel — avaliação trimestral ou após evento</div>
+      ${A._scoreBox()}
+      ${items.map(item=>`
+        <div class="asec">${item.label}</div>
+        ${item.opts.map((o,i)=>`<div class="aopt ${i===0?'sel':''}" data-g="${item.g}" data-pts="${o.p}"><div class="aopt-dot"></div><div><div class="aopt-main">${o.t}</div><div class="aopt-sub">${o.p} pontos</div></div></div>`).join('')}
+      `).join('')}
+      <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
+    </div>`;
+  },
+
+  _hydrationFrm(){return`<div style="padding:14px 20px 20px">
+    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Monitoramento diário — 3 perguntas rápidas</div>
+    <div style="background:var(--bl);border-radius:var(--rs);padding:11px 13px;margin-bottom:16px;font-size:12px;color:var(--blue);line-height:1.5">💡 Idosos devem ingerir ao menos <strong>1.500 ml</strong> por dia independente de sentir sede. Sinais de desidratação surgem antes da sede.</div>
+    ${A._scoreBox()}
+
+    <div class="asec">1. O paciente bebeu bem hoje?</div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div class="aopt" data-g="hq1" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">😟</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Pouco ou nada</div>
+        <div class="aopt-sub">Menos de 500 ml</div>
+      </div>
+      <div class="aopt" data-g="hq1" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">😐</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Parcialmente</div>
+        <div class="aopt-sub">500–1.000 ml</div>
+      </div>
+      <div class="aopt sel" data-g="hq1" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">😊</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Bem</div>
+        <div class="aopt-sub">Mais de 1.000 ml</div>
+      </div>
+    </div>
+
+    <div class="asec">2. A urina está com cor normal?</div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div class="aopt" data-g="hq2" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">🔴</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Escura ou ausente</div>
+        <div class="aopt-sub">Sinal de alerta</div>
+      </div>
+      <div class="aopt" data-g="hq2" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">🟡</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Amarela escura</div>
+        <div class="aopt-sub">Hidratação baixa</div>
+      </div>
+      <div class="aopt sel" data-g="hq2" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">🟢</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Clara / palha</div>
+        <div class="aopt-sub">Adequada</div>
+      </div>
+    </div>
+
+    <div class="asec">3. Lábios e mucosa estão úmidos?</div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div class="aopt" data-g="hq3" data-pts="0" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">🌵</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Secos e rachados</div>
+        <div class="aopt-sub">Sinal visível</div>
+      </div>
+      <div class="aopt" data-g="hq3" data-pts="1" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">😶</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Leve ressecamento</div>
+        <div class="aopt-sub">Observar</div>
+      </div>
+      <div class="aopt sel" data-g="hq3" data-pts="2" style="flex:1;flex-direction:column;align-items:center;text-align:center;padding:14px 8px">
+        <div style="font-size:26px;margin-bottom:4px">✅</div>
+        <div class="aopt-dot" style="margin:0 auto 4px"></div>
+        <div class="aopt-main">Úmidos, normais</div>
+        <div class="aopt-sub">Adequado</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
+  </div>`;},
+
+  _painFrm(){return`<div style="padding:14px 20px 20px">
+    <div style="font-size:12px;color:var(--tmu);margin-bottom:4px">Escala de dor — pode ser avaliada diariamente</div>
+    ${A._scoreBox()}
+    <div class="asec">Intensidade da dor agora</div>
+    <div style="text-align:center;margin:20px 0 8px">
+      <div id="pain-emoji" style="font-size:56px;margin-bottom:10px">😶</div>
+      <div id="pain-num" style="font-size:32px;font-weight:700;color:var(--text);font-family:'Lora',serif">0</div>
+      <div id="pain-desc" style="font-size:13px;color:var(--tmu);margin-top:4px">Sem dor</div>
+    </div>
+    <input type="range" id="pain-range" min="0" max="10" value="0" style="width:100%;accent-color:var(--sage);margin-bottom:8px"/>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tmu);margin-bottom:18px"><span>Sem dor</span><span>Dor máxima</span></div>
+    <div class="asec">Localização (opcional)</div>
+    <div class="fg"><input class="fi" id="pain-loc" placeholder="Ex: joelho esquerdo, costas..."/></div>
+    <div class="asec">Característica (opcional)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+      ${['Queimação','Pontada','Latejamento','Pressão','Formigamento','Câimbra'].map(t=>`<div class="fc off" style="cursor:pointer" onclick="this.classList.toggle('on')">${t}</div>`).join('')}
+    </div>
+    <div style="margin-top:8px;padding-bottom:20px"><button class="btn bp" onclick="A._saveAssess()">✓ Salvar avaliação</button></div>
+  </div>`;},
+
+  renderMedsChecklist(containerId, modalId){
+    const p=DB.p;if(!p)return;
+    const d=today();
+    const sched=p.medSchedule||[];
+    if(!sched.length){document.getElementById(containerId).innerHTML='';return;}
+    const allItems=[];
+    sched.forEach(m=>m.times.forEach(t=>{allItems.push({med:m,time:t,log:getMedLog(p,d,m.name,t)});}));
+    allItems.sort((a,b)=>a.time.localeCompare(b.time));
+    const pend=allItems.filter(x=>!x.log).length;
+    const now=nowTime();
+    let html=`<div style="background:var(--W);border-radius:var(--r);padding:13px 14px;border:1px solid var(--border);box-shadow:var(--sh)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">💊 Medicações de hoje</div>
+        <div style="font-size:11px;color:${pend===0?'var(--grn)':'var(--yel)'};font-weight:700">${pend===0?'✓ Todas administradas':`${pend} pendente${pend>1?'s':''}`}</div>
+      </div>`;
+    allItems.forEach(({med,time,log})=>{
+      const isPast=time<=now,isOverdue=isPast&&!log,isDone=!!log;
+      const cls=isDone?'done':isOverdue?'overdue':'';
+      html+=`<div class="mci ${cls}" data-mn="${med.name}" data-mt="${time}" data-modal="${modalId}">
+        <div class="mci-check">${isDone?'✓':''}</div>
+        <div style="flex:1">
+          <div class="mci-name">${med.name}</div>
+          <div class="mci-meta">${isDone?`${log.doseGiven} ${med.unit} · ${log.author}${log.altered?' <span style="color:var(--yel);font-weight:700">⚠ dose alterada</span>':''}`:med.dose+' '+med.unit}</div>
+        </div>
+        <div class="mci-time">${time}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+    document.getElementById(containerId).innerHTML=html;
+    document.querySelectorAll(`[data-modal="${modalId}"]:not(.done)`).forEach(el=>{
+      el.addEventListener('click',()=>{
+        const mn=el.dataset.mn,mt=el.dataset.mt;
+        const m=p.medSchedule.find(x=>x.name===mn);if(!m)return;
+        A.openDoseModal(m,mt,modalId);
+      });
+    });
+  },
+
+  openDoseModal(med,time,modalId){
+    A._dCtx={med,time,modalId};
+    const pre=modalId==='dose-modal'?'dm-':'dm2-';
+    const nalertId=modalId==='dose-modal'?'net-alert':'net-alert-2';
+    const nreciId=modalId==='dose-modal'?'net-recipients':'net-recipients-2';
+
+    document.getElementById(pre+'title').textContent=`Confirmar — ${med.name}`;
+    document.getElementById(pre+'sub').textContent=`Horário prescrito: ${time}`;
+    document.getElementById(pre+'name').textContent=med.name;
+    document.getElementById(pre+'prescribed').textContent=`Dose prescrita: ${med.dose} ${med.unit}`;
+    document.getElementById(pre+'val').value=med.dose;
+    document.getElementById(pre+'unit').textContent=med.unit;
+
+    // Check if administering more than 1h before scheduled time
+    const now=nowTime();
+    const [sh,sm]=time.split(':').map(Number);
+    const [nh,nm]=now.split(':').map(Number);
+    const diffMin=(sh*60+sm)-(nh*60+nm);
+    const earlyAlert=diffMin>60; // more than 1h early
+
+    const nalert=document.getElementById(nalertId);
+    const p=DB.p;
+    if(earlyAlert){
+      nalert.querySelector('.net-alert-title').textContent='⚠ Administração antecipada';
+      nalert.querySelector('.net-alert-body').textContent=`Este medicamento está sendo administrado mais de 1 hora antes do horário prescrito (${time}). Esta informação será comunicada à rede de apoio do paciente.`;
+      if(p) document.getElementById(nreciId).innerHTML=(p.suporte||[]).map(s=>`<div class="net-tag">👤 ${s}</div>`).join('');
+      nalert.classList.add('show');
+    } else {
+      nalert.querySelector('.net-alert-title').textContent='⚠ Dose diferente da prescrição';
+      nalert.querySelector('.net-alert-body').textContent='A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.';
+      nalert.classList.remove('show');
+    }
+
+    // Store early flag in context
+    A._dCtx.earlyAdmin=earlyAlert;
+    document.getElementById(modalId).classList.add('show');
+  },
+
+  calcDrugInteractions(p){
+    const sched=p.medSchedule||[];
+    if(!sched.length) return[];
+
+    // Normaliza nomes para comparação case-insensitive
+    const normalize=n=>n.toLowerCase().trim();
+    const names=sched.map(m=>normalize(m.name));
+
+    // Palavras-chave de eventos recentes (últimos 60 dias)
+    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-60);
+    const cutoffStr=cutoff.toISOString().slice(0,10);
+    const recentEventText=p.events
+      .filter(e=>e.date>=cutoffStr)
+      .map(e=>((e.desc||'')+(e.type||'')+(e.socialNote||'')).toLowerCase())
+      .join(' ');
+
+    const alerts=[];
+
+    A._DRUG_DB.forEach(rule=>{
+      const rDrugs=rule.drugs.map(normalize);
+      const rPair=rule.pair.map(normalize);
+
+      // Verificar se algum medicamento do paciente bate com os drugs da regra
+      const matchedDrug=names.find(n=>rDrugs.some(d=>n.includes(d)||d.includes(n)));
+      if(!matchedDrug) return;
+
+      if(rPair.length===0){
+        // Medicamento isolado de risco
+        const medName=sched.find(m=>normalize(m.name).includes(matchedDrug)||matchedDrug.includes(normalize(m.name)))?.name||matchedDrug;
+        const symptomMatch=rule.symptomLinks.some(s=>recentEventText.includes(s));
+        alerts.push({
+          type:'single',
+          med:medName,
+          effect:rule.effect,
+          severity:rule.severity,
+          symptomMatch,
+          key:medName
+        });
+        return;
+      }
+
+      // Verificar se há um segundo medicamento que bate com pair
+      const matchedPair=names.find(n=>rPair.some(d=>n.includes(d)||d.includes(n)));
+      if(!matchedPair) return;
+
+      const med1=sched.find(m=>normalize(m.name).includes(matchedDrug)||matchedDrug.includes(normalize(m.name)))?.name||matchedDrug;
+      const med2=sched.find(m=>normalize(m.name).includes(matchedPair)||matchedPair.includes(normalize(m.name)))?.name||matchedPair;
+      if(med1===med2) return; // mesmo med, ignorar
+
+      const symptomMatch=rule.symptomLinks.some(s=>recentEventText.includes(s));
+      alerts.push({
+        type:'pair',
+        med:med1,
+        med2,
+        effect:rule.effect,
+        severity:rule.severity,
+        symptomMatch,
+        key:`${med1}+${med2}`
+      });
+    });
+
+    // Deduplicar por key
+    const seen=new Set();
+    return alerts.filter(a=>{if(seen.has(a.key))return false;seen.add(a.key);return true;})
+      .sort((a,b)=>(b.severity==='grave'?1:0)-(a.severity==='grave'?1:0));
+  },
+
+
+  _updateAssessScore(){
+    const c=document.getElementById('as-content');
+    const sb=document.getElementById('as-score-bar');
+    const sl=document.getElementById('as-score-label');
+    if(!sb||!sl) return;
+    const {type}=A._assessCtx;
+    if(type==='morse'){
+      // Morse: sum points from selected options
+      let score=0;
+      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
+      const risk=score<25?'Baixo':score<45?'Moderado':'Alto';
+      const pct=Math.min(100,Math.round(score/125*100));
+      sb.style.width=pct+'%';
+      sb.style.background=score<25?'var(--grn)':score<45?'var(--yel)':'var(--red)';
+      sl.textContent=`Pontuação: ${score} — Risco ${risk}`;
+      A._assessCtx.score=score; A._assessCtx.result=risk;
+    } else if(type==='mna'){
+      let score=0;
+      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
+      const risk=score>=12?'Baixo':score>=8?'Moderado':'Alto';
+      const pct=Math.round(score/14*100);
+      sb.style.width=pct+'%';
+      sb.style.background=score>=12?'var(--grn)':score>=8?'var(--yel)':'var(--red)';
+      sl.textContent=`Pontuação: ${score}/14 — ${score>=12?'Nutrição adequada':score>=8?'Risco moderado':'Alto risco nutricional'}`;
+      A._assessCtx.score=score; A._assessCtx.result=risk;
+    } else if(type==='barthel'){
+      let score=0;
+      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
+      const risk=score>=85?'Baixo':score>=60?'Moderado':'Alto';
+      const pct=Math.round(score/100*100);
+      sb.style.width=pct+'%';
+      sb.style.background=score>=85?'var(--grn)':score>=60?'var(--yel)':'var(--red)';
+      sl.textContent=`Barthel: ${score}/100 — ${score>=85?'Independente':score>=60?'Dependência moderada':'Dependência severa'}`;
+      A._assessCtx.score=score; A._assessCtx.result=risk;
+    } else if(type==='hydration'){
+      // 3 questions × max 2 pts each = 6 total
+      let score=0;
+      c.querySelectorAll('.aopt.sel').forEach(el=>{ score+=parseInt(el.dataset.pts||0); });
+      const risk=score>=5?'Baixo':score>=3?'Moderado':'Alto';
+      const pct=Math.round(score/6*100);
+      sb.style.width=pct+'%';
+      sb.style.background=score>=5?'var(--grn)':score>=3?'var(--yel)':'var(--red)';
+      sl.textContent=`Hidratação — ${score}/6 pts · Risco ${risk}`;
+      A._assessCtx.score=score; A._assessCtx.result=risk;
+    } else if(type==='pain'){
+      const v=parseInt(document.getElementById('pain-range')?.value||0);
+      const risk=v<=2?'Baixo':v<=5?'Moderado':'Alto';
+      const pct=v/10*100;
+      sb.style.width=pct+'%';
+      sb.style.background=v<=2?'var(--grn)':v<=5?'var(--yel)':'var(--red)';
+      sl.textContent=`Dor: ${v}/10 — ${v===0?'Sem dor':risk}`;
+      A._assessCtx.score=v; A._assessCtx.result=risk;
+    }
+  },
+
+  closeDoseModal(modalId){
+    document.getElementById(modalId).classList.remove('show');
+    A._dCtx=null;
+  },
+
+  confirmDose(modalId){
+    const ctx=A._dCtx;if(!ctx)return;
+    const p=DB.p;if(!p)return;
+    const {med,time,earlyAdmin}=ctx;
+    const pre=modalId==='dose-modal'?'dm-':'dm2-';
+    const doseGiven=(document.getElementById(pre+'val').value||med.dose).trim();
+    const altered=doseGiven!==med.dose;
+    const isNetworkAlert=altered||earlyAdmin;
+    const author='Ana Oliveira';
+    const d=today();
+    if(!p.medLog[d])p.medLog[d]={};
+    p.medLog[d][medKey(med.name,time)]={medName:med.name,time,doseGiven,unit:med.unit,prescribed:med.dose,altered,earlyAdmin:!!earlyAdmin,author,date:d};
+
+    // Build timeline event description
+    let desc=`${med.name} ${med.dose} ${med.unit} administrado`;
+    if(earlyAdmin&&altered) desc+=`. ⚠ Dose administrada: ${doseGiven} ${med.unit} (diferente da prescrita). Administração mais de 1h antes do horário (${time}). Rede de apoio notificada.`;
+    else if(earlyAdmin) desc+=`. ⚠ Administrado mais de 1h antes do horário prescrito (${time}). Rede de apoio notificada.`;
+    else if(altered) desc+=`. Dose prescrita: ${med.dose} ${med.unit}. Dose administrada: ${doseGiven} ${med.unit}. ⚠ Rede de apoio notificada sobre a alteração de dose.`;
+    else desc+=` conforme prescrição.`;
+
+    p.events.unshift({id:Date.now(),date:d,type:'Administração de medicamento',grav:'Leve',desc,author,isNetworkAlert});
+    A.closeDoseModal(modalId);
+    saveDB();
+
+    // Toast
+    let msg;
+    if(earlyAdmin&&altered) msg=`⚠ Dose alterada e horário antecipado registrados. Rede notificada.`;
+    else if(earlyAdmin) msg=`⚠ Horário antecipado registrado. Rede de apoio será notificada.`;
+    else if(altered) msg=`⚠ Dose alterada registrada. Rede de apoio será notificada.`;
+    else msg=`✓ ${med.name} ${med.dose} ${med.unit} administrado!`;
+    toast(msg,3500);
+
+    if(modalId==='dose-modal'){A.renderTL();}
+    else{A.renderMeds();}
+    A.renderDash();
+  },
+
+  openAssess(type){
+    document.getElementById('as-cancel').onclick=()=>go('s-dash');
+    const titles={morse:'🦯 Risco de queda — Morse',mna:'🥗 Avaliação nutricional — MNA',barthel:'🙋 Funcionalidade — Barthel',hydration:'💧 Hidratação diária',pain:'😣 Avaliação de dor'};
+    document.getElementById('as-title').textContent=titles[type]||'Avaliação';
+    A._assessCtx={type};
+    const c=document.getElementById('as-content');
+    if(type==='morse') c.innerHTML=A._morseFrm();
+    else if(type==='mna') c.innerHTML=A._mnaFrm();
+    else if(type==='barthel') c.innerHTML=A._barthelFrm();
+    else if(type==='hydration') c.innerHTML=A._hydrationFrm();
+    else if(type==='pain') c.innerHTML=A._painFrm();
+    // Wire radio options
+    c.querySelectorAll('.aopt,.dopt').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const g=el.dataset.g;
+        c.querySelectorAll(`.aopt[data-g="${g}"],.dopt[data-g="${g}"]`).forEach(o=>{
+          o.classList.remove('sel','sel0','sel1','sel2');
+        });
+        if(el.classList.contains('aopt')){el.classList.add('sel');}
+        else{el.classList.add('sel'+el.dataset.v);}
+        A._updateAssessScore();
+      });
+    });
+    A._updateAssessScore();
+    c.querySelectorAll('input[type=range]').forEach(r=>r.addEventListener('input',A._updateAssessScore));
+    c.querySelectorAll('input[type=number]').forEach(r=>r.addEventListener('input',A._updateAssessScore));
+    go('s-assess');
+  },
+
+  openNewEvent(){
+    const p=DB.p;if(!p)return;
+    document.getElementById('ne-pname').textContent=p.name;
+    document.getElementById('ne-date').value=today();
+    document.getElementById('ne-desc').value='';
+    document.getElementById('ne-social-note').value='';
+    // Reset photo
+    document.getElementById('ne-photo-preview').style.display='none';
+    document.getElementById('ne-photo-preview').src='';
+    document.getElementById('ne-photo-placeholder').style.display='flex';
+    document.getElementById('ne-photo-remove').style.display='none';
+    document.getElementById('ne-photo-input').value='';
+    DB._photoData=null;
+    DB.eGrav='Leve';DB.eType='Observação livre';
+    A.refreshGravBtns();
+    document.querySelectorAll('.etbtn').forEach(b=>b.classList.remove('sel'));
+    document.querySelector('.etbtn[data-type="Observação livre"]').classList.add('sel');
+    go('s-new-ev');
+  },
+
+  openNewVS(){
+    const p=DB.p;if(!p)return;
+    document.getElementById('nv-pname').textContent=p.name;
+    document.getElementById('nv-date').value=today();
+    document.getElementById('nv-time').value=nowTime();
+    ['nv-sis','nv-dia','nv-fc','nv-temp','nv-sat','nv-gli','nv-fr','nv-peso','nv-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    go('s-new-vs');
+  },
+
+  refreshGravBtns(){
+    document.getElementById('g-leve').className='gbtn '+(DB.eGrav==='Leve'?'gl2':'gn');
+    document.getElementById('g-mod').className='gbtn '+(DB.eGrav==='Moderada'?'gm2':'gn');
+    document.getElementById('g-alta').className='gbtn '+(DB.eGrav==='Alta'?'gh2':'gn');
+  },
+
+  renderEvalResult(label,result,rbc,icon,cat){
+    const p=DB.p;
+    if(p){
+      if(cat==='Queda')p.rF=result;if(cat==='Nutricional')p.rN=result;if(cat==='Funcional')p.rFunc=result;
+      p.events.unshift({id:Date.now(),date:today(),type:`Avaliação — ${cat}`,grav:'Leve',desc:`${label}: ${result}.`,author:'Ana Oliveira'});
+    }
+    const tips={Queda:['Instalar barras de apoio no banheiro','Retirar tapetes do chão','Iluminação noturna','Revisar medicamentos que causam tontura','Comunicar ao médico ou fisioterapeuta'],Nutricional:['Refeições menores e mais frequentes','Enriquecer alimentos com azeite','Registrar ingestão de líquidos','Consultar nutricionista','Verificar dificuldade de deglutição'],Funcional:['Adaptar ambiente para autonomia','Estimular atividades independentes','Terapeuta ocupacional','Fisioterapia regular','Registrar mudanças de dependência']};
+    const tl=tips[cat]||tips['Queda'];
+    const isGood=result==='Baixo'||result==='Baixa';
+    const c=isGood?'var(--grn)':result==='Moderado'||result==='Moderada'?'var(--yel)':'var(--red)';
+    document.getElementById('eval-r-content').innerHTML=`<div style="padding:24px 20px">
+      <div style="text-align:center;margin-bottom:22px"><div style="font-size:50px;margin-bottom:9px">${isGood?'✅':icon}</div>
+      <div style="font-size:19px;font-family:'Lora',serif;font-weight:600;color:${c}">${label}: ${result}</div>
+      <div style="font-size:12px;color:var(--tmu);margin-top:4px">Avaliado em ${fmt(today())} · Por Ana Oliveira</div></div>
+      <div class="card" style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px">Nível de risco</div><div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div class="rbar ${rbc}"><div class="rfill"></div></div></div><div style="font-size:15px;font-weight:700;color:${c}">${result}</div></div></div>
+      <div class="card" style="background:var(--al);border-color:#F0C8A0;margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px">💡 Sugestões</div><div style="font-size:12px;line-height:1.8">${tl.map(t=>'• '+t).join('<br/>')}</div></div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:14px;padding-bottom:20px">
+        <button class="btn bp" id="er-dash">Voltar ao painel</button>
+        <button class="btn bs" id="er-tl">Ver no histórico</button>
+      </div></div>`;
+    document.getElementById('er-dash').addEventListener('click',()=>{A.renderDash();go('s-dash');});
+    document.getElementById('er-tl').addEventListener('click',()=>{DB.tlFilter='Todos';A.renderTL();go('s-tl');});
+    go('s-eval-r');
+  },
+
+  renderMeds(){
+    const p=DB.p;if(!p)return;
+    document.getElementById('meds-title').textContent=p.name.split(' ')[0]+' · Medicações';
+    const d=today();const[y,m,day]=d.split('-');
+    document.getElementById('meds-date').textContent=`Hoje: ${parseInt(day)} de ${MON[parseInt(m)]} ${y}`;
+
+    // ── ADHERENCE HIGHLIGHT ──
+    const adh=A.calcAdherence(p);
+    const adhColor=adh.color||'var(--tmu)';
+    const adhBg=adh.pct===null?'var(--warm)':adh.pct>=90?'var(--gl)':adh.pct>=80?'var(--yl)':'var(--rl)';
+    const adhBorder=adh.pct===null?'var(--border)':adh.pct>=90?'var(--grn)':adh.pct>=80?'var(--yel)':'var(--red)';
+    const adhIcon=adh.pct===null?'—':adh.pct>=90?'✅':adh.pct>=80?'⚡':'⚠';
+    const adhDesc=adh.pct===null?'Sem dados suficientes (menos de 1 semana de registro)':adh.pct>=90?'Aderência excelente — paciente segue a prescrição corretamente.':adh.pct>=80?'Aderência moderada — alguns horários perdidos nos últimos 7 dias.':'Aderência baixa — vários horários não foram registrados. Verificar com o paciente.';
+    document.getElementById('meds-content').innerHTML=`
+      <div style="margin:0 20px 14px;background:${adhBg};border:1.5px solid ${adhBorder};border-radius:var(--r);padding:13px 14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:22px">${adhIcon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:${adhColor}">Aderência medicamentosa: <span>${adh.label}</span></div>
+            <div style="font-size:11px;color:var(--tm);margin-top:1px">${adh.pct!=null?adh.pct+'% nos últimos 7 dias':''}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--tm);line-height:1.5">${adhDesc}</div>
+        ${adh.pct!=null?`<div style="background:rgba(0,0,0,.08);border-radius:10px;height:6px;overflow:hidden;margin-top:8px"><div style="height:100%;border-radius:10px;background:${adhColor};width:${adh.pct}%;transition:width .4s"></div></div>`:''}
+      </div>`;
+    // Append checklist below
+    const checkWrap=document.createElement('div');
+    checkWrap.id='mci-wrap';
+    document.getElementById('meds-content').appendChild(checkWrap);
+    A.renderMedsChecklist('mci-wrap','dose-modal-meds');
+
+    // ── INTERAÇÕES MEDICAMENTOSAS ──
+    const interactions=A.calcDrugInteractions(p);
+    const intEl=document.createElement('div');
+    intEl.id='meds-interactions';
+    if(interactions.length){
+      const graves=interactions.filter(x=>x.severity==='grave');
+      const mods=interactions.filter(x=>x.severity==='moderada');
+      const headerBg=graves.length?'var(--rl)':'var(--yl)';
+      const headerBorder=graves.length?'var(--red)':'var(--yel)';
+      const headerColor=graves.length?'var(--red)':'var(--yel)';
+      const headerIcon=graves.length?'⚠️':'⚡';
+      const totalLabel=`${interactions.length} interaç${interactions.length>1?'ões':'ão'} identificada${interactions.length>1?'s':''}`;
+      intEl.innerHTML=`
+        <div style="margin:14px 20px 0">
+          <div style="background:${headerBg};border:1.5px solid ${headerBorder};border-radius:var(--r);overflow:hidden">
+            <!-- Header clicável -->
+            <div id="int-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="font-size:20px">${headerIcon}</span>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:${headerColor}">Interações medicamentosas</div>
+                  <div style="font-size:11px;color:var(--tm);margin-top:1px">${totalLabel} — toque para ver detalhes</div>
+                </div>
+              </div>
+              <span id="int-chevron" style="font-size:16px;color:var(--tmu);transition:transform .2s">›</span>
+            </div>
+            <!-- Body expansível -->
+            <div id="int-body" style="display:none;border-top:1px solid ${headerBorder}">
+              <div style="padding:6px 14px 4px;font-size:11px;color:var(--tmu);font-style:italic;line-height:1.5">
+                Baseado nos Critérios de Beers 2023, STOPP e Consenso Brasileiro (CBMPI). Estas informações são orientativas — não substituem a avaliação do médico ou farmacêutico responsável.
+              </div>
+              ${interactions.map(int=>{
+                const isGrave=int.severity==='grave';
+                const bg=isGrave?'rgba(192,84,74,.07)':'rgba(196,154,60,.07)';
+                const color=isGrave?'var(--red)':'var(--yel)';
+                const icon=isGrave?'🔴':'🟡';
+                const medLabel=int.type==='pair'?`${int.med} + ${int.med2}`:int.med;
+                const symptomBadge=int.symptomMatch?`<span style="display:inline-flex;align-items:center;gap:3px;background:var(--rl);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:5px">⚡ Sintoma registrado recentemente</span>`:'';
+                return`<div style="padding:11px 14px;border-top:1px solid rgba(0,0,0,.06);background:${bg}">
+                  <div style="display:flex;align-items:flex-start;gap:8px">
+                    <span style="font-size:15px;flex-shrink:0;margin-top:1px">${icon}</span>
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:3px;line-height:1.3">${medLabel}</div>
+                      <div style="font-size:12px;color:var(--tm);line-height:1.5">${int.effect}</div>
+                      ${symptomBadge}
+                    </div>
+                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${isGrave?'var(--rl)':'var(--yl)'};color:${color};white-space:nowrap;flex-shrink:0;margin-top:1px">${int.severity==='grave'?'Grave':'Moderada'}</span>
+                  </div>
+                </div>`;
+              }).join('')}
+              <div style="padding:11px 14px;font-size:12px;color:var(--tm);line-height:1.5;border-top:1px solid rgba(0,0,0,.06);background:rgba(0,0,0,.02)">
+                💡 <strong>O que fazer:</strong> Informe o médico ou farmacêutico responsável sobre todas as medicações em uso. Não interrompa nenhum medicamento sem orientação profissional.
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      // Toggle accordion
+      let intOpen=false;
+      intEl.querySelector('#int-header').addEventListener('click',()=>{
+        intOpen=!intOpen;
+        intEl.querySelector('#int-body').style.display=intOpen?'block':'none';
+        intEl.querySelector('#int-chevron').style.transform=intOpen?'rotate(90deg)':'rotate(0deg)';
+      });
+    } else {
+      intEl.innerHTML=`
+        <div style="margin:14px 20px 0">
+          <div style="background:var(--gl);border:1.5px solid var(--grn);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:9px">
+            <span style="font-size:18px">✅</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--grn)">Sem interações identificadas</div>
+              <div style="font-size:11px;color:var(--tm);margin-top:1px">Nenhuma combinação de risco detectada nas medicações cadastradas.</div>
+            </div>
+          </div>
+        </div>`;
+    }
+    document.getElementById('meds-content').appendChild(intEl);
+    // History
+    const all=[];
+    Object.entries(p.medLog).forEach(([date,dl])=>Object.entries(dl).forEach(([,log])=>all.push(log)));
+    all.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
+    document.getElementById('meds-hist').innerHTML=all.length===0
+      ?`<div style="padding:12px 0;color:var(--tmu);font-size:13px">Nenhuma administração registrada ainda.</div>`
+      :all.slice(0,30).map(l=>`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">💊 ${l.medName}</div>
+            <div style="font-size:11px;color:var(--tmu);margin-top:2px">${fmt(l.date)} às ${l.time} · ${l.author}</div>
+            ${l.altered?`<div style="font-size:11px;color:var(--yel);font-weight:700;margin-top:2px">⚠ Dose alterada: ${l.doseGiven} ${l.unit} (prescrita: ${l.prescribed} ${l.unit})</div>`:''}
+          </div>
+          <span class="badge ${l.altered?'bby':'bgg'}">${l.doseGiven} ${l.unit}</span>
+        </div>`).join('');
+  },
+
+  renderProf(){
+    const p=DB.p;if(!p)return;
+    document.getElementById('prof-content').innerHTML=`
+      <div style="background:var(--warm);padding:20px 20px 16px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="position:relative;flex-shrink:0">
+            ${p.photo
+              ? `<img src="${p.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--sm)"/>`
+              : `<div class="av" style="background:${p.ab};color:${p.ac};width:64px;height:64px;font-size:23px">${p.initials}</div>`
+            }
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--sage);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid var(--warm);cursor:pointer" id="prof-photo-btn">✎</div>
+            <input type="file" id="prof-photo-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;border-radius:50%"/>
+          </div>
+          <div>
+            <div style="font-size:18px;font-family:'Lora',serif;font-weight:600">${p.name}</div>
+            <div style="font-size:12px;color:var(--tmu);margin-top:1px">${p.age} anos · ${p.sex}</div>
+            <div style="margin-top:6px"><span class="badge ${GC[p.rF]||'bbmu'}">${p.rF==='Alto'?'⚠ Risco alto':p.rF==='Moderado'?'⚡ Atenção':'✓ Estável'}</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:13px 20px 0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Diagnóstico</div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:1.6">${p.diag}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Comorbidades</div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px">${p.como}</div>
+        
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">Medicações prescritas</div>
+          <button class="btn bsm" style="font-size:11px;padding:5px 10px;background:var(--sl);color:var(--sage);border:none" id="prof-add-med">+ Adicionar</button>
+        </div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px" id="prof-med-list">
+          ${(p.medSchedule||[]).length===0?'<div style="font-size:13px;color:var(--tmu)">Nenhuma medicação cadastrada.</div>':
+          (p.medSchedule||[]).map(m=>`
+            <div class="msr">
+              <div style="flex:1">
+                <div class="msr-name">${m.name} <span style="color:var(--tmu);font-weight:400;font-size:12px">${m.dose} ${m.unit}</span></div>
+                <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">${m.times.map(t=>`<span class="msr-time">${t}</span>`).join('')}</div>
+              </div>
+              <button style="background:var(--rl);border:none;color:var(--red);font-size:11px;font-weight:600;padding:4px 9px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif" data-del-med="${m.id}">Remover</button>
+            </div>`).join('')}
+        </div>
+        
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Rede de apoio</div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px">
+          ${(p.suporte||[]).map(s=>`<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text)">👤 ${s}</div>`).join('')}
+          <div style="font-size:12px;color:var(--tmu);margin-top:8px;font-style:italic">Estas pessoas serão notificadas em caso de alteração de dose ou eventos críticos.</div>
+        </div>
+        
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Dados gerais</div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px">
+          <div class="pdr"><div class="pdl">Emergência</div><div class="pdv" style="color:var(--sage)">${p.emerg}</div></div>
+          <div class="pdr" style="border:none"><div class="pdl">Eventos registrados</div><div class="pdv">${p.events.length}</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px">Observações</div>
+        <div class="card" style="padding:11px 13px;margin-bottom:12px;font-size:13px;color:var(--tm);line-height:1.6">${p.obs||'—'}</div>
+        <div style="margin-bottom:28px"><button class="btn bd" id="btn-rem">🗑 Remover paciente</button></div>
+      </div>`;
+    document.getElementById('prof-add-med').addEventListener('click',()=>document.getElementById('addmed-modal').classList.add('show'));
+    document.querySelectorAll('[data-del-med]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const mid=btn.dataset.delMed;
+        p.medSchedule=p.medSchedule.filter(m=>m.id!==mid);
+        A.renderProf();toast('Medicação removida.');
+      });
+    });
+    document.getElementById('btn-rem').addEventListener('click',()=>{
+      if(!confirm('Remover este paciente?'))return;
+      DB.patients=DB.patients.filter(x=>x.id!==DB.pid);DB.pid=null;A.renderPatList();go('s-patients');toast('Paciente removido.');
+    });
+    // Profile photo upload
+    document.getElementById('prof-photo-input').addEventListener('change',function(){
+      const file=this.files[0];if(!file)return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        p.photo=e.target.result;
+        A.renderProf(); // re-render to show new photo
+        A.renderDash(); // update dash header too
+        toast('✓ Foto atualizada!');
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  renderTL(){
+    const p=DB.p;if(!p)return;
+    document.getElementById('tl-title').textContent=p.name.split(' ')[0]+' · Timeline';
+
+    // ── COLLAPSIBLE MEDS ACCORDION ──
+    const d=today();
+    const sched=p.medSchedule||[];
+    const pend=sched.reduce((a,m)=>a+m.times.filter(t=>!getMedLog(p,d,m.name,t)).length,0);
+    const bar=document.getElementById('tl-meds-bar');
+    bar.innerHTML=`<div id="meds-accordion" style="background:var(--W);border-radius:var(--r);border:1.5px solid ${pend>0?'var(--yel)':'var(--sm)'};box-shadow:var(--sh);overflow:hidden;cursor:pointer">
+      <div id="meds-acc-header" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:18px">💊</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">Medicações de hoje</div>
+            <div style="font-size:11px;color:${pend>0?'var(--yel)':'var(--grn)'};font-weight:600;margin-top:1px">${pend>0?`${pend} pendente${pend>1?'s':''}  — toque para ver`:'✓ Todas administradas'}</div>
+          </div>
+        </div>
+        <span id="meds-acc-chevron" style="font-size:16px;color:var(--tmu);transition:transform .2s">›</span>
+      </div>
+      <div id="meds-acc-body" style="display:none;border-top:1px solid var(--border);padding:10px 14px 12px"></div>
+    </div>`;
+    // Render body content
+    if(sched.length){
+      const allItems=[];
+      sched.forEach(m=>m.times.forEach(t=>allItems.push({med:m,time:t,log:getMedLog(p,d,m.name,t)})));
+      allItems.sort((a,b)=>a.time.localeCompare(b.time));
+      const now=nowTime();
+      document.getElementById('meds-acc-body').innerHTML=allItems.map(({med,time,log})=>{
+        const isPast=time<=now,isOverdue=isPast&&!log,isDone=!!log;
+        const cls=isDone?'done':isOverdue?'overdue':'';
+        return`<div class="mci ${cls}" style="margin-bottom:6px" data-mn="${med.name}" data-mt="${time}" data-modal="dose-modal">
+          <div class="mci-check">${isDone?'✓':''}</div>
+          <div style="flex:1">
+            <div class="mci-name">${med.name}</div>
+            <div class="mci-meta">${isDone?`${log.doseGiven} ${med.unit} · ${log.author}${log.altered?' <span style="color:var(--yel);font-weight:700">⚠ dose alterada</span>':''}`:med.dose+' '+med.unit}</div>
+          </div>
+          <div class="mci-time">${time}</div>
+        </div>`;
+      }).join('');
+      document.querySelectorAll('#meds-acc-body .mci:not(.done)').forEach(el=>{
+        el.addEventListener('click',e=>{e.stopPropagation();const mn=el.dataset.mn,mt=el.dataset.mt;const m=p.medSchedule.find(x=>x.name===mn);if(m)A.openDoseModal(m,mt,'dose-modal');});
+      });
+    } else {
+      document.getElementById('meds-acc-body').innerHTML=`<div style="font-size:13px;color:var(--tmu);padding:4px 0">Nenhuma medicação cadastrada.</div>`;
+    }
+    // Toggle accordion
+    const header=document.getElementById('meds-acc-header');
+    const body=document.getElementById('meds-acc-body');
+    const chevron=document.getElementById('meds-acc-chevron');
+    let open=false;
+    header.addEventListener('click',()=>{
+      open=!open;
+      body.style.display=open?'block':'none';
+      chevron.style.transform=open?'rotate(90deg)':'rotate(0deg)';
+    });
+
+    // ── TIMELINE EVENTS ──
+    const allTypes=[...new Set(p.events.map(e=>e.type))];
+    const filters=['Todos',...allTypes];
+    const evts=DB.tlFilter==='Todos'?p.events:p.events.filter(e=>e.type===DB.tlFilter);
+    const groups={};
+    evts.forEach(e=>{const k=e.date.slice(0,7);if(!groups[k])groups[k]=[];groups[k].push(e);});
+    let html=`<div class="frow">${filters.map(f=>`<button class="fc ${DB.tlFilter===f?'on':'off'}" data-f="${f}">${f}</button>`).join('')}</div>`;
+    if(!evts.length){html+=`<div style="padding:28px 20px;text-align:center;color:var(--tmu);font-size:13px">Nenhum evento deste tipo.</div>`;}
+    else{
+      const sk=Object.keys(groups).sort().reverse();
+      sk.forEach((key,ki)=>{
+        const[y2,m2]=key.split('-');
+        html+=`<div class="mlabel">${MON[parseInt(m2)]} ${y2}</div>`;
+        groups[key].forEach((e,ei)=>{
+          const last=ki===sk.length-1&&ei===groups[key].length-1;
+          const dotBg=GDOT[e.grav]||'#E8F0EB';
+          // Social card style if has photo or social note
+          const isPost=e.photo||e.socialNote;
+          if(isPost){
+            html+=`<div class="tli"><div class="tll"><div class="tldot" style="background:${dotBg}">${TE[e.type]||'📝'}</div>${!last?'<div class="tlline"></div>':''}</div>
+            <div class="tlc" style="padding:0;overflow:hidden">
+              ${e.photo?`<img src="${e.photo}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:var(--rs) var(--rs) 0 0"/>`:'' }
+              <div style="padding:11px 13px">
+                ${e.socialNote?`<div style="font-size:14px;color:var(--text);line-height:1.5;margin-bottom:8px">${e.socialNote}</div>`:''}
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+                  <span class="badge ${GC[e.grav]||'bbmu'}" style="font-size:10px">${e.type}</span>
+                  <span style="font-size:11px;color:var(--tmu)">${fmt(e.date)} · ${e.author}</span>
+                </div>
+                ${e.desc?`<div style="font-size:12px;color:var(--tmu);margin-top:6px;line-height:1.4">${e.desc}</div>`:''}
+              </div>
+            </div></div>`;
+          } else {
+            html+=`<div class="tli"><div class="tll"><div class="tldot" style="background:${dotBg}">${TE[e.type]||'📝'}</div>${!last?'<div class="tlline"></div>':''}</div><div class="tlc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:700;color:var(--tm)">${e.type}</span><span class="badge ${GC[e.grav]||'bbmu'}" style="font-size:10px">${e.grav}</span></div><div style="font-size:13px;color:var(--text);line-height:1.5">${e.desc||'—'}</div><div style="font-size:11px;color:var(--tmu);margin-top:5px">${fmt(e.date)} · Por ${e.author}</div></div></div>`;
+          }
+        });
+      });
+    }
+    document.getElementById('tl-content').innerHTML=html;
+    document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{DB.tlFilter=b.dataset.f;A.renderTL();}));
+  },
+
+  renderVS(){
+    const p=DB.p;if(!p)return;
+    const vitals=p.vitals||[];
+    document.getElementById('vs-title').textContent=p.name.split(' ')[0]+' · Sinais vitais';
+    document.getElementById('vs-last').textContent=vitals.length?`Último: ${fmt(vitals[0].date)} às ${vitals[0].time} · ${vitals[0].author}`:'Nenhum registro ainda.';
+    const lv=vitals[0]||{};
+    const VSDEF=[
+      {k:'sis',k2:'dia',icon:'🫀',label:'Pressão arterial',unit:'mmHg',color:'#C0544A',disp:v=>v.sis?`${v.sis}/${v.dia}`:'—'},
+      {k:'fc',icon:'❤️',label:'Freq. cardíaca',unit:'bpm',color:'#D4885C',disp:v=>v.fc},
+      {k:'temp',icon:'🌡️',label:'Temperatura',unit:'°C',color:'#C49A3C',disp:v=>v.temp},
+      {k:'sat',icon:'🫁',label:'Saturação O₂',unit:'%',color:'#3A6EA5',disp:v=>v.sat},
+      {k:'gli',icon:'🩸',label:'Glicemia',unit:'mg/dL',color:'#854f0b',disp:v=>v.gli},
+      {k:'fr',icon:'🫧',label:'Freq. resp.',unit:'irpm',color:'#3D7A58',disp:v=>v.fr},
+      {k:'peso',icon:'⚖️',label:'Peso',unit:'kg',color:'#5C7E6A',disp:v=>v.peso},
+    ];
+    document.getElementById('vs-cards').innerHTML=VSDEF.map((d,i)=>{
+      const disp=d.disp(lv);const hasVal=disp!==null&&disp!==undefined&&disp!=='—'&&String(disp)!=='null/null';
+      const st=hasVal?vsS(d.k,parseFloat(String(disp).split('/')[0])):'none';
+      return`<div class="vscard" style="cursor:pointer" data-vs-idx="${i}">
+        <div style="font-size:21px;margin-bottom:4px">${d.icon}</div>
+        <div style="font-size:10px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.4px">${d.label}</div>
+        <div style="font-size:20px;font-weight:600;color:${st==='alert'?'var(--red)':st==='warn'?'var(--yel)':'var(--text)'};margin-top:2px;line-height:1">${hasVal?disp:'—'}</div>
+        <div style="font-size:10px;color:var(--tmu);margin-top:2px">${d.unit}</div>
+        <div class="vs-status ${vsC(st)}">${vsL(st)}</div>
+        <canvas class="spark" id="sp-${d.k}"></canvas>
+      </div>`;
+    }).join('');
+    setTimeout(()=>{VSDEF.forEach(d=>{const vals=vitals.slice().reverse().map(v=>parseFloat(v[d.k])).filter(n=>!isNaN(n));if(vals.length>=2){const c=document.getElementById('sp-'+d.k);if(c)spark(c,vals,d.color);}});},60);
+    // Tappable cards → open detail sheet
+    document.querySelectorAll('#vs-cards .vscard[data-vs-idx]').forEach(card=>{
+      card.addEventListener('click',()=>{
+        const idx=parseInt(card.dataset.vsIdx);
+        openVSDetail(VSDEF[idx],vitals);
+      });
+    });
+    document.getElementById('vs-hist').innerHTML=vitals.length===0
+      ?`<div style="padding:14px 0;text-align:center;color:var(--tmu);font-size:13px">Nenhum registro ainda.</div>`
+      :vitals.map(v=>`<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div><div style="font-size:12px;color:var(--tmu)">${fmt(v.date)}</div><div style="font-size:10px;color:var(--tmu)">${v.time} · ${v.author}</div></div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end">
+            ${v.sis?`<span style="font-size:13px;font-weight:600;color:${vsS('sis',v.sis)==='alert'?'var(--red)':'var(--text)'}">${v.sis}/${v.dia}<small style="font-size:10px;color:var(--tmu);font-weight:400"> mmHg</small></span>`:''}
+            ${v.fc?`<span style="font-size:13px;font-weight:600">${v.fc}<small style="font-size:10px;color:var(--tmu);font-weight:400"> bpm</small></span>`:''}
+            ${v.temp?`<span style="font-size:13px;font-weight:600">${v.temp}<small style="font-size:10px;color:var(--tmu);font-weight:400"> °C</small></span>`:''}
+            ${v.sat?`<span style="font-size:13px;font-weight:600;color:${vsS('sat',v.sat)==='alert'?'var(--red)':'var(--text)'}">${v.sat}<small style="font-size:10px;color:var(--tmu);font-weight:400"> %</small></span>`:''}
+          </div>
+        </div>`).join('');
+  },
+
 }; // end of A object
+
+function renderMeuDoutor(){
+  const p=DB.p; if(!p) return;
+  const status=A.calcOverallStatus(p);
+  const role=DB.currentUser?.role;
+  const adherence=A.calcAdherence(p);
+  const lv=p.vitals&&p.vitals[0];
+
+  // Generate/reuse QR token (24h expiry)
+  if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
+    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
+    p._qrExp=Date.now()+(24*60*60*1000);
+    saveDB();
+  }
+  const msLeft=p._qrExp-Date.now();
+  const hLeft=Math.floor(msLeft/3600000);
+  const mLeft=Math.floor((msLeft%3600000)/60000);
+  const qrUrl=`https://appampara.github.io/ampara/?report=${p._qrToken}`;
+
+  const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
+  const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
+
+  const statusExplain={
+    Estável:`${p.name.split(' ')[0]} apresenta sinais vitais e parâmetros clínicos dentro dos limites esperados. Nenhum alerta crítico no momento.`,
+    Atenção:`Alguns parâmetros de ${p.name.split(' ')[0]} requerem observação. Verifique os alertas e mantenha o acompanhamento próximo.`,
+    Alerta:`${p.name.split(' ')[0]} apresenta um ou mais parâmetros críticos. Avaliação médica recomendada com brevidade.`
+  }[status.level]||'';
+
+  const meds=p.medSchedule||[];
+
+  let html=`
+  <div id="md-report-area">
+    <!-- Cabeçalho verde -->
+    <div style="background:linear-gradient(140deg,#2D4A3E,#5C7E6A);padding:20px 20px 24px">
+      <div style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:4px">${p.name} · ${p.age} anos</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:${sBg};padding:9px 16px;border-radius:24px;margin-bottom:10px">
+        <span style="font-size:18px">${status.icon}</span>
+        <span style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</span>
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,.85);line-height:1.6">${statusExplain}</div>
+    </div>`;
+
+  // Vitals
+  if(lv){
+    html+=`<div class="md-section">Últimos sinais vitais</div>
+    <div class="md-card">
+      ${lv.sis?`<div class="md-row"><span class="md-label">🫀 Pressão arterial</span><span class="md-value" style="color:${vsS('sis',lv.sis)==='alert'?'var(--red)':vsS('sis',lv.sis)==='warn'?'var(--yel)':'var(--text)'}">${lv.sis}/${lv.dia} mmHg</span></div>`:''}
+      ${lv.fc?`<div class="md-row"><span class="md-label">❤️ Freq. cardíaca</span><span class="md-value">${lv.fc} bpm</span></div>`:''}
+      ${lv.temp?`<div class="md-row"><span class="md-label">🌡️ Temperatura</span><span class="md-value" style="color:${vsS('temp',lv.temp)==='alert'?'var(--red)':'var(--text)'}">${lv.temp} °C</span></div>`:''}
+      ${lv.sat?`<div class="md-row"><span class="md-label">🫁 Saturação O₂</span><span class="md-value" style="color:${vsS('sat',lv.sat)==='alert'?'var(--red)':'var(--text)'}">${lv.sat} %</span></div>`:''}
+      ${lv.gli?`<div class="md-row"><span class="md-label">🩸 Glicemia</span><span class="md-value" style="color:${vsS('gli',lv.gli)==='alert'?'var(--red)':'var(--text)'}">${lv.gli} mg/dL</span></div>`:''}
+      <div style="font-size:11px;color:var(--tmu);margin-top:8px">${fmt(lv.date)} às ${lv.time} · ${lv.author}</div>
+    </div>`;
+  }
+
+  // Riscos
+  html+=`<div class="md-section">Avaliações de risco</div>
+  <div class="md-card">
+    <div class="md-row"><span class="md-label">🦯 Risco de queda</span><span class="md-value" style="color:${RC[p.rF]||'var(--tmu)'}">${p.rF||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">🥗 Risco nutricional</span><span class="md-value" style="color:${RC[p.rN]||'var(--tmu)'}">${p.rN||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">🙋 Funcionalidade</span><span class="md-value" style="color:${RC[p.rFunc]||'var(--tmu)'}">${p.rFunc||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">💧 Hidratação</span><span class="md-value" style="color:${RC[p.rHyd]||'var(--tmu)'}">${p.rHyd||'Não avaliado'}</span></div>
+    <div class="md-row"><span class="md-label">💊 Aderência</span><span class="md-value" style="color:${adherence.color||'var(--tmu)'}">${adherence.label}${adherence.pct!=null?' ('+adherence.pct+'%)':''}</span></div>
+  </div>`;
+
+  // Medicações
+  if(meds.length){
+    html+=`<div class="md-section">Medicações cadastradas</div><div class="md-card">`;
+    meds.forEach(m=>{html+=`<div class="md-row"><span class="md-label">💊 ${m.name}</span><span class="md-value">${m.dose} ${m.unit} · ${m.times.join(', ')}</span></div>`;});
+    html+=`</div>`;
+  }
+
+  // Próximas consultas
+  const upcoming=(p.appointments||[]).filter(a=>a.date>=today()).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+  if(upcoming.length){
+    html+=`<div class="md-section">Próximas consultas</div><div class="md-card">`;
+    upcoming.forEach(a=>{html+=`<div class="md-row"><span class="md-label">${a.icon||'📅'} ${a.prof}</span><span class="md-value">${fmt(a.date)}${a.time?' às '+a.time:''}</span></div>`;});
+    html+=`</div>`;
+  }
+
+  // QR + botão download
+  html+=`<div class="md-section">Relatório para o médico</div>
+  <div class="qr-wrap">
+    <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:2px">QR Code do paciente</div>
+    <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">Médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
+    <div id="md-qr-canvas" style="border-radius:8px;overflow:hidden;width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff"></div>
+    <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min</div>
+    <div style="display:flex;gap:8px;margin-top:8px;width:100%">
+      <button class="btn bs bsm" id="md-regen-qr" style="flex:1">🔄 Novo QR</button>
+      <button class="btn bp bsm" id="md-download-pdf" style="flex:1.5;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar PDF
+      </button>
+    </div>
+  </div>
+  </div>`; // close md-report-area
+
+  document.getElementById('md-content').innerHTML=html;
+
+  // QR Code real com QRCodeJS
+  const qrEl=document.getElementById('md-qr-canvas');
+  qrEl.innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(qrEl,{text:qrUrl,width:180,height:180,colorDark:'#1E2820',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  } else {
+    qrEl.innerHTML='<div style="padding:16px;font-size:11px;color:var(--tmu);text-align:center">QR indisponível</div>';
+  }
+
+  // Regen QR
+  document.getElementById('md-regen-qr')?.addEventListener('click',()=>{
+    p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
+    p._qrExp=Date.now()+(24*60*60*1000);
+    saveDB(); renderMeuDoutor();
+    toast('🔄 QR Code renovado por 24h!');
+  });
+
+  // Download PDF
+  document.getElementById('md-download-pdf')?.addEventListener('click',async()=>{
+    const btn=document.getElementById('md-download-pdf');
+    btn.textContent='⏳ Gerando...'; btn.disabled=true;
+    try{
+      const reportEl=document.getElementById('md-report-area');
+      const canvas=await html2canvas(reportEl,{scale:2,useCORS:true,backgroundColor:'#FAF8F4'});
+      const imgData=canvas.toDataURL('image/png');
+      const {jsPDF}=window.jspdf;
+      const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const pageW=pdf.internal.pageSize.getWidth();
+      const pageH=pdf.internal.pageSize.getHeight();
+      const imgW=pageW-20;
+      const imgH=(canvas.height*imgW)/canvas.width;
+      let y=10;
+      if(imgH<=pageH-20){
+        pdf.addImage(imgData,'PNG',10,y,imgW,imgH);
+      } else {
+        // Multi-page
+        let srcY=0;
+        const pageImgH=pageH-20;
+        const srcHPerPage=(pageImgH/imgH)*canvas.height;
+        while(srcY<canvas.height){
+          const pageCanvas=document.createElement('canvas');
+          pageCanvas.width=canvas.width;
+          pageCanvas.height=Math.min(srcHPerPage,canvas.height-srcY);
+          const ctx=pageCanvas.getContext('2d');
+          ctx.drawImage(canvas,0,srcY,canvas.width,pageCanvas.height,0,0,canvas.width,pageCanvas.height);
+          const pageImg=pageCanvas.toDataURL('image/png');
+          const h=(pageCanvas.height/canvas.height)*imgH;
+          if(srcY>0) pdf.addPage();
+          pdf.addImage(pageImg,'PNG',10,10,imgW,h);
+          srcY+=srcHPerPage;
+        }
+      }
+      const fname=`relatorio_${p.name.replace(/\s+/g,'_')}_${today()}.pdf`;
+      pdf.save(fname);
+      toast('✅ PDF baixado!');
+    } catch(e){
+      toast('⚠️ Erro ao gerar PDF: '+e.message);
+    } finally {
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x1="12" y1="3"/></svg> Baixar PDF';
+      btn.disabled=false;
+    }
+  });
+}
+
+// drawSimpleQR removed — using QRCode.js library
 
 function renderInfographic(p){
   if(!document.getElementById('d-infographic'))return;
   const status=A.calcOverallStatus(p);
   const adherence=A.calcAdherence(p);
   const lv=p.vitals&&p.vitals[0];
+  const pend=pendingCount(p);
 
   const statusColors={
     Estável:['var(--gl)','var(--grn)','#3D7A58'],
@@ -3061,19 +4186,21 @@ function renderInfographic(p){
   };
   const [sBg,sFg,sBorder]=statusColors[status.level]||statusColors['Estável'];
 
-  // ── BOX 1: STATUS GERAL ───────────────────────────
-  const box1=`<div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${status.icon}</div>
-      <div style="flex:1">
-        <div style="font-size:15px;font-weight:700;color:${sFg}">${status.level}</div>
-        <div style="font-size:11px;color:var(--tm);margin-top:1px">${status.headline}</div>
-      </div>
-      <button style="background:var(--amber);border:none;color:#fff;padding:7px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(212,136,92,.35);flex-shrink:0" id="dash-meu-doutor-btn">🩺 Meu Doutor</button>
-    </div>
-  </div>`;
+  const shortExplain={
+    Estável:'Tudo dentro do esperado.',
+    Atenção:'Alguns pontos merecem atenção.',
+    Alerta:'Avaliação médica recomendada.'
+  }[status.level]||'';
 
-  // ── BOX 2: SINAIS VITAIS RESUMO ───────────────────
+  // Mini risk icons
+  const risks=[
+    {icon:'🦯',val:p.rF||'—',label:'Queda'},
+    {icon:'🥗',val:p.rN||'—',label:'Nutrição'},
+    {icon:'💊',val:adherence.label,label:'Aderência'},
+    {icon:'💧',val:p.rHyd||'—',label:'Hidratação'},
+  ];
+
+  // Vitals summary
   const vsItems=lv?[
     {icon:'🫀',label:'Pressão',val:lv.sis&&lv.dia?`${lv.sis}/${lv.dia}`:'—',unit:'mmHg',st:vsS('sis',lv.sis)},
     {icon:'❤️',label:'FC',val:lv.fc||'—',unit:'bpm',st:vsS('fc',lv.fc)},
@@ -3083,7 +4210,26 @@ function renderInfographic(p){
     {icon:'⚖️',label:'Peso',val:lv.peso||'—',unit:'kg',st:'none'},
   ]:[];
   const vsDate=lv?`Último: ${fmt(lv.date)} às ${lv.time}`:'Nenhum registro';
-  const box2=`<div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
+
+  document.getElementById('d-infographic').innerHTML=`
+  <div style="background:var(--W);border-radius:var(--r);border:2px solid ${sBorder};box-shadow:var(--sh);padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="width:48px;height:48px;border-radius:50%;background:${sBg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${status.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;color:${sFg}">${status.level}</div>
+        <div style="font-size:12px;color:var(--tm);margin-top:1px">${shortExplain}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+      ${risks.map(r=>`<div style="text-align:center;background:var(--cream);border-radius:8px;padding:7px 4px">
+        <div style="font-size:16px">${r.icon}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${r.label}</div>
+        <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'};margin-top:2px">${r.val}</div>
+      </div>`).join('')}
+    </div>
+    ${pend>0?`<div style="margin-top:10px;background:var(--bl);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--blue);font-weight:600">💊 ${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div>`:''}
+  </div>
+  <div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--text)">🩺 Sinais vitais</div>
       <div style="font-size:10px;color:var(--tmu)">${vsDate}</div>
@@ -3100,31 +4246,6 @@ function renderInfographic(p){
       }).join('')}
     </div>
   </div>`;
-
-  // ── BOX 3: RISCOS E ADERÊNCIA ─────────────────────
-  const RC={Alto:'var(--red)',Alta:'var(--red)',Moderado:'var(--yel)',Moderada:'var(--yel)',Baixo:'var(--grn)',Baixa:'var(--grn)','Boa':'var(--grn)','Regular':'var(--yel)','Baixa ':'var(--red)'};
-  const risks=[
-    {icon:'🦯',val:p.rF||'—',label:'Queda'},
-    {icon:'🥗',val:p.rN||'—',label:'Nutrição'},
-    {icon:'💊',val:adherence.label,label:'Aderência'},
-    {icon:'💧',val:p.rHyd||'—',label:'Hidratação'},
-  ];
-  const box3=`<div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
-    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">⚡ Indicadores de risco</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-      ${risks.map(r=>`<div style="background:var(--cream);border-radius:var(--rs);padding:8px 4px;text-align:center">
-        <div style="font-size:16px;margin-bottom:2px">${r.icon}</div>
-        <div style="font-size:9px;font-weight:700;color:var(--tmu);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px">${r.label}</div>
-        <div style="font-size:11px;font-weight:700;color:${RC[r.val]||'var(--tmu)'}">${r.val}</div>
-      </div>`).join('')}
-    </div>
-  </div>`;
-
-  document.getElementById('d-infographic').innerHTML=box1+box2+box3;
-
-  document.getElementById('dash-meu-doutor-btn')?.addEventListener('click',()=>{
-    renderMeuDoutor().then(()=>go('s-meu-doutor'));
-  });
 };
 function openVSDetail(vsDef, vitals){
   const modal=document.getElementById('vs-detail-modal');
@@ -3187,6 +4308,21 @@ function openVSDetail(vsDef, vitals){
 
 
 window.addEventListener('DOMContentLoaded',()=>{
+
+  // ── HANDLER: abrir relatório via QR Code (?report=TOKEN) ──
+  const _urlParams=new URLSearchParams(window.location.search);
+  const _reportToken=_urlParams.get('report');
+  if(_reportToken){
+    loadDB().then(()=>{
+      const pat=DB.patients.find(p=>p._qrToken===_reportToken);
+      if(pat&&Date.now()<(pat._qrExp||0)){
+        DB.pid=pat.id; DB.currentUser={role:'doctor',name:'Médico',id:'qr-viewer'};
+        renderMeuDoutor(); go('s-meu-doutor');
+      } else {
+        document.getElementById('s-login').innerHTML+=`<div style="margin:16px 20px;background:var(--rl);border-radius:10px;padding:12px;font-size:13px;color:var(--red);font-weight:600;text-align:center">⚠️ QR Code inválido ou expirado.<br><span style="font-weight:400;font-size:12px">Solicite um novo código ao cuidador.</span></div>`;
+      }
+    });
+  }
 
   // ── Defensive helper — silently skips if element doesn't exist ──
   function wire(id, evt, fn){
@@ -4586,6 +5722,184 @@ window.addEventListener('DOMContentLoaded',()=>{
         .catch(e => console.warn('Ampara: SW erro', e));
     });
   }
+
+  // ── CALENDÁRIO NAV ──
+  wire('bn-d-cal','click',()=>{A.renderCal();go('s-cal');});
+  wire('bn-tl-cal','click',()=>{A.renderCal();go('s-cal');});
+  wire('bn-vs-cal','click',()=>{A.renderCal();go('s-cal');});
+  wire('bn-meds-cal','click',()=>{A.renderCal();go('s-cal');});
+  wire('cal-back','click',()=>{A.renderDash();go('s-dash');});
+  wire('bn-cal-dash','click',()=>{A.renderDash();go('s-dash');});
+  wire('bn-cal-tl','click',()=>{DB.tlFilter='Todos';A.renderTL();go('s-tl');});
+  wire('bn-cal-vs','click',()=>{A.renderVS();go('s-vs');});
+  wire('bn-cal-meds','click',()=>{A.renderMeds();go('s-meds');});
+
+  // ── DOCUMENTOS NAV ──
+  wire('docs-back','click',()=>{A.renderProf();go('s-prof');});
+
+  // ── VS CHART NAV ──
+  wire('vsc-back','click',()=>{A.renderVS();go('s-vs');});
+
+  // ── RX MODAL (Ler Prescrição com IA) ─────────────
+  let _rxPhotoB64 = null;
+  wire('meds-rx-btn','click',()=>{ 
+    _rxPhotoB64=null;
+    document.getElementById('rx-photo-preview').style.display='none';
+    document.getElementById('rx-photo-ph').style.display='flex';
+    document.getElementById('rx-analyze-btn').disabled=true;
+    document.getElementById('rx-analyze-btn').style.opacity='.45';
+    document.getElementById('rx-analyze-btn').style.pointerEvents='none';
+    ['rx-step-1','rx-step-2','rx-step-3','rx-step-4'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.classList.toggle('active', id==='rx-step-1');
+    });
+    document.getElementById('rx-modal').classList.add('show');
+  });
+  wire('rx-cancel-1','click',()=>document.getElementById('rx-modal').classList.remove('show'));
+  wire('rx-cancel-3','click',()=>document.getElementById('rx-modal').classList.remove('show'));
+  wire('rx-retry-btn','click',()=>{
+    ['rx-step-1','rx-step-2','rx-step-3','rx-step-4'].forEach(id=>{
+      document.getElementById(id)?.classList.toggle('active', id==='rx-step-1');
+    });
+  });
+  wire('rx-photo-input','change',function(){
+    if(!this.files[0]) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      _rxPhotoB64=e.target.result.split(',')[1];
+      document.getElementById('rx-photo-preview').src=e.target.result;
+      document.getElementById('rx-photo-preview').style.display='block';
+      document.getElementById('rx-photo-ph').style.display='none';
+      document.getElementById('rx-analyze-btn').disabled=false;
+      document.getElementById('rx-analyze-btn').style.opacity='1';
+      document.getElementById('rx-analyze-btn').style.pointerEvents='auto';
+    };
+    reader.readAsDataURL(this.files[0]);
+  });
+  wire('rx-analyze-btn','click',async()=>{
+    if(!_rxPhotoB64) return;
+    ['rx-step-1','rx-step-2','rx-step-3','rx-step-4'].forEach(id=>{
+      document.getElementById(id)?.classList.toggle('active', id==='rx-step-2');
+    });
+    const bar=document.getElementById('rx-loading-bar');
+    let prog=8; const tick=setInterval(()=>{ prog=Math.min(prog+4,88); bar.style.width=prog+'%'; },400);
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-opus-4-5',max_tokens:1024,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:_rxPhotoB64}},
+            {type:'text',text:'Identifique os medicamentos nesta prescrição médica. Para cada medicamento responda APENAS com JSON neste formato exato (sem markdown): [{"name":"Nome do medicamento","dose":"dose","unit":"unidade","times":["08:00"]}]. Se não conseguir identificar nenhum medicamento, responda: []'}
+          ]}]
+        })
+      });
+      clearInterval(tick); bar.style.width='100%';
+      if(!resp.ok) throw new Error('API error '+resp.status);
+      const data=await resp.json();
+      const text=data.content?.[0]?.text||'[]';
+      let meds=[]; try{ meds=JSON.parse(text.replace(/```json|```/g,'').trim()); }catch(_){ meds=[]; }
+      if(!meds.length) throw new Error('Nenhum medicamento identificado');
+      document.getElementById('rx-results-list').innerHTML=meds.map((m,i)=>`
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer">
+          <input type="checkbox" checked data-rx-idx="${i}" style="width:18px;height:18px;cursor:pointer"/>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div>
+            <div style="font-size:11px;color:var(--tmu)">${m.dose} ${m.unit} · ${(m.times||[]).join(', ') || '—'}</div>
+          </div>
+        </label>`).join('');
+      document.getElementById('rx-results-list').dataset.rxMeds=JSON.stringify(meds);
+      ['rx-step-1','rx-step-2','rx-step-3','rx-step-4'].forEach(id=>{
+        document.getElementById(id)?.classList.toggle('active', id==='rx-step-3');
+      });
+    }catch(e){
+      clearInterval(tick);
+      document.getElementById('rx-error-msg').textContent=e.message||'Tente com melhor iluminação.';
+      ['rx-step-1','rx-step-2','rx-step-3','rx-step-4'].forEach(id=>{
+        document.getElementById(id)?.classList.toggle('active', id==='rx-step-4');
+      });
+    }
+  });
+  wire('rx-confirm-all','click',()=>{
+    const p=DB.p; if(!p) return;
+    const medsRaw=document.getElementById('rx-results-list').dataset.rxMeds;
+    if(!medsRaw) return;
+    const meds=JSON.parse(medsRaw);
+    const checked=[...document.querySelectorAll('[data-rx-idx]:checked')].map(el=>parseInt(el.dataset.rxIdx));
+    const toAdd=meds.filter((_,i)=>checked.includes(i));
+    if(!toAdd.length){ toast('Nenhum medicamento selecionado.'); return; }
+    if(!p.medSchedule) p.medSchedule=[];
+    toAdd.forEach(m=>{ p.medSchedule.push({id:'m'+Date.now()+Math.random().toString(36).slice(2),name:m.name,dose:m.dose,unit:m.unit||'mg',times:m.times||['08:00']}); });
+    saveDB(); A.renderMeds();
+    document.getElementById('rx-modal').classList.remove('show');
+    toast(`✓ ${toAdd.length} medicamento${toAdd.length>1?'s':''} adicionado${toAdd.length>1?'s':''}!`);
+  });
+
+  // ── DOCUMENTOS — botão + Novo ─────────────────────
+  wire('docs-add-btn','click',()=>{
+    document.getElementById('doc-title-input').value='';
+    document.getElementById('doc-desc-input').value='';
+    document.getElementById('doc-photo-preview').src='';
+    document.getElementById('doc-photo-preview').style.display='none';
+    document.getElementById('doc-photo-ph').style.display='flex';
+    document.getElementById('add-doc-modal').classList.add('show');
+  });
+  wire('doc-cancel-btn','click',()=>document.getElementById('add-doc-modal').classList.remove('show'));
+  wire('doc-photo-input','change',function(){
+    if(!this.files[0]) return;
+    const r=new FileReader(); r.onload=e=>{
+      document.getElementById('doc-photo-preview').src=e.target.result;
+      document.getElementById('doc-photo-preview').style.display='block';
+      document.getElementById('doc-photo-ph').style.display='none';
+    }; r.readAsDataURL(this.files[0]);
+  });
+  wire('doc-save-btn','click',()=>{
+    const p=DB.p; if(!p) return;
+    const title=document.getElementById('doc-title-input').value.trim();
+    if(!title){ toast('Digite um título para o documento.'); return; }
+    const desc=document.getElementById('doc-desc-input').value.trim();
+    const photo=document.getElementById('doc-photo-preview').src||null;
+    if(!p.docs) p.docs=[];
+    p.docs.unshift({id:Date.now(),title,desc,photo:photo&&photo!==window.location.href?photo:null,date:today()});
+    saveDB(); A.renderDocs();
+    document.getElementById('add-doc-modal').classList.remove('show');
+    toast('✓ Documento salvo!');
+  });
+
+  // ── CALENDÁRIO — botão + Consulta ────────────────
+  wire('cal-add-btn','click',()=>A._openApptModal(DB.calSelDate||today()));
+  wire('appt-cancel-btn','click',()=>document.getElementById('appt-modal').classList.remove('show'));
+  document.querySelectorAll('.appt-type-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.appt-type-btn').forEach(b=>{
+        b.style.border='2px solid var(--border)';b.style.background='var(--W)';b.style.color='var(--tm)';
+      });
+      btn.style.border='2px solid var(--sage)';btn.style.background='var(--sl)';btn.style.color='var(--sage)';
+      DB._apptType=btn.dataset.type; DB._apptIcon=btn.dataset.icon;
+    });
+  });
+  wire('appt-save-btn','click',()=>{
+    const p=DB.p; if(!p) return;
+    const date=document.getElementById('appt-date').value;
+    const time=document.getElementById('appt-time').value;
+    const prof=document.getElementById('appt-prof').value.trim();
+    const spec=document.getElementById('appt-spec').value.trim();
+    const local=document.getElementById('appt-local').value.trim();
+    const obs=document.getElementById('appt-obs').value.trim();
+    if(!date||!prof){ toast('Preencha data e profissional.'); return; }
+    if(!p.appointments) p.appointments=[];
+    const appt={id:DB._apptEditId||Date.now(),date,time:time||'',type:DB._apptType||'Médico',icon:DB._apptIcon||'👨‍⚕️',prof,spec,local,obs};
+    if(DB._apptEditId){
+      const idx=p.appointments.findIndex(a=>String(a.id)===String(DB._apptEditId));
+      if(idx!==-1) p.appointments[idx]=appt; else p.appointments.push(appt);
+    } else { p.appointments.push(appt); }
+    p.appointments.sort((a,b)=>a.date.localeCompare(b.date));
+    saveDB(); A.renderCal();
+    document.getElementById('appt-modal').classList.remove('show');
+    toast(DB._apptEditId?'✓ Consulta atualizada!':'✓ Consulta adicionada!');
+    DB._apptEditId=null;
+  });
 
 });
 </script>
