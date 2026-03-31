@@ -416,6 +416,14 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
       </div>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;color:var(--tmu);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
+    <button id="btn-quick-fisio" style="width:100%;padding:11px 14px;background:var(--bl);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:12px;transition:all .15s;text-align:left;margin-top:8px" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#2E5A8A);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🦴</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Ft. Rafael Souza</div>
+        <div style="font-size:11px;color:var(--tmu);margin-top:1px">Fisioterapeuta · Demo</div>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;color:var(--tmu);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
 
     <div style="display:flex;align-items:center;gap:10px;margin:16px 0 0">
       <div style="flex:1;height:1px;background:var(--border)"></div>
@@ -459,8 +467,30 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
         <option value="">Selecione...</option>
         <option value="caregiver">🧑‍⚕️ Cuidador profissional</option>
         <option value="family">👨‍👩‍👦 Familiar / responsável</option>
-        <option value="doctor">👩‍⚕️ Médico / profissional de saúde</option>
+        <option value="doctor">👩‍⚕️ Médico</option>
+        <option value="health_pro">🏥 Profissional de saúde</option>
       </select>
+    </div>
+    <!-- Profissão — aparece só para health_pro -->
+    <div class="fg" id="reg-profession-wrap" style="display:none">
+      <label class="fl">Profissão *</label>
+      <select class="fi" id="reg-profession">
+        <option value="">Selecione sua profissão...</option>
+        <option value="Fisioterapeuta">🦴 Fisioterapeuta</option>
+        <option value="Enfermeiro">💉 Enfermeiro(a)</option>
+        <option value="Técnico de Enfermagem">🩺 Técnico de Enfermagem</option>
+        <option value="Nutricionista">🥗 Nutricionista</option>
+        <option value="Fonoaudiólogo">🗣️ Fonoaudiólogo(a)</option>
+        <option value="Terapeuta Ocupacional">🤲 Terapeuta Ocupacional</option>
+        <option value="Psicólogo">🧠 Psicólogo(a)</option>
+        <option value="Assistente Social">👥 Assistente Social</option>
+        <option value="Farmacêutico">💊 Farmacêutico(a)</option>
+        <option value="Outro profissional">➕ Outro</option>
+      </select>
+    </div>
+    <div class="fg" id="reg-council-wrap" style="display:none">
+      <label class="fl">Conselho profissional <span style="font-size:11px;color:var(--tmu);font-weight:400">(CRM, CREFITO, COREN...)</span></label>
+      <input class="fi" id="reg-council" placeholder="Ex: CREFITO 987654-SP"/>
     </div>
     <div class="fg">
       <label class="fl">Telefone (opcional)</label>
@@ -644,54 +674,6 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   <div class="scroll" style="padding-top:10px">
     <div id="tl-content"></div>
   </div>
-  <!-- DOSE MODAL lives here so z-index stacks correctly -->
-  <div class="modal-ov" id="dose-modal">
-    <div class="modal-sheet">
-      <div class="drag"></div>
-      <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:3px" id="dm-title">Confirmar administração</div>
-      <div style="font-size:12px;color:var(--tmu);margin-bottom:16px" id="dm-sub">Horário prescrito</div>
-      <!-- Medication info -->
-      <div style="background:var(--warm);border-radius:var(--rs);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="font-size:28px">💊</div>
-        <div>
-          <div style="font-size:15px;font-weight:700;color:var(--text)" id="dm-name">—</div>
-          <div style="font-size:12px;color:var(--tm);margin-top:2px" id="dm-prescribed">Dose prescrita: —</div>
-        </div>
-      </div>
-      <!-- Dose input -->
-      <div style="margin-bottom:4px">
-        <label style="font-size:12px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px">Dose administrada</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input class="fi" id="dm-val" type="text" style="text-align:center;font-size:18px;font-weight:700;max-width:140px" placeholder="ex: 50"/>
-          <span style="font-size:14px;color:var(--tmu);font-weight:500" id="dm-unit">mg</span>
-        </div>
-      </div>
-      <!-- Network alert — shown when dose differs -->
-      <div class="net-alert" id="net-alert">
-        <div class="net-alert-title">⚠ Dose diferente da prescrição</div>
-        <div class="net-alert-body">A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.</div>
-        <div class="net-recipients" id="net-recipients"></div>
-      </div>
-      <!-- Actions -->
-      <div id="dm-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-        <button class="btn bp" id="dm-confirm">✓ Confirmar administração</button>
-        <button class="btn bo" id="dm-cancel">Cancelar</button>
-        <button id="dm-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          Remover esta medicação
-        </button>
-      </div>
-      <!-- Confirm removal panel (shown on remove click) -->
-      <div id="dm-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
-        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
-        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm-remove-name"></strong> de todas as medicações do paciente.</div>
-        <div style="display:flex;gap:8px">
-          <button id="dm-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
-          <button id="dm-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
-        </div>
-      </div>
-    </div>
-  </div>
   <button id="tl-fab-add" style="position:absolute;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(212,136,92,.5);font-size:26px;z-index:50;font-family:'DM Sans',sans-serif">+</button>
   <div class="bnav">
     <button class="bi" id="bn-tl-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
@@ -815,47 +797,6 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="3" fill="currentColor" stroke="none" opacity=".3"/><path d="M16.5 4.5l3 3"/></svg>
     Ler Prescrição
   </button>
-  <!-- Dose modal also needed here -->
-  <div class="modal-ov" id="dose-modal-meds">
-    <div class="modal-sheet">
-      <div class="drag"></div>
-      <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:3px" id="dm2-title">Confirmar administração</div>
-      <div style="font-size:12px;color:var(--tmu);margin-bottom:16px" id="dm2-sub">Horário prescrito</div>
-      <div style="background:var(--warm);border-radius:var(--rs);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="font-size:28px">💊</div>
-        <div><div style="font-size:15px;font-weight:700;color:var(--text)" id="dm2-name">—</div><div style="font-size:12px;color:var(--tm);margin-top:2px" id="dm2-prescribed">Dose prescrita: —</div></div>
-      </div>
-      <div style="margin-bottom:4px">
-        <label style="font-size:12px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px">Dose administrada</label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input class="fi" id="dm2-val" type="text" style="text-align:center;font-size:18px;font-weight:700;max-width:140px" placeholder="ex: 50"/>
-          <span style="font-size:14px;color:var(--tmu);font-weight:500" id="dm2-unit">mg</span>
-        </div>
-      </div>
-      <div class="net-alert" id="net-alert-2">
-        <div class="net-alert-title">⚠ Dose diferente da prescrição</div>
-        <div class="net-alert-body">A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.</div>
-        <div class="net-recipients" id="net-recipients-2"></div>
-      </div>
-      <div id="dm2-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-        <button class="btn bp" id="dm2-confirm">✓ Confirmar administração</button>
-        <button class="btn bo" id="dm2-cancel">Cancelar</button>
-        <button id="dm2-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          Remover esta medicação
-        </button>
-      </div>
-      <!-- Confirm removal panel -->
-      <div id="dm2-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
-        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
-        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm2-remove-name"></strong> de todas as medicações do paciente.</div>
-        <div style="display:flex;gap:8px">
-          <button id="dm2-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
-          <button id="dm2-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
-        </div>
-      </div>
-    </div>
-  </div>
   <div class="bnav">
     <button class="bi" id="bn-meds-dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Painel</button>
     <button class="bi" id="bn-meds-cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
@@ -1010,6 +951,8 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
     <div class="egrid">
       <div class="etbtn sel" data-type="Momento especial"><span>❤️</span>Momento especial</div>
       <div class="etbtn" data-type="Passeio"><span>🚶</span>Passeio</div>
+      <div class="etbtn" data-type="Atividade"><span>🎯</span>Atividade</div>
+      <div class="etbtn" data-type="Observação livre"><span>📝</span>Observação</div>
       <div class="etbtn" data-type="Queda"><span>🤕</span>Queda</div>
       <div class="etbtn" data-type="Internação"><span>🏥</span>Internação</div>
       <div class="etbtn" data-type="Pronto atendimento"><span>🚨</span>Pronto atendimento</div>
@@ -1374,6 +1317,8 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   </div>
 </div>
 
+
+
 <div class="toast" id="toast"></div>
 <div id="save-indicator" style="position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:#4db080;opacity:0;transition:opacity .3s;z-index:300;pointer-events:none;box-shadow:0 0 6px rgba(77,176,128,.6)"></div>
 
@@ -1677,7 +1622,228 @@ body{font-family:'DM Sans',sans-serif;background:#C8D5CC;display:flex;align-item
   </div>
 </div>
 
+
+<!-- ══ EVOLUÇÃO CLÍNICA ════════════════════════════ -->
+<div class="screen" id="s-evolucao">
+  <div class="nav" style="background:linear-gradient(135deg,#1a3a5c 0%,#2E5A8A 60%,#4a7ab5 100%)">
+    <button class="nback" id="ev-prof-back" style="color:#fff;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>Sair
+    </button>
+    <div class="ntitle" id="ev-prof-title" style="color:#fff">Evolução Clínica</div>
+    <div></div>
+  </div>
+  <div class="scroll" style="padding:0 0 40px">
+    <!-- Patient header -->
+    <div id="ev-prof-header" style="background:linear-gradient(135deg,#1a3a5c,#2E5A8A);padding:14px 20px 18px"></div>
+    <!-- Form -->
+    <div style="padding:16px 20px">
+      <!-- Professional type — locked from user profile -->
+      <div class="fg">
+        <label class="fl">Tipo de profissional</label>
+        <div id="ev-prof-type-display" style="background:var(--warm);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px">
+          <span id="ev-prof-type-icon" style="font-size:18px"></span>
+          <span id="ev-prof-type-text" style="flex:1">—</span>
+          <span style="font-size:10px;color:var(--tmu);font-weight:400;background:var(--border);padding:2px 7px;border-radius:6px">perfil</span>
+        </div>
+        <!-- hidden input for JS compatibility -->
+        <input type="hidden" id="ev-prof-type" value=""/>
+      </div>
+      <!-- Professional name -->
+      <div class="fg">
+        <label class="fl">Nome do profissional <span style="color:var(--red)">*</span></label>
+        <input class="fi" id="ev-prof-name" placeholder="Ex: Dr. Carlos Silva / Ft. Ana Souza"/>
+      </div>
+      <!-- Specialty / CRM / CREFITO -->
+      <div class="fg">
+        <label class="fl">Conselho profissional <span style="font-size:11px;color:var(--tmu);font-weight:400">(CRM, CREFITO, COREN...)</span></label>
+        <input class="fi" id="ev-prof-council" placeholder="Ex: CRM 12345-SP · CREFITO 987654"/>
+      </div>
+      <!-- Date and time (auto) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg">
+          <label class="fl">Data</label>
+          <input class="fi" id="ev-prof-date" type="date"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Hora</label>
+          <input class="fi" id="ev-prof-time" type="time"/>
+        </div>
+      </div>
+      <!-- Separator -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--tmu);font-weight:700;letter-spacing:.5px">EVOLUÇÃO</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <!-- Evolution text -->
+      <div class="fg">
+        <label class="fl">Evolução clínica <span style="color:var(--red)">*</span></label>
+        <textarea class="fta" id="ev-prof-text" placeholder="Descreva a evolução do paciente. Ex: Paciente encontrava-se no leito em decúbito dorsal. Foram realizadas mobilizações passivas e ativas de membros superiores e inferiores. Paciente relatou dor leve durante exercícios. Sem intercorrências." style="min-height:160px;resize:vertical;line-height:1.7"></textarea>
+      </div>
+
+      <!-- Sinais vitais opcionais -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 14px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--tmu);font-weight:700;letter-spacing:.5px">SINAIS VITAIS <span style="font-size:10px;font-weight:400">(opcional)</span></span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div style="background:var(--warm);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--tmu);margin-bottom:10px">Preencha apenas os sinais que foram aferidos. Campos não preenchidos serão ignorados.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🫀 PA sistólica (mmHg)</label>
+            <input class="fi" id="ev-vs-sis" type="number" placeholder="Ex: 120" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🫀 PA diastólica (mmHg)</label>
+            <input class="fi" id="ev-vs-dia" type="number" placeholder="Ex: 80" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">❤️ FC (bpm)</label>
+            <input class="fi" id="ev-vs-fc" type="number" placeholder="Ex: 72" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🌡️ Temp. (°C)</label>
+            <input class="fi" id="ev-vs-temp" type="number" step="0.1" placeholder="Ex: 36.5" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🫁 SpO₂ (%)</label>
+            <input class="fi" id="ev-vs-sat" type="number" placeholder="Ex: 97" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🩸 Glicemia (mg/dL)</label>
+            <input class="fi" id="ev-vs-gli" type="number" placeholder="Ex: 110" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">🫧 FR (irpm)</label>
+            <input class="fi" id="ev-vs-fr" type="number" placeholder="Ex: 16" style="padding:9px 12px;font-size:14px"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl" style="font-size:11px">⚖️ Peso (kg)</label>
+            <input class="fi" id="ev-vs-peso" type="number" step="0.1" placeholder="Ex: 70.5" style="padding:9px 12px;font-size:14px"/>
+          </div>
+        </div>
+      </div>
+      <!-- Gravity -->
+      <div class="fg">
+        <label class="fl">Classificação</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <button class="ev-grav-btn" data-grav="Leve" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--gl);background:var(--gl);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:var(--grn);display:flex;flex-direction:column;align-items:center;gap:3px"><span style="font-size:18px">🟢</span>Rotina</button>
+          <button class="ev-grav-btn" data-grav="Moderada" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:3px"><span style="font-size:18px">🟡</span>Atenção</button>
+          <button class="ev-grav-btn" data-grav="Alta" style="padding:10px 6px;border-radius:var(--rs);border:2px solid var(--border);background:var(--W);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:3px"><span style="font-size:18px">🔴</span>Urgente</button>
+        </div>
+      </div>
+      <!-- Save button -->
+      <button class="btn bp" id="ev-prof-save" style="margin-top:8px;background:var(--blue);border-color:var(--blue)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Registrar evolução
+      </button>
+      <button class="btn bo" id="ev-go-profile" style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Ver perfil do paciente
+      </button>
+      <div id="ev-prof-success" style="display:none;margin-top:12px;background:var(--gl);border:1.5px solid var(--grn);border-radius:var(--rs);padding:16px;text-align:center">
+        <div style="font-size:28px;margin-bottom:6px">✅</div>
+        <div style="font-size:14px;font-weight:700;color:var(--grn)">Evolução registrada!</div>
+        <div style="font-size:12px;color:var(--tm);margin-top:4px;margin-bottom:14px">Salva na timeline do paciente e sincronizada com a equipe.</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button id="ev-success-new" class="btn bs bsm" style="flex:1;background:var(--W);border:1.5px solid var(--grn);color:var(--grn)">+ Nova evolução</button>
+          <button id="ev-success-exit" class="btn bp bsm" style="flex:1;background:var(--grn)">← Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </div><!-- /shell -->
+
+<div class="modal-ov" id="dose-modal" style="position:fixed;z-index:500">
+    <div class="modal-sheet">
+      <div class="drag"></div>
+      <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:3px" id="dm-title">Confirmar administração</div>
+      <div style="font-size:12px;color:var(--tmu);margin-bottom:16px" id="dm-sub">Horário prescrito</div>
+      <!-- Medication info -->
+      <div style="background:var(--warm);border-radius:var(--rs);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">💊</div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text)" id="dm-name">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:2px" id="dm-prescribed">Dose prescrita: —</div>
+        </div>
+      </div>
+      <!-- Dose input -->
+      <div style="margin-bottom:4px">
+        <label style="font-size:12px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px">Dose administrada</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input class="fi" id="dm-val" type="text" style="text-align:center;font-size:18px;font-weight:700;max-width:140px" placeholder="ex: 50"/>
+          <span style="font-size:14px;color:var(--tmu);font-weight:500" id="dm-unit">mg</span>
+        </div>
+      </div>
+      <!-- Network alert — shown when dose differs -->
+      <div class="net-alert" id="net-alert">
+        <div class="net-alert-title">⚠ Dose diferente da prescrição</div>
+        <div class="net-alert-body">A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.</div>
+        <div class="net-recipients" id="net-recipients"></div>
+      </div>
+      <!-- Actions -->
+      <div id="dm-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <button class="btn bp" id="dm-confirm">✓ Confirmar administração</button>
+        <button class="btn bo" id="dm-cancel">Cancelar</button>
+        <button id="dm-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Remover esta medicação
+        </button>
+      </div>
+      <!-- Confirm removal panel (shown on remove click) -->
+      <div id="dm-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
+        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm-remove-name"></strong> de todas as medicações do paciente.</div>
+        <div style="display:flex;gap:8px">
+          <button id="dm-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
+          <button id="dm-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal-ov" id="dose-modal-meds" style="position:fixed;z-index:500">
+    <div class="modal-sheet">
+      <div class="drag"></div>
+      <div style="font-size:17px;font-family:'Lora',serif;font-weight:600;color:var(--text);margin-bottom:3px" id="dm2-title">Confirmar administração</div>
+      <div style="font-size:12px;color:var(--tmu);margin-bottom:16px" id="dm2-sub">Horário prescrito</div>
+      <div style="background:var(--warm);border-radius:var(--rs);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">💊</div>
+        <div><div style="font-size:15px;font-weight:700;color:var(--text)" id="dm2-name">—</div><div style="font-size:12px;color:var(--tm);margin-top:2px" id="dm2-prescribed">Dose prescrita: —</div></div>
+      </div>
+      <div style="margin-bottom:4px">
+        <label style="font-size:12px;font-weight:600;color:var(--tm);display:block;margin-bottom:6px">Dose administrada</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input class="fi" id="dm2-val" type="text" style="text-align:center;font-size:18px;font-weight:700;max-width:140px" placeholder="ex: 50"/>
+          <span style="font-size:14px;color:var(--tmu);font-weight:500" id="dm2-unit">mg</span>
+        </div>
+      </div>
+      <div class="net-alert" id="net-alert-2">
+        <div class="net-alert-title">⚠ Dose diferente da prescrição</div>
+        <div class="net-alert-body">A dose informada é diferente da registrada no sistema. Esta informação será comunicada à rede de apoio do paciente assim que confirmada.</div>
+        <div class="net-recipients" id="net-recipients-2"></div>
+      </div>
+      <div id="dm2-actions-main" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <button class="btn bp" id="dm2-confirm">✓ Confirmar administração</button>
+        <button class="btn bo" id="dm2-cancel">Cancelar</button>
+        <button id="dm2-remove-btn" style="background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;padding:6px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Remover esta medicação
+        </button>
+      </div>
+      <!-- Confirm removal panel -->
+      <div id="dm2-confirm-remove" style="display:none;margin-top:14px;background:var(--rl);border-radius:var(--rs);padding:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Remover medicação?</div>
+        <div style="font-size:12px;color:var(--red);opacity:.8;margin-bottom:12px">Esta ação removerá <strong id="dm2-remove-name"></strong> de todas as medicações do paciente.</div>
+        <div style="display:flex;gap:8px">
+          <button id="dm2-remove-no" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Não, manter</button>
+          <button id="dm2-remove-yes" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Sim, remover</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script data-cfasync="false">
 // ══════════════════════════════════════════════════════
@@ -1694,6 +1860,7 @@ const DB = {
     {id:'u1', name:'Ana Oliveira',   email:'ana@familia.com',    pass:'12345',     role:'caregiver', avatar:'🧑‍⚕️', patientIds:[1,2,3]},
     {id:'u2', name:'Carlos Oliveira',email:'carlos@familia.com', pass:'familia',   role:'family',  avatar:'👨‍👩‍👦', patientIds:[1]},
     {id:'u3', name:'Dra. Fernanda Lima', email:'dra@clinica.com', pass:'medico123', role:'doctor', avatar:'👩‍⚕️', patientIds:[1,2,3]},
+    {id:'u4', name:'Ft. Rafael Souza', email:'ft@ampara.com', pass:'fisio123', role:'health_pro', avatar:'🦴', profession:'Fisioterapeuta', council:'CREFITO 987654-SP', patientIds:[1,2,3]},
   ],
 
   // ── ALERT CONFIG (master can edit) ──
@@ -2186,7 +2353,8 @@ function hideLoading(){ const el=document.getElementById('supa-loading'); if(el)
 // ══════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════
-const TE={Queda:'🤕',Internação:'🏥','Pronto atendimento':'🚨','Piora clínica':'😔','Dificuldade ao caminhar':'🚶','Baixa alimentação':'🍽️','Confusão / esquecimento':'🧠','Observação livre':'📝','Avaliação funcional':'📋','Administração de medicamento':'💊'};
+const TE={Queda:'🤕',Internação:'🏥','Pronto atendimento':'🚨','Piora clínica':'😔','Dificuldade ao caminhar':'🚶','Baixa alimentação':'🍽️','Confusão / esquecimento':'🧠','Observação livre':'📝','Avaliação funcional':'📋','Administração de medicamento':'💊','Evolução clínica':'🩺','Momento especial':'❤️','Passeio':'🚶','Atividade':'🎯','Sinais vitais':'📊'};
+const PROF_ASSESS_MAP={"Fisioterapeuta":["barthel","morse"],"Terapeuta Ocupacional":["barthel"],"Nutricionista":["mna"],"Enfermeiro":["morse","hydration"],"Técnico de Enfermagem":["morse","hydration"],"Fonoaudiólogo":[],"Psicólogo":["daily"],"Médico":["morse","mna","barthel","hydration","pain"],"Farmacêutico":[],"Assistente Social":[],"Outro profissional":[]};
 const GC={Leve:'bgg',Moderada:'bby',Alta:'bbr',Moderado:'bby',Alto:'bbr',Baixo:'bgg',Baixa:'bgg'};
 const RC={Alto:'var(--red)',Moderado:'var(--yel)',Baixo:'var(--grn)',Moderada:'var(--yel)',Alta:'var(--red)',Baixa:'var(--grn)','—':'var(--tmu)'};
 const RBC={Alto:'rh',Moderado:'rm',Baixo:'rl',Moderada:'rm',Alta:'rh',Baixa:'rl','—':'rl'};
@@ -2724,6 +2892,10 @@ const A = {
           A.renderDash();go('s-dash');
           // Reschedule reminders for this patient
           setTimeout(()=>{ _scheduleMedReminders(); _scheduleApptReminders(); }, 500);
+          // health_pro goes directly to evolution screen
+          if(DB.currentUser?.role==='health_pro'){
+            setTimeout(()=>{renderEvolucao(DB.p);go('s-evolucao');},100);
+          }
         }
       });
     });
@@ -2933,14 +3105,30 @@ const A = {
     document.getElementById('dh-perfil-btn').addEventListener('click',()=>{A.renderProf();go('s-prof');});
     document.getElementById('dh-status-btn').addEventListener('click',()=>A.openStatusModal(status,p));
 
+    // Hide agenda button for health_pro and doctor
+    const _noCalRoles=['health_pro','doctor'];
+    const _isNoCal=_noCalRoles.includes(DB.currentUser?.role);
+    ['bn-d-cal','bn-tl-cal','bn-vs-cal','bn-meds-cal'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=_isNoCal?'none':'';
+    });
+
     // Read-only banner for doctors
     const roleBar=document.getElementById('d-role-bar');
     if(roleBar){
       const role=DB.currentUser?.role;
       roleBar.innerHTML=role==='doctor'
-        ?`<div style="background:#1a2e28;color:rgba(255,255,255,.85);font-size:12px;font-weight:600;text-align:center;padding:7px 20px;letter-spacing:.3px">👁 Modo visualização — Médico · Somente leitura</div>`
+        ?`<div style="background:#1a2e28;color:rgba(255,255,255,.85);font-size:12px;font-weight:600;text-align:center;padding:7px 16px;letter-spacing:.3px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>👁 Modo visualização — Somente leitura</span>
+          <button id="dh-evol-btn" onclick="renderEvolucao(DB.p);go('s-evolucao')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">🩺 Registrar evolução</button>
+        </div>`
         :role==='family'
         ?`<div style="background:var(--warm);color:var(--tm);font-size:11px;font-weight:600;text-align:center;padding:6px 20px;border-bottom:1px solid var(--border)">👨‍👩‍👦 Acesso familiar · Você pode registrar observações e acompanhar o paciente</div>`
+        :role==='health_pro'
+        ?`<div style="background:var(--bl);color:var(--blue);font-size:12px;font-weight:600;text-align:center;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(58,110,165,.2)">
+          <span>🏥 ${DB.currentUser?.profession||'Profissional'} · ${DB.currentUser?.name||''}</span>
+          <button onclick="renderEvolucao(DB.p);go('s-evolucao')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">🩺 Registrar evolução</button>
+        </div>`
         :'';
     }
 
@@ -3187,10 +3375,27 @@ const A = {
         const tid=btn.dataset.taskCheck;
         const key=todayStr+'§'+tid;
         if(!p.tasksDone)p.tasksDone={};
-        p.tasksDone[key]=!p.tasksDone[key];
         const task=allTasks.find(t=>t.id===tid);
-        if(task?.type==='vs'&&p.tasksDone[key])A.openNewVS();
-        if(task?.type==='daily'&&p.tasksDone[key])A.openDailyModal();
+        if(!task)return;
+
+        // Med task → open dose confirmation modal (same as meds screen)
+        if(task.type==='med'&&!p.tasksDone[key]){
+          const medName=task.title.replace('💊 ','').trim();
+          const med=p.medSchedule.find(m=>m.name===medName);
+          if(med){
+            A.openDoseModal(med, task.time, 'dose-modal-meds');
+            return;
+          }
+        }
+
+        // VS task → open new VS screen
+        if(task.type==='vs'&&!p.tasksDone[key]){A.openNewVS();return;}
+
+        // Daily evaluation task → open daily modal
+        if(task.type==='daily'&&!p.tasksDone[key]){A.openDailyModal();return;}
+
+        // Other tasks → toggle done
+        p.tasksDone[key]=!p.tasksDone[key];
         saveDB();A.renderTasks();
       });
     });
@@ -3427,8 +3632,9 @@ const A = {
       </div>`;
     });
     html+=`</div>`;
-    document.getElementById(containerId).innerHTML=html;
-    document.querySelectorAll(`[data-modal="${modalId}"]:not(.done)`).forEach(el=>{
+    const containerEl=document.getElementById(containerId);
+    containerEl.innerHTML=html;
+    containerEl.querySelectorAll(`[data-modal="${modalId}"]:not(.done)`).forEach(el=>{
       el.addEventListener('click',()=>{
         const mn=el.dataset.mn,mt=el.dataset.mt;
         const m=p.medSchedule.find(x=>x.name===mn);if(!m)return;
@@ -3637,6 +3843,7 @@ const A = {
 
     if(modalId==='dose-modal'){A.renderTL();}
     else{A.renderMeds();}
+    A.renderTasks();
     A.renderDash();
   },
 
@@ -3672,6 +3879,8 @@ const A = {
   openNewEvent(){
     const p=DB.p;if(!p)return;
     document.getElementById('ne-pname').textContent=p.name;
+    const neAuthorEl=document.getElementById('ne-author');
+    if(neAuthorEl) neAuthorEl.value=DB.currentUser?.name||'Familiar';
     document.getElementById('ne-date').value=today();
     document.getElementById('ne-desc').value='';
     document.getElementById('ne-social-note').value='';
@@ -4113,6 +4322,87 @@ function generateReportHTML(p){
   return parts.join('\n');
 }
 
+
+// ══ EVOLUÇÃO CLÍNICA ════════════════════════════════════════
+function renderEvolucao(p){
+  if(!p) return;
+  // Header with patient info
+  const header = document.getElementById('ev-prof-header');
+  if(header){
+    header.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        ${p.photo
+          ? `<img src="${p.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0"/>`
+          : `<div style="width:48px;height:48px;border-radius:50%;background:${p.ab};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:${p.ac};border:2px solid rgba(255,255,255,.25);flex-shrink:0">${p.initials}</div>`
+        }
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#fff;font-family:'Lora',serif">${p.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">${p.age} anos · ${p.diag.split('·')[0].trim()}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px">📋 Evolução clínica — ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</div>
+        </div>
+      </div>`;
+  }
+
+  // Auto-fill date and time
+  const now = new Date();
+  const dateEl = document.getElementById('ev-prof-date');
+  const timeEl = document.getElementById('ev-prof-time');
+  if(dateEl) dateEl.value = now.toISOString().slice(0,10);
+  if(timeEl) timeEl.value = now.toTimeString().slice(0,5);
+
+  // Pre-fill and lock name/council from user profile
+  const nameEl = document.getElementById('ev-prof-name');
+  const councilEl = document.getElementById('ev-prof-council');
+  const u = DB.currentUser;
+  if(u && u.id !== 'qr-evolucao'){
+    if(nameEl){ nameEl.value = u.name||''; nameEl.readOnly=true; nameEl.style.background='var(--warm)'; nameEl.style.color='var(--tm)'; }
+    if(councilEl && u.council){ councilEl.value = u.council; councilEl.readOnly=true; councilEl.style.background='var(--warm)'; councilEl.style.color='var(--tm)'; }
+  } else {
+    // QR access — fields editable
+    if(nameEl){ nameEl.readOnly=false; nameEl.style.background=''; nameEl.style.color=''; nameEl.value=''; }
+    if(councilEl){ councilEl.readOnly=false; councilEl.style.background=''; councilEl.style.color=''; }
+  }
+
+
+  // Populate locked profession display from user profile
+  const profIcons={'Fisioterapeuta':'🦴','Enfermeiro':'💉','Técnico de Enfermagem':'🩺',
+    'Nutricionista':'🥗','Fonoaudiólogo':'🗣️','Terapeuta Ocupacional':'🤲',
+    'Psicólogo':'🧠','Assistente Social':'👥','Farmacêutico':'💊',
+    'Médico':'👨‍⚕️','Outro profissional':'➕'};
+  const userProf = DB.currentUser?.profession || (DB.currentUser?.role==='doctor'?'Médico':null);
+  const profTypeEl = document.getElementById('ev-prof-type');
+  const profIconEl = document.getElementById('ev-prof-type-icon');
+  const profTextEl = document.getElementById('ev-prof-type-text');
+  if(userProf && profTypeEl){
+    profTypeEl.value = userProf;
+    if(profIconEl) profIconEl.textContent = profIcons[userProf]||'🏥';
+    if(profTextEl) profTextEl.textContent = userProf;
+  } else if(profTextEl){
+    profTextEl.textContent = 'Não definido';
+    if(profIconEl) profIconEl.textContent = '🏥';
+  }
+
+  // Reset gravity selection
+  document.querySelectorAll('.ev-grav-btn').forEach(b=>{
+    const isLeve = b.dataset.grav === 'Leve';
+    b.style.border = isLeve ? '2px solid var(--gl)' : '2px solid var(--border)';
+    b.style.background = isLeve ? 'var(--gl)' : 'var(--W)';
+    b.style.color = isLeve ? 'var(--grn)' : 'var(--tm)';
+  });
+  DB._evolGrav = 'Leve';
+
+  // Hide success banner
+  const succ = document.getElementById('ev-prof-success');
+  if(succ) succ.style.display = 'none';
+  const btn = document.getElementById('ev-prof-save');
+  if(btn){ btn.style.display = 'flex'; btn.disabled = false; }
+
+  // Clear vitals fields
+  ['ev-vs-sis','ev-vs-dia','ev-vs-fc','ev-vs-temp','ev-vs-sat','ev-vs-gli','ev-vs-fr','ev-vs-peso'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+}
+
 function renderMeuDoutor(){
   const p=DB.p; if(!p) return;
   const status=A.calcOverallStatus(p);
@@ -4120,16 +4410,22 @@ function renderMeuDoutor(){
   const adherence=A.calcAdherence(p);
   const lv=p.vitals&&p.vitals[0];
 
-  // Generate/reuse QR token (24h expiry)
+  // Generate/reuse QR tokens (24h expiry)
   if(!p._qrToken||!p._qrExp||Date.now()>p._qrExp){
     p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
     p._qrExp=Date.now()+(24*60*60*1000);
+    saveDB();
+  }
+  // _evolToken is STATIC — generated once per patient, never expires
+  if(!p._evolToken){
+    p._evolToken='EV-'+p.id+'-'+Math.abs(p.id*7919+13).toString(36).toUpperCase()+p.name.length.toString(36).toUpperCase();
     saveDB();
   }
   const msLeft=p._qrExp-Date.now();
   const hLeft=Math.floor(msLeft/3600000);
   const mLeft=Math.floor((msLeft%3600000)/60000);
   const qrUrl=`https://appampara.github.io/ampara/?report=${p._qrToken}`;
+  const evolUrl=`https://appampara.github.io/ampara/?evolucao=${p._evolToken}`;
 
   const statusColors={Estável:['var(--gl)','var(--grn)'],Atenção:['var(--yl)','var(--yel)'],Alerta:['var(--rl)','var(--red)']};
   const [sBg,sFg]=statusColors[status.level]||statusColors['Estável'];
@@ -4193,9 +4489,28 @@ function renderMeuDoutor(){
   }
 
   // QR + botão download
-  html+=`<div class="md-section">Relatório para o médico</div>
+  // Evoluções recentes
+  const evols=(p.events||[]).filter(e=>e.isEvolucao).slice(0,5);
+  if(evols.length){
+    html+=`<div class="md-section">Evoluções clínicas recentes</div><div class="md-card">`;
+    evols.forEach(e=>{
+      const gravColor=e.grav==='Alta'?'var(--red)':e.grav==='Moderada'?'var(--yel)':'var(--grn)';
+      html+=`<div style="padding:9px 0;border-bottom:1px solid var(--border);last-child:border:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:11px;font-weight:700;color:var(--blue);background:var(--bl);padding:2px 8px;border-radius:8px">${e.profType||'Profissional'}</span>
+          <span style="font-size:10px;color:var(--tmu)">${fmt(e.date)}${e.time?' às '+e.time:''}</span>
+          ${e.grav!=='Leve'?`<span style="font-size:10px;font-weight:700;color:${gravColor};margin-left:auto">${e.grav}</span>`:''}
+        </div>
+        <div style="font-size:12px;color:var(--text);line-height:1.65">${e.desc}</div>
+        <div style="font-size:11px;color:var(--tmu);margin-top:3px">— ${e.author}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  html+=`<div class="md-section">QR Codes</div>
   <div class="qr-wrap">
-    <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:2px">QR Code do paciente</div>
+    <div style="font-size:13px;color:var(--tm);font-weight:600;text-align:center;margin-bottom:2px">📋 Relatório médico</div>
     <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">Médico escaneia e acessa o relatório completo. Expira em ${hLeft}h ${mLeft}min.</div>
     <div id="md-qr-canvas" style="border-radius:8px;overflow:hidden;width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff"></div>
     <div class="qr-timer">⏱ Válido por ${hLeft}h ${mLeft}min</div>
@@ -4207,26 +4522,33 @@ function renderMeuDoutor(){
       </button>
     </div>
   </div>
+  <div class="qr-wrap" style="margin-top:0;border:1.5px solid var(--blue)">
+    <div style="font-size:13px;color:var(--blue);font-weight:700;text-align:center;margin-bottom:2px">🩺 QR para evolução clínica</div>
+    <div style="font-size:12px;color:var(--tmu);text-align:center;margin-bottom:12px">Profissionais de saúde escaneiam para registrar evolução do paciente. QR permanente — não expira.</div>
+    <div id="md-evol-qr-canvas" style="border-radius:8px;overflow:hidden;width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff"></div>
+    <div class="qr-timer" style="color:var(--blue)">🔒 QR permanente — não expira</div>
+  </div>
   </div>`; // close md-report-area
 
   document.getElementById('md-content').innerHTML=html;
 
-  // QR Code real com QRCodeJS
+  // QR Code relatório (QRCodeJS)
   const qrEl=document.getElementById('md-qr-canvas');
-  qrEl.innerHTML='';
-  if(typeof QRCode!=='undefined'){
-    new QRCode(qrEl,{text:qrUrl,width:180,height:180,colorDark:'#1E2820',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-  } else {
-    qrEl.innerHTML='<div style="padding:16px;font-size:11px;color:var(--tmu);text-align:center">QR indisponível</div>';
-  }
+  if(qrEl){ qrEl.innerHTML=''; if(typeof QRCode!=='undefined'){ new QRCode(qrEl,{text:qrUrl,width:180,height:180,colorDark:'#1E2820',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); } else { qrEl.innerHTML='<div style="padding:16px;font-size:11px;color:var(--tmu);text-align:center">QR indisponível</div>'; } }
 
-  // Regen QR
+  // QR Code evolução (azul)
+  const evolEl=document.getElementById('md-evol-qr-canvas');
+  if(evolEl){ evolEl.innerHTML=''; if(typeof QRCode!=='undefined'){ new QRCode(evolEl,{text:evolUrl,width:180,height:180,colorDark:'#2E5A8A',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); } else { evolEl.innerHTML='<div style="padding:16px;font-size:11px;color:var(--tmu);text-align:center">QR indisponível</div>'; } }
+
+  // Regen QR relatório
   document.getElementById('md-regen-qr')?.addEventListener('click',()=>{
     p._qrToken='AMP-'+p.id+'-'+Date.now().toString(36).toUpperCase();
     p._qrExp=Date.now()+(24*60*60*1000);
     saveDB(); renderMeuDoutor();
     toast('🔄 QR Code renovado por 24h!');
   });
+
+  // evolToken is static — no regen needed
 
   // Download PDF — abre relatório completo (template relatorio_1.html) numa nova aba
   document.getElementById('md-download-pdf')?.addEventListener('click',()=>{
@@ -4309,6 +4631,10 @@ function renderInfographic(p){
       </div>`).join('')}
     </div>
     ${pend>0?`<div style="margin-top:10px;background:var(--bl);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--blue);font-weight:600">💊 ${pend} medicamento${pend>1?'s':''} pendente${pend>1?'s':''} hoje</div>`:''}
+    <button id="dash-evol-btn" style="margin-top:10px;width:100%;padding:9px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Registrar evolução
+    </button>
   </div>
   <div style="background:var(--W);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:13px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -4327,6 +4653,10 @@ function renderInfographic(p){
       }).join('')}
     </div>
   </div>`;
+
+  document.getElementById('dash-evol-btn')?.addEventListener('click',()=>{
+    renderEvolucao(DB.p);go('s-evolucao');
+  });
 };
 function openVSDetail(vsDef, vitals){
   const modal=document.getElementById('vs-detail-modal');
@@ -4438,6 +4768,13 @@ window.addEventListener('DOMContentLoaded',()=>{
   wire('lnk-reg','click',()=>go('s-register'));
   wire('reg-back','click',()=>go('s-login'));
   wire('lnk-login','click',()=>go('s-login'));
+  // Show profession field when health_pro is selected
+  document.getElementById('reg-role')?.addEventListener('change',function(){
+    const isPro = this.value === 'health_pro';
+    document.getElementById('reg-profession-wrap').style.display = isPro ? 'block' : 'none';
+    document.getElementById('reg-council-wrap').style.display = isPro ? 'block' : 'none';
+  });
+
 
   // ── CADASTRO — solicitar acesso ──
   wire('btn-register','click',async()=>{
@@ -4461,8 +4798,11 @@ window.addEventListener('DOMContentLoaded',()=>{
     const roleLabels={caregiver:'Cuidador profissional',family:'Familiar',doctor:'Médico'};
     const avatars={caregiver:'🧑‍⚕️',family:'👨‍👩‍👦',doctor:'👩‍⚕️'};
     const tel=document.getElementById('reg-tel').value.trim();
-    const newUser={id:'u'+Date.now(),name,email,pass,role,avatar:avatars[role]||'👤',patientIds:[],status:'pending',tel:tel||null};
-    const req={id:'reg'+Date.now(),type:'Solicitação de cadastro',obs:`${roleLabels[role]||role} — ${email}${tel?' · '+tel:''}`,status:'pending',date:today(),requestedBy:'novo_usuario',newUser};
+    const profession=document.getElementById('reg-profession')?.value||null;
+    const council=document.getElementById('reg-council')?.value.trim()||null;
+    const avatars2={caregiver:'🧑‍⚕️',family:'👨‍👩‍👦',doctor:'👩‍⚕️',health_pro:'🏥'};
+    const newUser={id:'u'+Date.now(),name,email,pass,role,avatar:avatars2[role]||'👤',patientIds:[],status:'pending',tel:tel||null,profession:profession||null,council:council||null};
+    const profStr=profession?' · '+profession+(council?' ('+council+')':''):''; const req={id:'reg'+Date.now(),type:'Solicitação de cadastro',obs:`${roleLabels[role]||role}${profStr} — ${email}${tel?' · '+tel:''}`,status:'pending',date:today(),requestedBy:'novo_usuario',newUser};
     DB.requests.push(req);
     try{
       await sbUpsert('requests',[{id:req.id,data:req}]);
@@ -4486,6 +4826,12 @@ window.addEventListener('DOMContentLoaded',()=>{
     btn.style.background='var(--sl)';
     setTimeout(()=>document.getElementById('btn-login').click(), 350);
   });
+  wire('btn-quick-fisio','click',()=>{
+    document.getElementById('li-email').value='ft@ampara.com';
+    document.getElementById('li-pass').value='fisio123';
+    document.getElementById('li-error').style.display='none';
+    document.getElementById('btn-login').click();
+  });
 
   // LOGIN
   wire('btn-login','click',()=>{
@@ -4507,6 +4853,17 @@ window.addEventListener('DOMContentLoaded',()=>{
         ? DB.patients
         : DB.patients.filter(p=>ids.map(Number).includes(Number(p.id)));
       A.renderPatList(accessible);go('s-patients');
+    }
+    // Pre-fill profession if health_pro
+    if(user.role==='health_pro'&&user.profession){
+      setTimeout(()=>{
+        const t=document.getElementById('ev-prof-type');
+        const n=document.getElementById('ev-prof-name');
+        const c=document.getElementById('ev-prof-council');
+        if(t)t.value=user.profession;
+        if(n)n.value=user.name;
+        if(c&&user.council)c.value=user.council;
+      },300);
     }
   });
   // ADMIN MASTER
@@ -4627,6 +4984,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   function canWrite(){
     const role=DB.currentUser?.role;
     if(role==='doctor'){toast('⛔ Médicos têm acesso somente leitura.');return false;}
+    if(role==='health_pro'){toast('⛔ Apenas registre evoluções na tela de Evolução Clínica.');return false;}
+    return true;
+  }
+  function canViewCal(){
+    const role=DB.currentUser?.role;
+    if(role==='health_pro'||role==='doctor'){toast('⛔ Agenda não disponível para este perfil.');return false;}
     return true;
   }
 
@@ -5713,7 +6076,69 @@ window.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('addmed-fab-modal').classList.add('show');
   });
 
-  // Wire Meu Doutor back button
+
+  // ── AVALIAÇÃO DIÁRIA ──────────────────────────────
+  wire('fab-daily','click',()=>{if(!canWrite())return;A.openDailyModal();});
+  wire('daily-cancel','click',()=>document.getElementById('daily-modal').classList.remove('show'));
+  wire('daily-modal','click',e=>{if(e.target===document.getElementById('daily-modal'))document.getElementById('daily-modal').classList.remove('show');});
+
+  // Mood / Food / Sleep buttons
+  document.querySelectorAll('[data-mood]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      DB._dailyMood=parseInt(btn.dataset.mood);
+      DB._dailyMoodLabel=btn.dataset.label;
+      document.querySelectorAll('[data-mood]').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('[data-food]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      DB._dailyFood=btn.dataset.food;
+      document.querySelectorAll('[data-food]').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('[data-sleep]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      DB._dailySleep=btn.dataset.sleep;
+      document.querySelectorAll('[data-sleep]').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+    });
+  });
+
+  wire('daily-save','click',()=>{
+    const p=DB.p;if(!p)return;
+    const obs=document.getElementById('daily-obs').value.trim();
+    const author=document.getElementById('daily-author').value.trim()||DB.currentUser?.name||'Cuidador';
+    const nowH=new Date().getHours();
+    const shift=nowH<12?'Manhã (1º turno)':'Noite (2º turno)';
+    const nowT=nowTime();
+    const mood=DB._dailyMood;
+    const moodLabel=DB._dailyMoodLabel||'—';
+    const food=DB._dailyFood||'—';
+    const sleep=DB._dailySleep||'—';
+    let desc=`Avaliação ${shift}`;
+    if(mood) desc+=` · Humor: ${moodLabel}`;
+    if(food!=='—') desc+=` · Alimentação: ${food}`;
+    if(sleep!=='—') desc+=` · Sono: ${sleep}`;
+    if(obs) desc+=` · Obs: ${obs}`;
+    p.events.unshift({
+      id:Date.now(),
+      date:today(),
+      type:'Avaliação diária',
+      grav:'Leve',
+      desc,
+      author,
+      daily:{time:nowT,shift,mood,moodLabel,food,sleep,obs}
+    });
+    saveDB();
+    document.getElementById('daily-modal').classList.remove('show');
+    DB._dailyMood=null;DB._dailyFood=null;DB._dailySleep=null;
+    A.renderTasks();A.renderDash();
+    toast('✓ Avaliação salva!');
+  });
+
+    // Wire Meu Doutor back button
   document.getElementById('md-back')?.addEventListener('click',()=>go('s-dash'));
 
   // renderDash patches applied inline above
@@ -5846,7 +6271,196 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // Meu Doutor acessível pelo botão no header do painel
 
-  // ── ACESSAR POR CÓDIGO ───────────────────────────
+
+  // ── EVOLUÇÃO CLÍNICA ──────────────────────────────
+  // Gravity buttons
+  document.querySelectorAll('.ev-grav-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      DB._evolGrav = btn.dataset.grav;
+      document.querySelectorAll('.ev-grav-btn').forEach(b=>{
+        b.style.border = '2px solid var(--border)';
+        b.style.background = 'var(--W)';
+        b.style.color = 'var(--tm)';
+      });
+      const colors = {Leve:'gl,grn', Moderada:'yl,yel', Alta:'rl,red'};
+      const [bg, fg] = (colors[btn.dataset.grav]||'gl,grn').split(',');
+      btn.style.border = `2px solid var(--${fg})`;
+      btn.style.background = `var(--${bg})`;
+      btn.style.color = `var(--${fg})`;
+    });
+  });
+
+  // Back button
+  wire('ev-go-profile','click',()=>{
+    A.renderProf(); go('s-prof');
+  });
+  wire('ev-success-exit','click',()=>{
+    if(!DB.currentUser || DB.currentUser.id === 'qr-evolucao'){
+      DB.currentUser=null; DB.pid=null; go('s-login');
+    } else {
+      A.renderDash(); go('s-dash');
+    }
+  });
+  wire('ev-success-new','click',()=>{
+    // Reset form for another evolution
+    document.getElementById('ev-prof-success').style.display='none';
+    document.getElementById('ev-prof-save').style.display='flex';
+    document.getElementById('ev-prof-save').disabled=false;
+    document.getElementById('ev-prof-text').value='';
+    // Reset gravity
+    document.querySelectorAll('.ev-grav-btn').forEach(b=>{
+      b.style.border='2px solid var(--border)'; b.style.background='var(--W)'; b.style.color='var(--tm)';
+    });
+    const leveBtn=document.querySelector('.ev-grav-btn[data-grav="Leve"]');
+    if(leveBtn){ leveBtn.style.border='2px solid var(--gl)'; leveBtn.style.background='var(--gl)'; leveBtn.style.color='var(--grn)'; }
+    DB._evolGrav='Leve';
+    // Update date/time
+    const now=new Date();
+    const d=document.getElementById('ev-prof-date'); if(d) d.value=now.toISOString().slice(0,10);
+    const t=document.getElementById('ev-prof-time'); if(t) t.value=now.toTimeString().slice(0,5);
+  });
+  wire('ev-prof-back','click',()=>{
+    // If came from QR (no currentUser login), go to login
+    if(!DB.currentUser || DB.currentUser.id === 'qr-evolucao'){
+      DB.currentUser = null; DB.pid = null;
+      go('s-login');
+    } else {
+      A.renderDash(); go('s-dash');
+    }
+  });
+
+  // Save evolution
+  wire('ev-prof-save','click',async()=>{
+    const p = DB.p; if(!p){ toast('⚠ Paciente não encontrado'); return; }
+    const profType = document.getElementById('ev-prof-type').value;
+    const profName = document.getElementById('ev-prof-name').value.trim();
+    const profCouncil = document.getElementById('ev-prof-council').value.trim();
+    const evDate = document.getElementById('ev-prof-date').value;
+    const evTime = document.getElementById('ev-prof-time').value;
+    const evText = document.getElementById('ev-prof-text').value.trim();
+    const grav = DB._evolGrav || 'Leve';
+
+    if(!profName){ toast('⚠ Informe o nome do profissional'); return; }
+    if(!evText || evText.length < 10){ toast('⚠ Descreva a evolução do paciente'); return; }
+    if(!profType){ toast('⚠ Selecione o tipo de profissional'); return; }
+
+    const btn = document.getElementById('ev-prof-save');
+    btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+
+    const authorLabel = profType ? `${profType} ${profName}` : profName;
+    const councilStr = profCouncil ? ` · ${profCouncil}` : '';
+
+    // Collect optional vitals (only filled fields)
+    const evVS = {};
+    const vsFields = ['sis','dia','fc','temp','sat','gli','fr','peso'];
+    vsFields.forEach(k=>{
+      const el = document.getElementById('ev-vs-'+k);
+      const v = el?.value.trim();
+      if(v && !isNaN(parseFloat(v))) evVS[k] = parseFloat(v);
+    });
+    const hasVitals = Object.keys(evVS).length > 0;
+
+    // Save vitals record if any filled
+    if(hasVitals){
+      if(!p.vitals) p.vitals=[];
+      p.vitals.unshift({
+        id: Date.now(),
+        date: evDate || today(),
+        time: evTime || nowTime(),
+        author: authorLabel + councilStr,
+        obs: `Aferido durante evolução clínica`,
+        ...evVS
+      });
+      // Clear vitals fields
+      vsFields.forEach(k=>{ const el=document.getElementById('ev-vs-'+k); if(el) el.value=''; });
+
+      // Build readable VS summary for timeline
+      const vsLabels={sis:'PA',dia:'/',fc:'FC',temp:'Temp',sat:'SpO₂',gli:'Glicemia',fr:'FR',peso:'Peso'};
+      const vsUnits={sis:'',dia:' mmHg',fc:' bpm',temp:'°C',sat:'%',gli:' mg/dL',fr:' irpm',peso:' kg'};
+      let vsDesc='📊 Sinais vitais aferidos: ';
+      const vsParts=[];
+      if(evVS.sis&&evVS.dia) vsParts.push(`PA ${evVS.sis}/${evVS.dia} mmHg`);
+      else if(evVS.sis) vsParts.push(`PA ${evVS.sis} mmHg`);
+      if(evVS.fc) vsParts.push(`FC ${evVS.fc} bpm`);
+      if(evVS.temp) vsParts.push(`Temp ${evVS.temp}°C`);
+      if(evVS.sat) vsParts.push(`SpO₂ ${evVS.sat}%`);
+      if(evVS.gli) vsParts.push(`Glicemia ${evVS.gli} mg/dL`);
+      if(evVS.fr) vsParts.push(`FR ${evVS.fr} irpm`);
+      if(evVS.peso) vsParts.push(`Peso ${evVS.peso} kg`);
+      vsDesc += vsParts.join(' · ');
+
+      // Add VS event to timeline
+      p.events.unshift({
+        id: Date.now()-1,
+        date: evDate || today(),
+        time: evTime || nowTime(),
+        type: 'Sinais vitais',
+        grav: 'Leve',
+        desc: vsDesc,
+        author: authorLabel + councilStr,
+        isVsFromEvol: true
+      });
+    }
+
+    p.events.unshift({
+      id: Date.now(),
+      date: evDate || today(),
+      time: evTime || nowTime(),
+      type: 'Evolução clínica',
+      grav,
+      desc: evText,
+      author: authorLabel + councilStr,
+      profType,
+      profName,
+      profCouncil,
+      isEvolucao: true,
+      hasVitals
+    });
+
+    try {
+      await saveDB();
+      // Show success
+      btn.style.display = 'none';
+      document.getElementById('ev-prof-success').style.display = 'block';
+      // Clear text for next entry
+      document.getElementById('ev-prof-text').value = '';
+      toast('✅ Evolução registrada na timeline!', 3000);
+      // Suggest relevant assessment based on profession
+      const profType2 = document.getElementById('ev-prof-type').value;
+      const suggested = PROF_ASSESS_MAP[profType2]||[];
+      if(suggested.length && DB.p){
+        const assessLabels={morse:'Risco de queda (Morse)',mna:'Avaliação nutricional (MNA)',barthel:'Avaliação funcional (Barthel)',hydration:'Hidratação',pain:'Avaliação de dor',daily:'Avaliação de humor'};
+        const assessNames = suggested.map(k=>assessLabels[k]).filter(Boolean);
+        setTimeout(()=>{
+          showConfirm(`Deseja registrar também: ${assessNames.join(' e ')}?`,()=>{
+            if(suggested[0]==='daily'){A.openDailyModal();}else{A.openAssess(suggested[0]);}
+          },{icon:'📋',yesLabel:'Sim, avaliar',danger:false});
+        }, 1500);
+      }
+    } catch(e) {
+      toast('⚠ Erro ao salvar: ' + e.message);
+      btn.textContent = 'Registrar evolução'; btn.disabled = false;
+    }
+  });
+
+  // URL handler: ?evolucao=TOKEN → open evolution screen directly
+  const _evolToken = _urlParams.get('evolucao');
+  if(_evolToken && !_reportToken){
+    loadDB().then(()=>{
+      const pat = DB.patients.find(p => p._evolToken === _evolToken);
+      if(pat && pat._evolToken){
+        DB.pid = pat.id;
+        DB.currentUser = {role:'doctor', name:'Profissional', id:'qr-evolucao'};
+        renderEvolucao(pat);
+        go('s-evolucao');
+      } else {
+        document.getElementById('s-login').innerHTML += `<div style="margin:16px 20px;background:var(--rl);border-radius:10px;padding:12px;font-size:13px;color:var(--red);font-weight:600;text-align:center">⚠️ QR Code de evolução inválido ou expirado.<br><span style="font-weight:400;font-size:12px">Solicite um novo QR ao gestor do paciente.</span></div>`;
+      }
+    });
+  }
+
+
+    // ── ACESSAR POR CÓDIGO ───────────────────────────
   let _foundPatByCode=null;
   wire('btn-access-code','click',()=>{ _foundPatByCode=null; document.getElementById('ac-code').value=''; document.getElementById('ac-result').style.display='none'; document.getElementById('ac-error').style.display='none'; document.getElementById('ac-success').style.display='none'; document.getElementById('btn-ac-request').style.display='none'; go('s-access-code'); });
 
@@ -5910,10 +6524,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
 
   // ── CALENDÁRIO NAV ──
-  wire('bn-d-cal','click',()=>{A.renderCal();go('s-cal');});
-  wire('bn-tl-cal','click',()=>{A.renderCal();go('s-cal');});
-  wire('bn-vs-cal','click',()=>{A.renderCal();go('s-cal');});
-  wire('bn-meds-cal','click',()=>{A.renderCal();go('s-cal');});
+  wire('bn-d-cal','click',()=>{if(!canViewCal())return;A.renderCal();go('s-cal');});
+  wire('bn-tl-cal','click',()=>{if(!canViewCal())return;A.renderCal();go('s-cal');});
+  wire('bn-vs-cal','click',()=>{if(!canViewCal())return;A.renderCal();go('s-cal');});
+  wire('bn-meds-cal','click',()=>{if(!canViewCal())return;A.renderCal();go('s-cal');});
   wire('cal-back','click',()=>{A.renderDash();go('s-dash');});
   wire('bn-cal-dash','click',()=>{A.renderDash();go('s-dash');});
   wire('bn-cal-tl','click',()=>{DB.tlFilter='Todos';A.renderTL();go('s-tl');});
