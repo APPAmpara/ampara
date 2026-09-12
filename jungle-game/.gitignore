@@ -1,0 +1,43 @@
+# Gerado automaticamente pelo Unity Editor — nunca commitar
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+
+# Assets importados automaticamente / caches
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+
+# Arquivos de IDE / editor
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Arquivos específicos de OS
+.DS_Store
+Thumbs.db
+
+# Build do Xcode (gerado ao exportar para iOS)
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+Pods/
